@@ -1,35 +1,44 @@
 "use client";
-import { EmailIcon, PasswordIcon } from "@/assets/icons";
-import Link from "next/link";
 import React, { useState } from "react";
 import InputGroup from "../FormElements/InputGroup";
 import { Checkbox } from "../FormElements/checkbox";
+import { EmailIcon, PasswordIcon } from "@/assets/icons";
+import Link from "next/link";
 
-export default function SigninWithPassword() {
+type Props = {
+  loginUser: (formData: FormData) => Promise<any>;
+};
+
+export default function SigninWithPasswordClient({ loginUser }: Props) {
   const [data, setData] = useState({
-    email: process.env.NEXT_PUBLIC_DEMO_USER_MAIL || "",
-    password: process.env.NEXT_PUBLIC_DEMO_USER_PASS || "",
+    email: "",
+    password: "",
     remember: false,
   });
 
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setData({
-      ...data,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // You can remove this code block
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+
+      const result = await loginUser(formData);
+
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      document.cookie = `token=${result.token}; path=/; max-age=604800`;
+
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      alert(err.message || "Login failed");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -40,22 +49,20 @@ export default function SigninWithPassword() {
         className="mb-4 [&_input]:py-[15px]"
         placeholder="Enter your email"
         name="email"
-        handleChange={handleChange}
+        handleChange={(e) => setData({ ...data, email: e.target.value })}
         value={data.email}
         icon={<EmailIcon />}
       />
-
       <InputGroup
         type="password"
         label="Password"
         className="mb-5 [&_input]:py-[15px]"
         placeholder="Enter your password"
         name="password"
-        handleChange={handleChange}
+        handleChange={(e) => setData({ ...data, password: e.target.value })}
         value={data.password}
         icon={<PasswordIcon />}
       />
-
       <div className="mb-6 flex items-center justify-between gap-2 py-2 font-medium">
         <Checkbox
           label="Remember me"
@@ -63,14 +70,8 @@ export default function SigninWithPassword() {
           withIcon="check"
           minimal
           radius="md"
-          onChange={(e) =>
-            setData({
-              ...data,
-              remember: e.target.checked,
-            })
-          }
+          onChange={(e) => setData({ ...data, remember: e.target.checked })}
         />
-
         <Link
           href="/auth/forgot-password"
           className="hover:text-primary dark:text-white dark:hover:text-primary"
@@ -78,7 +79,6 @@ export default function SigninWithPassword() {
           Forgot Password?
         </Link>
       </div>
-
       <div className="mb-4.5">
         <button
           type="submit"
@@ -86,7 +86,7 @@ export default function SigninWithPassword() {
         >
           Sign In
           {loading && (
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent dark:border-primary dark:border-t-transparent" />
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
           )}
         </button>
       </div>
