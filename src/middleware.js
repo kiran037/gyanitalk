@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const PUBLIC_ROUTES = ["/auth/signin", "/auth/register"];
-const PROTECTED_ROUTES = ["/dashboard", "/profile"];
+const PROTECTED_ROUTES = ["/", "/profile"];
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-export async function middleware(req: NextRequest) {
+export async function middleware(req) {
   const token = req.cookies.get("token")?.value;
 
   const isAuthPage = PUBLIC_ROUTES.includes(req.nextUrl.pathname);
@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
 
   if (token) {
     try {
-      await jwtVerify(token, secret); 
+      await jwtVerify(token, secret);
 
       if (isAuthPage) {
         return NextResponse.redirect(new URL("/", req.url));
@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  return NextResponse.next(); 
+  return NextResponse.next();
 }
 
 

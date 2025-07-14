@@ -33,7 +33,7 @@ export default function SigninWithPasswordClient({ loginUser }: Props) {
       localStorage.setItem("user", JSON.stringify(result.user));
       document.cookie = `token=${result.token}; path=/; max-age=604800`;
 
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (err: any) {
       alert(err.message || "Login failed");
     } finally {
