@@ -45,11 +45,23 @@ export async function getCustomers({
   page = 1,
   limit = 15,
   search = "",
+  startDate,
+  endDate,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  startDate?: string;
+  endDate?: string;
 }) {
+
+  if (startDate && endDate) {
+    console.log("Filter Date Range:", {
+      from: new Date(startDate),
+      to: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+    });
+  }
+
   const offset = (page - 1) * limit;
   const [users, totalCount] = await Promise.all([
     prisma.users.findMany({
@@ -62,6 +74,12 @@ export async function getCustomers({
         birthDate: {
           gte: new Date("1000-01-01"),
         },
+        ...(startDate && endDate && {
+          created_at: {
+            gte: new Date(startDate),
+            lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+          },
+        }),
         OR: [
           {
             userRoles: {
@@ -97,6 +115,12 @@ export async function getCustomers({
         birthDate: {
           gte: new Date("1000-01-01"),
         },
+        ...(startDate && endDate && {
+          created_at: {
+            gte: new Date(startDate),
+            lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+          },
+        }),
         OR: [
           {
             userRoles: {
@@ -116,20 +140,21 @@ export async function getCustomers({
           ],
         }),
       },
-    }),
+    })
+
   ]);
 
   const data = users.map((user: User) => {
     const balance = user.user_wallets.reduce((acc, item) => {
       return acc + Number(item.amount || 0);
     }, 0);
-  
+
     return {
       ...user,
       balance,
     };
   });
-  
+
 
   return {
     data,

@@ -18,15 +18,22 @@ export async function CustomerTable({
   page = 1,
   limit = 15,
   search = "",
+  startDate,
+  endDate,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  startDate?: string;
+  endDate?: string;
+
 }) {
   const { data, totalPages, currentPage } = await getCustomers({
     page,
     limit,
     search,
+    startDate,
+    endDate,
   });
 
   return (
@@ -152,7 +159,7 @@ export async function CustomerTable({
           return (
             <a
               key={i}
-              href={`?page=${pageNum}${search ? `&search=${search}` : ""}`}
+              href={`?page=${pageNum}${search ? `&search=${search}` : ""}${startDate ? `&startDate=${startDate}` : ""}${endDate ? `&endDate=${endDate}` : ""}`}
               className={cn(
                 "px-3 py-1 border rounded",
                 isCurrent
