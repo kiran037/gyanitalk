@@ -4,16 +4,21 @@ import { startOfDay, endOfDay } from 'date-fns';
 
 
 export async function getDashboardOverview() {
-  const today = dayjs().startOf("day").toDate();
 
-  const startOfToday = new Date();
+  const today = new Date(
+    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
+  );
+
+  const startOfToday = new Date(today);
   startOfToday.setHours(0, 0, 0, 0);
-  
-  const endOfToday = new Date();
+
+  const endOfToday = new Date(today);
   endOfToday.setHours(23, 59, 59, 999);
-  
+
   const start = startOfDay(today);
   const end = endOfDay(today);
+
+  const statuses = ['success', 'failed', 'pending'] as const;
 
 
   const [
@@ -96,7 +101,7 @@ export async function getDashboardOverview() {
       isDelete: false,
     },
   });
-  
+
   const usersWithChatOrCallTx: { userId: bigint | null }[] = await prisma.wallettransaction.findMany({
     where: {
       transactionType: { in: ["Chat", "Call"] },
@@ -129,10 +134,9 @@ export async function getDashboardOverview() {
 
 
 
-  const [totalAstrologer, totalOrders, totalStories, totalLiveAstro, totalLiveChat, totalLiveCall, totalRequest] = await Promise.all([
+  const [totalAstrologer, totalOrders, totalLiveAstro, totalLiveChat, totalLiveCall, totalRequest] = await Promise.all([
     prisma.astrologers.count(),
     prisma.order_request.count({ where: { orderType: "astromall" } }),
-    prisma.astrologer_stories.count(),
     prisma.liveastro.count({ where: { isActive: 1 } }),
     prisma.astrologers.count({ where: { chatStatus: "Online" } }),
     prisma.astrologers.count({ where: { callStatus: "Online" } }),
@@ -149,7 +153,7 @@ export async function getDashboardOverview() {
       amount: true,
     },
   });
-  
+
   const todayEarningResult = await prisma.admin_get_commissions.aggregate({
     where: {
       created_at: {
@@ -161,7 +165,7 @@ export async function getDashboardOverview() {
       amount: true,
     },
   });
-  
+
 
 
   const astrologerUserIds = await prisma.user_roles.findMany({
@@ -172,9 +176,9 @@ export async function getDashboardOverview() {
       userId: true,
     },
   });
-  
+
   const userIds = astrologerUserIds.map((ur: { userId: bigint }) => Number(ur.userId));
-  
+
   const totalAstroEarningResult = await prisma.wallettransaction.aggregate({
     where: {
       userId: {
@@ -186,7 +190,7 @@ export async function getDashboardOverview() {
     },
   });
 
-  
+
   // Step 2: Sum today's wallet transactions for those user IDs
   const todayAstroEarningResult = await prisma.wallettransaction.aggregate({
     where: {
@@ -202,8 +206,78 @@ export async function getDashboardOverview() {
       amount: true,
     },
   });
-  
-  
+
+
+
+
+  const [totalWithdraw, todayWithdraw] = await Promise.all([
+    prisma.withdrawrequest.aggregate({
+      where: {
+        status: { not: 'Reject' },
+      },
+      _sum: {
+        withdrawAmount: true,
+      },
+    }),
+    prisma.withdrawrequest.aggregate({
+      where: {
+        status: { not: 'Reject' },
+        created_at: {
+          gte: startOfToday,
+          lte: endOfToday,
+        },
+      },
+      _sum: {
+        withdrawAmount: true,
+      },
+    }),
+  ]);
+
+
+  const [totalDepositByStatus, todayDepositByStatus] = await Promise.all([
+    prisma.payment.groupBy({
+      by: ['paymentStatus'],
+      _sum: {
+        amount: true,
+      },
+    }),
+    prisma.payment.groupBy({
+      by: ['paymentStatus'],
+      where: {
+        created_at: {
+          gte: startOfToday,
+          lte: endOfToday,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+  ]);
+
+  const normalizeDepositMap = (
+    depositArr: typeof totalDepositByStatus
+  ): Record<typeof statuses[number], number> => {
+    const depositMap = Object.fromEntries(
+      depositArr.map((item: DepositGroup) => [item.paymentStatus ?? 'Unknown', item._sum.amount])
+    );
+
+    return statuses.reduce((acc, status) => {
+      const val = depositMap[status];
+      acc[status] = val !== null && val !== undefined ? val : 0;
+      return acc;
+    }, {} as Record<typeof statuses[number], number>);
+  };
+
+  const totalDepositMap = normalizeDepositMap(totalDepositByStatus);
+  const todayDepositMap = normalizeDepositMap(todayDepositByStatus);
+
+
+
+  const [pendingRequests, successRequests] = await Promise.all([
+    prisma.astrologer_request.count({ where: { status: 'Pending' } }),
+    prisma.astrologer_request.count({ where: { status: 'Assigned' } }),
+  ]);
 
 
   return {
@@ -215,7 +289,6 @@ export async function getDashboardOverview() {
     todayCustomer,
     totalAstrologer,
     totalOrders,
-    totalStories,
     totalLiveAstro,
     totalLiveChat,
     totalLiveCall,
@@ -237,29 +310,21 @@ export async function getDashboardOverview() {
     unverifiedAstrologer,
 
 
-    totalEarning:totalEarningResult._sum.amount ?? 0,
+    totalEarning: totalEarningResult._sum.amount ?? 0,
     todayEarning: todayEarningResult._sum.amount ?? 0,
-    totalAstroEarning : totalAstroEarningResult._sum.amount ?? 0,
-    todayAstroEarning : todayAstroEarningResult._sum.amount ?? 0
+    totalAstroEarning: totalAstroEarningResult._sum.amount ?? 0,
+    todayAstroEarning: todayAstroEarningResult._sum.amount ?? 0,
+
+    totalWithdraw: totalWithdraw._sum.withdrawAmount ?? 0,
+    todayWithdraw: todayWithdraw._sum.withdrawAmount ?? 0,
+
+    totalDeposit: totalDepositMap,
+    todayDeposit: todayDepositMap,
+    pendingRequests, successRequests,
 
 
   };
 }
-
-
-
-function calculateGrowth(monthUsers: number, total: number) {
-  if (total === 0) return 0;
-  return parseFloat(((monthUsers / total) * 100).toFixed(2));
-}
-
-
-
-
-
-
-
-
 
 
 export async function getChatsData() {
@@ -329,3 +394,11 @@ export async function getChatsData() {
     },
   ];
 }
+
+
+type DepositGroup = {
+  paymentStatus: string | null;
+  _sum: {
+    amount: number | null;
+  };
+};
