@@ -12,17 +12,17 @@ export function TopProductsSkeleton() {
   return (
     <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
       <h2 className="px-4 py-6 text-2xl font-bold text-dark dark:text-white md:px-6 xl:px-9">
-        Top Products
+        Customers
       </h2>
 
       <Table>
         <TableHeader>
           <TableRow className="border-t text-base [&>th]:h-auto [&>th]:py-3 sm:[&>th]:py-4.5">
-            <TableHead className="min-w-[120px]">Product Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Sold</TableHead>
-            <TableHead>Profit</TableHead>
+            <TableHead className="min-w-[120px]">Name</TableHead>
+            <TableHead>DOB</TableHead>
+            <TableHead>TOB</TableHead>
+            <TableHead>Mobile</TableHead>
+            <TableHead>Email</TableHead>
           </TableRow>
         </TableHeader>
 

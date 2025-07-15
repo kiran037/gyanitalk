@@ -1,4 +1,5 @@
 import * as logos from "@/assets/logos";
+const prisma = require("../../prismaClient");
 
 export async function getTopProducts() {
   // Fake delay
@@ -40,37 +41,58 @@ export async function getTopProducts() {
   ];
 }
 
-export async function getInvoiceTableData() {
-  // Fake delay
-  await new Promise((resolve) => setTimeout(resolve, 1400));
+export async function getCustomers({
+  page = 1,
+  limit = 15,
+}: {
+  page?: number;
+  limit?: number;
+}) {
+  const offset = (page - 1) * limit;
 
-  return [
-    {
-      name: "Free package",
-      price: 0.0,
-      date: "2023-01-13T18:00:00.000Z",
-      status: "Paid",
-    },
-    {
-      name: "Standard Package",
-      price: 59.0,
-      date: "2023-01-13T18:00:00.000Z",
-      status: "Paid",
-    },
-    {
-      name: "Business Package",
-      price: 99.0,
-      date: "2023-01-13T18:00:00.000Z",
-      status: "Unpaid",
-    },
-    {
-      name: "Standard Package",
-      price: 59.0,
-      date: "2023-01-13T18:00:00.000Z",
-      status: "Pending",
-    },
-  ];
+
+  const customers = await prisma.$queryRaw`
+  SELECT * FROM users
+  WHERE isActive = true
+    AND isDelete = false
+    AND (birthDate IS NULL OR birthDate >= '1000-01-01') -- skip 0000-00-00
+    AND (
+      EXISTS (
+        SELECT 1 FROM user_roles WHERE user_roles.userId = users.id AND roleId = 3
+      ) OR NOT EXISTS (
+        SELECT 1 FROM user_roles WHERE user_roles.userId = users.id
+      )
+    )
+  ORDER BY id DESC
+  LIMIT ${limit} OFFSET ${offset}
+`;
+
+
+
+  const [totalCount] = await Promise.all([
+   
+    
+    prisma.users.count({
+      where: {
+        isActive: true,
+        isDelete: false,
+        OR: [
+          { userRoles: { some: { roleId: 3 } } },
+          { userRoles: { none: {} } },
+        ],
+      },
+    }),
+  ]);
+
+
+  return {
+    data: customers,
+    total: totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
+
 
 export async function getTopChannels() {
   // Fake delay
