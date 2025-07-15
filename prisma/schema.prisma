@@ -1799,6 +1799,7 @@ model user_wallets {
   updated_at DateTime? @db.Timestamp(0)
   createdBy  Int
   modifiedBy Int
+  user users @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "user_wallets_userid_foreign")
 }
@@ -1840,7 +1841,7 @@ model users {
   liveuser    liveuser[]    
   payments payment[]
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
-
+  user_wallets user_wallets[]  
   user_device_details user_device_details[] @relation("UserToDeviceDetails")
   chatrequests    chatrequest[]   @relation("UserChatRequests")
   callrequests callrequest[] @relation("UserToCallRequests")

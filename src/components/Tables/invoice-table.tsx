@@ -12,33 +12,43 @@ import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import { getCustomers } from "./fetch";
 import { DownloadIcon, PreviewIcon } from "./icons";
+import moment from "moment";
 
-export async function CustomerTable({ page = 1, limit = 15, search = "" }: {
+export async function CustomerTable({
+  page = 1,
+  limit = 15,
+  search = "",
+}: {
   page?: number;
   limit?: number;
   search?: string;
 }) {
-  const { data, totalPages, currentPage } = await getCustomers({ page, limit, search });
+  const { data, totalPages, currentPage } = await getCustomers({
+    page,
+    limit,
+    search,
+  });
+
   return (
-    <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
+    <div className="rounded-2xl border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5 p-4 overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-none bg-[#F7F9FC] dark:bg-dark-2 [&>th]:py-4 [&>th]:text-base [&>th]:text-dark [&>th]:dark:text-white">
-            <TableHead className="min-w-[155px] xl:pl-7.5">Name</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>DOB</TableHead>
-            <TableHead>TOB</TableHead>
-            <TableHead className="text-right xl:pr-7.5">Referred</TableHead>
-            <TableHead>Balance</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Actions</TableHead>
+          <TableRow className="bg-[#F7F9FC] dark:bg-dark-2 [&>th]:py-4 [&>th]:text-base [&>th]:text-dark [&>th]:dark:text-white">
+            <TableHead className="min-w-[180px]">Name</TableHead>
+            <TableHead className="min-w-[140px]">Contact</TableHead>
+            <TableHead className="min-w-[130px]">DOB</TableHead>
+            <TableHead className="min-w-[110px]">TOB</TableHead>
+            <TableHead className="text-right min-w-[110px]">Referred</TableHead>
+            <TableHead className="min-w-[100px]">Balance</TableHead>
+            <TableHead className="min-w-[160px]">Created</TableHead>
+            <TableHead className="min-w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {data.map((item, index) => (
-            <TableRow key={index} className="border-[#eee] dark:border-dark-3">
-              <TableCell className="min-w-fit">
+          {data.map((item: any, index: number) => (
+            <TableRow key={index} className="hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors border-[#eee] dark:border-dark-3">
+              <TableCell>
                 <div className="flex items-center gap-3">
                   <Image
                     src={
@@ -46,75 +56,69 @@ export async function CustomerTable({ page = 1, limit = 15, search = "" }: {
                         ? `${process.env.BASEURL}${item.profile}`
                         : "https://gyanitalk.com/build/assets/images/person.png"
                     }
-                    className="size-8 rounded-full object-cover"
+                    className="rounded-full object-cover"
                     width={40}
                     height={40}
                     alt={(item.name || "User") + " Logo"}
                   />
-                  <div className="text-dark dark:text-white">
+                  <span className="text-dark dark:text-white font-medium truncate">
                     {item.name || "-"}
-                  </div>
+                  </span>
                 </div>
               </TableCell>
 
-
-              <TableCell className="min-w-[155px] xl:pl-7.5">
-                <h5 className="text-dark dark:text-white">{item.contactNo}</h5>
+              <TableCell>
+                <span className="text-dark dark:text-white text-sm">
+                  {item.contactNo || "-"}
+                </span>
               </TableCell>
 
-
-
               <TableCell>
-                <p className="text-dark dark:text-white">
+                <span className="text-dark dark:text-white text-sm">
                   {item.birthDate
-                    ? dayjs(item.birthDate).format("MMM DD, YYYY")
+                    ? dayjs(item.birthDate).format("DD MMM YYYY")
                     : "-"}
-                </p>
+                </span>
               </TableCell>
 
               <TableCell>
-                <p className="text-dark dark:text-white">
-                  {item.birthTime
-                    ? item.birthTime
-                    : "-"}
-                </p>
+                <span className="text-dark dark:text-white text-sm">
+                  {item.birthTime || "-"}
+                </span>
               </TableCell>
 
-
-              <TableCell>
-                <p className="text-dark dark:text-white">
+              <TableCell className="text-right">
+                <span className="text-dark dark:text-white text-sm">
                   {item.created_at
-                    ? dayjs(item.created_at).format("MMM DD, YYYY")
+                    ? dayjs(item.created_at).format("DD MMM YYYY")
                     : "-"}
-                </p>
-              </TableCell>
-              <TableCell>
-                <p className="text-dark dark:text-white">
-                  {item.created_at
-                    ? dayjs(item.created_at).format("MMM DD, YYYY")
-                    : "-"}
-                </p>
-              </TableCell>
-              <TableCell>
-                <p className="text-dark dark:text-white">
-                  {item.created_at
-                    ? dayjs(item.created_at).format("MMM DD, YYYY")
-                    : "-"}
-                </p>
+                </span>
               </TableCell>
 
+              <TableCell>
+                <span className="text-dark dark:text-white font-semibold text-sm">
+                  ₹{Number(item.balance || 0).toFixed(2)}
+                </span>
+              </TableCell>
 
-              <TableCell className="xl:pr-7.5">
-                <div className="flex items-center justify-end gap-x-3.5">
-                  <button className="hover:text-primary">
-                    <span className="sr-only">View Invoice</span>
+              <TableCell>
+                <span className="text-dark dark:text-white text-sm">
+                  {item.created_at
+                    ? moment(item.created_at).utcOffset("+05:30").format("DD MMM YYYY, hh:mm A")
+                    : "-"}
+                </span>
+              </TableCell>
+
+              <TableCell>
+                <div className="flex items-center justify-end gap-2">
+                  <button className="text-muted hover:text-primary transition-colors">
+                    <span className="sr-only">View</span>
                     <PreviewIcon />
                   </button>
-                  <button className="hover:text-primary">
-                    <span className="sr-only">Delete Invoice</span>
+                  <button className="text-red-500 hover:text-red-600 transition-colors">
+                    <span className="sr-only">Delete</span>
                     <TrashIcon />
                   </button>
-
                 </div>
               </TableCell>
             </TableRow>
@@ -122,8 +126,8 @@ export async function CustomerTable({ page = 1, limit = 15, search = "" }: {
         </TableBody>
       </Table>
 
-      {/* Pagination UI */}
-      <div className="mt-6 flex justify-end gap-2">
+      {/* Pagination */}
+      <div className="mt-6 flex justify-end gap-2 flex-wrap text-sm">
         {Array.from({ length: totalPages }, (_, i) => {
           const pageNum = i + 1;
           const isLast = pageNum === totalPages;
@@ -148,9 +152,9 @@ export async function CustomerTable({ page = 1, limit = 15, search = "" }: {
           return (
             <a
               key={i}
-              href={`?page=${pageNum}`}
+              href={`?page=${pageNum}${search ? `&search=${search}` : ""}`}
               className={cn(
-                "px-3 py-1 border rounded text-sm",
+                "px-3 py-1 border rounded",
                 isCurrent
                   ? "bg-primary text-white"
                   : "bg-white text-black dark:bg-dark dark:text-white"

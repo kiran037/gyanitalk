@@ -49,55 +49,95 @@ export async function getCustomers({
   page?: number;
   limit?: number;
   search?: string;
-
 }) {
   const offset = (page - 1) * limit;
-  const searchPattern = `%${search}%`;
+  const [users, totalCount] = await Promise.all([
+    prisma.users.findMany({
+      skip: offset,
+      take: limit,
+      orderBy: { id: "desc" },
+      where: {
+        isActive: true,
+        isDelete: false,
+        birthDate: {
+          gte: new Date("1000-01-01"),
+        },
+        OR: [
+          {
+            userRoles: {
+              some: { roleId: 3 },
+            },
+          },
+          {
+            userRoles: {
+              none: {},
+            },
+          },
+        ],
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { contactNo: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+      include: {
+        user_wallets: {
+          select: {
+            amount: true,
+          },
+        },
+      },
+    }),
 
-
-  const customers = await prisma.$queryRawUnsafe(`
-    SELECT *
-    FROM users
-    WHERE isActive = true
-      AND isDelete = false
-      AND (birthDate IS NULL OR birthDate >= '1000-01-01')
-      AND (
-        EXISTS (
-          SELECT 1 FROM user_roles WHERE user_roles.userId = users.id AND roleId = 3
-        ) OR NOT EXISTS (
-          SELECT 1 FROM user_roles WHERE user_roles.userId = users.id
-        )
-      )
-      ${search ? `AND (name LIKE '${searchPattern}' OR contactNo LIKE '${searchPattern}')` : ""}
-    ORDER BY id DESC
-    LIMIT ${limit}
-    OFFSET ${offset}
-  `);
-
-
-
-  const [totalCount] = await Promise.all([
     prisma.users.count({
       where: {
         isActive: true,
         isDelete: false,
+        birthDate: {
+          gte: new Date("1000-01-01"),
+        },
         OR: [
-          { userRoles: { some: { roleId: 3 } } },
-          { userRoles: { none: {} } },
+          {
+            userRoles: {
+              some: { roleId: 3 },
+            },
+          },
+          {
+            userRoles: {
+              none: {},
+            },
+          },
         ],
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { contactNo: { contains: search, mode: "insensitive" } },
+          ],
+        }),
       },
     }),
   ]);
 
+  const data = users.map((user: User) => {
+    const balance = user.user_wallets.reduce((acc, item) => {
+      return acc + Number(item.amount || 0);
+    }, 0);
+  
+    return {
+      ...user,
+      balance,
+    };
+  });
+  
 
   return {
-    data: customers,
+    data,
     total: totalCount,
     totalPages: Math.ceil(totalCount / limit),
     currentPage: page,
   };
 }
-
 
 export async function getTopChannels() {
   // Fake delay
@@ -146,3 +186,15 @@ export async function getTopChannels() {
     },
   ];
 }
+
+type User = {
+  id: bigint;
+  name?: string;
+  contactNo?: string;
+  birthDate?: Date;
+  birthTime?: string;
+  profile?: string;
+  user_wallets: {
+    amount: number | string | null;
+  }[];
+};

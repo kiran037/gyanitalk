@@ -43,17 +43,6 @@ export const NAV_DATA = [
         ],
       },
       {
-        title: "Tables",
-        url: "/tables",
-        icon: Icons.Table,
-        items: [
-          {
-            title: "Tables",
-            url: "/tables",
-          },
-        ],
-      },
-      {
         title: "Pages",
         icon: Icons.Alphabet,
         items: [
