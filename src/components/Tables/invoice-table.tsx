@@ -13,11 +13,12 @@ import dayjs from "dayjs";
 import { getCustomers } from "./fetch";
 import { DownloadIcon, PreviewIcon } from "./icons";
 
-export async function CustomerTable({ page = 1, limit = 15 }: {
+export async function CustomerTable({ page = 1, limit = 15, search = "" }: {
   page?: number;
   limit?: number;
+  search?: string;
 }) {
-  const { data, totalPages, currentPage } = await getCustomers({ page, limit });
+  const { data, totalPages, currentPage } = await getCustomers({ page, limit, search });
   return (
     <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
       <Table>
@@ -113,10 +114,7 @@ export async function CustomerTable({ page = 1, limit = 15 }: {
                     <span className="sr-only">Delete Invoice</span>
                     <TrashIcon />
                   </button>
-                  <button className="hover:text-primary">
-                    <span className="sr-only">Download Invoice</span>
-                    <DownloadIcon />
-                  </button>
+
                 </div>
               </TableCell>
             </TableRow>

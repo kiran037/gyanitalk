@@ -192,6 +192,8 @@ export function GlobeIcon(props: IconProps) {
 export function TrashIcon(props: IconProps) {
   return (
     <svg
+    className="text-red-500"
+
       width="18"
       height="18"
       viewBox="0 0 18 18"

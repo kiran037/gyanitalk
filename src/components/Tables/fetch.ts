@@ -44,34 +44,39 @@ export async function getTopProducts() {
 export async function getCustomers({
   page = 1,
   limit = 15,
+  search = "",
 }: {
   page?: number;
   limit?: number;
+  search?: string;
+
 }) {
   const offset = (page - 1) * limit;
+  const searchPattern = `%${search}%`;
 
 
-  const customers = await prisma.$queryRaw`
-  SELECT * FROM users
-  WHERE isActive = true
-    AND isDelete = false
-    AND (birthDate IS NULL OR birthDate >= '1000-01-01') -- skip 0000-00-00
-    AND (
-      EXISTS (
-        SELECT 1 FROM user_roles WHERE user_roles.userId = users.id AND roleId = 3
-      ) OR NOT EXISTS (
-        SELECT 1 FROM user_roles WHERE user_roles.userId = users.id
+  const customers = await prisma.$queryRawUnsafe(`
+    SELECT *
+    FROM users
+    WHERE isActive = true
+      AND isDelete = false
+      AND (birthDate IS NULL OR birthDate >= '1000-01-01')
+      AND (
+        EXISTS (
+          SELECT 1 FROM user_roles WHERE user_roles.userId = users.id AND roleId = 3
+        ) OR NOT EXISTS (
+          SELECT 1 FROM user_roles WHERE user_roles.userId = users.id
+        )
       )
-    )
-  ORDER BY id DESC
-  LIMIT ${limit} OFFSET ${offset}
-`;
+      ${search ? `AND (name LIKE '${searchPattern}' OR contactNo LIKE '${searchPattern}')` : ""}
+    ORDER BY id DESC
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `);
 
 
 
   const [totalCount] = await Promise.all([
-   
-    
     prisma.users.count({
       where: {
         isActive: true,
