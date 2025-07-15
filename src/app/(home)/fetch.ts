@@ -4,7 +4,6 @@ import { startOfDay, endOfDay } from 'date-fns';
 
 
 export async function getDashboardOverview() {
-
   const today = new Date(
     new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
   );
@@ -213,7 +212,7 @@ export async function getDashboardOverview() {
   const [totalWithdraw, todayWithdraw] = await Promise.all([
     prisma.withdrawrequest.aggregate({
       where: {
-        status: { not: 'Reject' },
+        status: 'Released'
       },
       _sum: {
         withdrawAmount: true,
@@ -221,7 +220,7 @@ export async function getDashboardOverview() {
     }),
     prisma.withdrawrequest.aggregate({
       where: {
-        status: { not: 'Reject' },
+        status: 'Released',
         created_at: {
           gte: startOfToday,
           lte: endOfToday,
@@ -325,6 +324,82 @@ export async function getDashboardOverview() {
 
   };
 }
+
+
+export async function getDashboardChartData() {
+  const today = dayjs();
+    const months = [];
+
+    for (let i = 11; i >= 0; i--) {
+      months.push(today.subtract(i, 'month').format('YYYY-MM'));
+    }
+
+    const callData = [];
+    const chatData = [];
+    const reportData = [];
+    const earningData = [];
+    const labels = [];
+
+    for (const monthStr of months) {
+      const [year, month] = monthStr.split('-').map(Number);
+      labels.push(dayjs(monthStr + '-01').format('MMM YYYY'));
+
+      const callCount = await prisma.callrequest.count({
+        where: {
+          created_at: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      });
+
+      const chatCount = await prisma.chatrequest.count({
+        where: {
+          created_at: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      });
+
+      const reportCount = await prisma.user_reports.count({
+        where: {
+          created_at: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      });
+
+      const earningSumResult = await prisma.admin_get_commissions.aggregate({
+        _sum: {
+          amount: true,
+        },
+        where: {
+          created_at: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      });
+
+      callData.push(callCount);
+      chatData.push(chatCount);
+      reportData.push(reportCount);
+      earningData.push(earningSumResult._sum.amount || 0);
+    }
+
+    return {
+      labels,
+      callData,
+      chatData,
+      reportData,
+      earningData,
+    };
+}
+
+
+
 
 
 export async function getChatsData() {
