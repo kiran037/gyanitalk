@@ -1,26 +1,266 @@
-export async function getOverviewData() {
-  // Fake delay
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+import dayjs from "dayjs";
+const prisma = require("../../prismaClient");
+import { startOfDay, endOfDay } from 'date-fns';
+
+
+export async function getDashboardOverview() {
+  const today = dayjs().startOf("day").toDate();
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  
+  const start = startOfDay(today);
+  const end = endOfDay(today);
+
+
+  const [
+    totalCallRequest,
+    completedCalls,
+    todayCallRequest,
+    todayCallRequestReject,
+    todayCallRequestList
+  ] = await Promise.all([
+    prisma.callrequest.count(),
+    prisma.callrequest.findMany({
+      where: { callStatus: "Completed" },
+      select: { totalMin: true }
+    }),
+    prisma.callrequest.count({
+      where: { created_at: { gte: today } },
+    }),
+    prisma.callrequest.count({
+      where: {
+        callStatus: "Rejected",
+        created_at: { gte: today },
+      },
+    }),
+    prisma.callrequest.findMany({
+      where: { created_at: { gte: today } },
+      select: { totalMin: true },
+    }),
+  ]);
+
+  const [
+    totalChatRequest,
+    completedChats,
+    todayChatRequest,
+    todayChatRequestReject,
+    todayChatRequestList
+  ] = await Promise.all([
+    prisma.chatrequest.count(),
+    prisma.chatrequest.findMany({
+      where: { chatStatus: "Completed" },
+      select: { totalMin: true }
+    }),
+    prisma.chatrequest.count({
+      where: { created_at: { gte: today } },
+    }),
+    prisma.chatrequest.count({
+      where: { chatStatus: "Rejected", created_at: { gte: today } },
+    }),
+    prisma.chatrequest.findMany({
+      where: { created_at: { gte: today } },
+      select: { totalMin: true },
+    }),
+  ]);
+
+  const sumTotalMin = (items: { totalMin: string | null }[]) =>
+    items.reduce((acc, cur) => acc + (parseInt(cur.totalMin || "0", 10) || 0), 0);
+
+
+
+  const totalReportRequest = await prisma.user_reports.count();
+  const totalCustomer = await prisma.users.count({
+    where: {
+      OR: [
+        { userRoles: { some: { roleId: 3 } } },
+        { userRoles: { none: {} } },
+      ],
+      isActive: true,
+      isDelete: false,
+    },
+  });
+
+
+  const todayCustomer = await prisma.users.count({
+    where: {
+      created_at: { gte: today },
+      OR: [
+        { userRoles: { some: { roleId: 3 } } },
+        { userRoles: { none: {} } },
+      ],
+      isActive: true,
+      isDelete: false,
+    },
+  });
+  
+  const usersWithChatOrCallTx: { userId: bigint | null }[] = await prisma.wallettransaction.findMany({
+    where: {
+      transactionType: { in: ["Chat", "Call"] },
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  const userIdsWithTx = Array.from(
+    new Set(
+      usersWithChatOrCallTx
+        .map((tx) => tx.userId)
+        .filter((id): id is bigint => id !== null)
+    )
+  );
+
+
+  const totalActiveCustomer = await prisma.users.count({
+    where: {
+      id: { in: userIdsWithTx },
+      isActive: true,
+      isDelete: false,
+      OR: [
+        { userRoles: { some: { roleId: 3 } } },
+        { userRoles: { none: {} } },
+      ],
+    },
+  });
+
+
+
+  const [totalAstrologer, totalOrders, totalStories, totalLiveAstro, totalLiveChat, totalLiveCall, totalRequest] = await Promise.all([
+    prisma.astrologers.count(),
+    prisma.order_request.count({ where: { orderType: "astromall" } }),
+    prisma.astrologer_stories.count(),
+    prisma.liveastro.count({ where: { isActive: 1 } }),
+    prisma.astrologers.count({ where: { chatStatus: "Online" } }),
+    prisma.astrologers.count({ where: { callStatus: "Online" } }),
+    prisma.astrologer_request.count({ where: { status: "Pending" } }),
+  ]);
+
+  const unverifiedAstrologer = await prisma.astrologers.count({
+    where: { isVerified: false },
+  });
+
+
+  const totalEarningResult = await prisma.admin_get_commissions.aggregate({
+    _sum: {
+      amount: true,
+    },
+  });
+  
+  const todayEarningResult = await prisma.admin_get_commissions.aggregate({
+    where: {
+      created_at: {
+        gte: startOfToday,
+        lte: endOfToday,
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+  
+
+
+  const astrologerUserIds = await prisma.user_roles.findMany({
+    where: {
+      roleId: 2,
+    },
+    select: {
+      userId: true,
+    },
+  });
+  
+  const userIds = astrologerUserIds.map((ur: { userId: bigint }) => Number(ur.userId));
+  
+  const totalAstroEarningResult = await prisma.wallettransaction.aggregate({
+    where: {
+      userId: {
+        in: userIds,
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  
+  // Step 2: Sum today's wallet transactions for those user IDs
+  const todayAstroEarningResult = await prisma.wallettransaction.aggregate({
+    where: {
+      userId: {
+        in: userIds,
+      },
+      created_at: {
+        gte: start,
+        lte: end,
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+  
+  
+
 
   return {
-    views: {
-      value: 3456,
-      growthRate: 0.43,
+    totalCallRequest,
+    totalChatRequest,
+    totalReportRequest,
+    totalCustomer,
+    totalActiveCustomer,
+    todayCustomer,
+    totalAstrologer,
+    totalOrders,
+    totalStories,
+    totalLiveAstro,
+    totalLiveChat,
+    totalLiveCall,
+    totalRequest,
+    totalCallCompleteRequest: {
+      count: completedCalls.length,
+      time: sumTotalMin(completedCalls),
     },
-    profit: {
-      value: 4220,
-      growthRate: 4.35,
+    totalChatComplteRequest: {
+      count: completedChats.length,
+      time: sumTotalMin(completedChats),
     },
-    products: {
-      value: 3456,
-      growthRate: 2.59,
-    },
-    users: {
-      value: 3456,
-      growthRate: -0.95,
-    },
+    todayCallRequest,
+    todayCallRequestReject,
+    todayCallRequestTime: sumTotalMin(todayCallRequestList),
+    todayChatRequest,
+    todayChatRequestReject,
+    todayChatRequestTime: sumTotalMin(todayChatRequestList),
+    unverifiedAstrologer,
+
+
+    totalEarning:totalEarningResult._sum.amount ?? 0,
+    todayEarning: todayEarningResult._sum.amount ?? 0,
+    totalAstroEarning : totalAstroEarningResult._sum.amount ?? 0,
+    todayAstroEarning : todayAstroEarningResult._sum.amount ?? 0
+
+
   };
 }
+
+
+
+function calculateGrowth(monthUsers: number, total: number) {
+  if (total === 0) return 0;
+  return parseFloat(((monthUsers / total) * 100).toFixed(2));
+}
+
+
+
+
+
+
+
+
+
 
 export async function getChatsData() {
   // Fake delay

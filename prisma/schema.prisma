@@ -1,0 +1,1996 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model admin_get_commissions {
+  id               BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  commissionTypeId BigInt           @db.UnsignedBigInt
+  amount           Float
+  commissionId     BigInt?          @db.UnsignedBigInt
+  description      String?          @db.VarChar(100)
+  orderId          Int?
+  isActive         Boolean          @default(true)
+  isDelete         Boolean          @default(false)
+  created_at       DateTime?        @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?        @default(now()) @db.Timestamp(0)
+  createdBy        Int
+  modifiedBy       Int
+  commissions      commissions?     @relation(fields: [commissionId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "admin_get_commissions_commissionid_foreign")
+  commission_types commission_types @relation(fields: [commissionTypeId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "admin_get_commissions_commissiontypeid_foreign")
+
+  @@index([commissionId], map: "admin_get_commissions_commissionid_foreign")
+  @@index([commissionTypeId], map: "admin_get_commissions_commissiontypeid_foreign")
+}
+
+model adminpages {
+  id           Int       @id @default(autoincrement())
+  pageName     String?   @db.VarChar(45)
+  pageGroup    Int?
+  icon         String?   @db.VarChar(45)
+  route        String?   @db.VarChar(45)
+  displayOrder Int?
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+}
+
+model app_reviews {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt    @db.UnsignedBigInt
+  review     String    @db.LongText
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  appId      Int
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+  users      users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "app_reviews_userid_foreign")
+
+  @@index([userId], map: "app_reviews_userid_foreign")
+}
+
+model assistantchat {
+  id           Int      @id @default(autoincrement())
+  senderId     Int
+  receiverId   Int
+  chatId       String   @db.VarChar(20)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  astrologerId BigInt
+  customerId   Int
+
+  astrologer   astrologers @relation(fields: [astrologerId], references: [id])
+}
+
+model astrohost {
+  id           Int       @id @default(autoincrement())
+  astrologerId BigInt?   @db.UnsignedBigInt
+  hostId       Int?
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([astrologerId], map: "astrohost_astrologer_idx")
+}
+
+model astrologer_assign_group {
+  id           Int           @id @default(autoincrement())
+  group_id     Int?
+  astrologerId BigInt?       @db.UnsignedBigInt
+  created_at   DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?     @db.Timestamp(0)
+
+  astrologer   astrologers?  @relation(fields: [astrologerId], references: [id])
+}
+
+
+model astrologer_assistant_permissions {
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  permissionId          BigInt    @db.UnsignedBigInt
+  astrologerAssistantId BigInt    @db.UnsignedBigInt
+  isActive              Boolean   @default(true)
+  isDelete              Boolean   @default(false)
+  created_at            DateTime? @db.Timestamp(0)
+  updated_at            DateTime? @db.Timestamp(0)
+  createdBy             Int
+  modifiedBy            Int
+
+  @@index([astrologerAssistantId], map: "astrologer_assistant_permissions_astrologerassistantid_foreign")
+  @@index([permissionId], map: "astrologer_assistant_permissions_permissionid_foreign")
+}
+
+model astrologer_assistants {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId      BigInt    @db.UnsignedBigInt
+  name              String    @db.VarChar(255)
+  email             String?   @db.VarChar(255)
+  contactNo         String    @db.VarChar(20)
+  gender            String    @db.VarChar(255)
+  birthdate         DateTime  @db.Timestamp(0)
+  primarySkill      String    @db.VarChar(100)
+  allSkill          String    @db.VarChar(100)
+  languageKnown     String    @db.VarChar(255)
+  experienceInYears Int
+  profile           String?   @db.VarChar(255)
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+
+  @@index([astrologerId], map: "astrologer_assistants_astrologerid_foreign")
+}
+
+model astrologer_availabilities {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  fromTime     String?   @db.VarChar(255)
+  toTime       String?   @db.VarChar(255)
+  day          String    @db.VarChar(255)
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "astrologer_availabilities_astrologerid_foreign")
+}
+
+model astrologer_categories {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name         String    @db.VarChar(255)
+  image        String?   @db.VarChar(255)
+  displayOrder Int?
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+}
+
+model astrologer_expertises {
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId          BigInt    @db.UnsignedBigInt
+  astrologerAssistantId BigInt    @db.UnsignedBigInt
+  skillId               BigInt    @db.UnsignedBigInt
+  isPrimary             Boolean
+  isActive              Boolean
+  isDelete              Boolean
+  created_at            DateTime? @db.Timestamp(0)
+  updated_at            DateTime? @db.Timestamp(0)
+  createdBy             Int
+  modifiedBy            Int
+
+  @@index([astrologerAssistantId], map: "astrologer_expertises_astrologerassistantid_foreign")
+  @@index([astrologerId], map: "astrologer_expertises_astrologerid_foreign")
+  @@index([skillId], map: "astrologer_expertises_skillid_foreign")
+}
+
+model astrologer_followers {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId   BigInt    @default(0) @db.UnsignedBigInt
+  aiAstrologerId BigInt    @default(0) @db.UnsignedBigInt
+  userId         BigInt    @db.UnsignedBigInt
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  createdBy      Int
+  modifiedBy     Int
+  astrologer astrologers? @relation(fields: [astrologerId], references: [id])
+
+  @@index([astrologerId], map: "astrologer_followers_astrologerid_foreign")
+  @@index([userId], map: "astrologer_followers_userid_foreign")
+}
+
+model astrologer_gifts {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  userId       BigInt    @db.UnsignedBigInt
+  giftId       BigInt    @db.UnsignedBigInt
+  giftAmount   Decimal?  @db.Decimal(10, 2)
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "astrologer_gifts_astrologerid_foreign")
+  @@index([giftId], map: "astrologer_gifts_giftid_foreign")
+  @@index([userId], map: "astrologer_gifts_userid_foreign")
+}
+
+model astrologer_groups {
+  id         BigInt    @id @default(autoincrement())
+  name       String?   @db.VarChar(250)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model astrologer_product {
+  id           Int       @id @default(autoincrement())
+  productId    BigInt    @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  productPrice Decimal?  @db.Decimal(10, 2)
+  isActive     Int?      @default(1) @db.TinyInt
+  isDelete     Int?      @default(0) @db.TinyInt
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
+  createdBy    Int?
+  modifiedBy   Int?
+
+  @@index([astrologerId], map: "astrologer_product_astrologer_idx")
+  @@index([productId], map: "astrologer_product_astromall_product_idx")
+}
+
+model astrologer_request {
+  id               Int       @id @default(autoincrement())
+  userId           BigInt 
+  groupId          BigInt?
+  type             String?   @db.VarChar(50)
+  request_id       Int?
+  name             String?   @db.VarChar(250)
+  contactNo        String?   @db.VarChar(50)
+  gender           String?   @db.VarChar(100)
+  dob              DateTime? @db.Date
+  birth_place      String?   @db.VarChar(400)
+  time_of_birth    String?   @db.VarChar(10)
+  marital_status   String?   @db.VarChar(50)
+  duration         String?   @db.VarChar(50)
+  topic_of_concern String?   @db.VarChar(500)
+  status           String?   @db.VarChar(50)
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  updated_at       DateTime? @default(now()) @db.Timestamp(0)
+  createdBy        Int?
+  modifiedBy       Int?
+}
+
+model astrologer_stories {
+  id           Int       @id @default(autoincrement())
+  astrologerId Int?
+  mediaType    String?   @db.Text
+  media        String?   @db.Text
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model astrologer_wait_lists {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt    @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  waitingTime  Int
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "astrologer_wait_lists_astrologerid_foreign")
+  @@index([userId], map: "astrologer_wait_lists_userid_foreign")
+}
+
+model astrologers {
+  id                          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId                      BigInt    @db.UnsignedBigInt
+  name                        String    @db.VarChar(255)
+  email                       String    @db.VarChar(255)
+  contactNo                   String    @db.VarChar(15)
+  gender                      String    @db.VarChar(255)
+  birthDate                   DateTime  @db.Timestamp(0)
+  primarySkill                String    @db.VarChar(255)
+  allSkill                    String    @db.VarChar(255)
+  languageKnown               String    @db.VarChar(255)
+  profileImage                String?   @db.VarChar(255)
+  charge                      Int
+  experienceInYears           Int
+  dailyContribution           Int
+  hearAboutAstroguru          String?   @db.LongText
+  isWorkingOnAnotherPlatform  Boolean?
+  whyOnBoard                  String    @db.VarChar(255)
+  interviewSuitableTime       String    @db.Text
+  currentCity                 String?   @db.VarChar(255)
+  mainSourceOfBusiness        String    @db.VarChar(255)
+  highestQualification        String    @db.VarChar(255)
+  degree                      String?   @db.VarChar(255)
+  college                     String?   @db.VarChar(255)
+  learnAstrology              String?   @db.VarChar(100)
+  astrologerCategoryId        String    @db.VarChar(100)
+  instaProfileLink            String?   @db.VarChar(255)
+  facebookProfileLink         String?   @db.VarChar(255)
+  linkedInProfileLink         String?   @db.VarChar(255)
+  youtubeChannelLink          String?   @db.VarChar(255)
+  websiteProfileLink          String?   @db.VarChar(255)
+  isAnyBodyRefer              Boolean?
+  minimumEarning              Int
+  maximumEarning              Int
+  loginBio                    String?   @db.LongText
+  NoofforeignCountriesTravel  String    @db.VarChar(255)
+  currentlyworkingfulltimejob String    @db.VarChar(255)
+  goodQuality                 String    @db.VarChar(255)
+  isLiveOff                   Int       @default(0)
+  biggestChallenge            String?   @db.VarChar(255)
+  whatwillDo                  String    @db.LongText
+  isVerified                  Boolean   @default(false)
+  totalOrder                  Int?
+  country                     String?   @db.VarChar(45)
+  isActive                    Boolean   @default(true)
+  isDelete                    Boolean   @default(false)
+  created_at                  DateTime? @db.Timestamp(0)
+  updated_at                  DateTime? @db.Timestamp(0)
+  createdBy                   Int?
+  modifiedBy                  Int?
+  nameofplateform             String?   @db.VarChar(400)
+  monthlyEarning              String?   @db.VarChar(200)
+  referedPerson               String?   @db.VarChar(400)
+  chatStatus                  String?   @db.VarChar(400)
+  chatWaitTime                String?   @db.VarChar(200)
+  callStatus                  String?   @db.VarChar(200)
+  callWaitTime                String?   @db.VarChar(45)
+  videoCallRate               Int?
+  reportRate                  Int?
+  is_featured                 Int       @default(0)
+  top_badge                   String?   @db.VarChar(255)
+  top_select                  Int       @default(0)
+  top_sorting                 Int       @default(0)
+  featured_badge              String?   @db.VarChar(255)
+  featured_select             Int       @default(0)
+  featured_sorting            Int       @default(0)
+  chat_badge                  String?   @db.VarChar(250)
+  chat_sorting                Int
+  chat_select                 Int
+  call_badge                  String?   @db.VarChar(250)
+  call_sorting                Int
+  call_select                 Int
+  deleted_at                  DateTime? @db.Timestamp(0)
+
+  users        users         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "astrologers_userid_foreign")
+
+  chatrequests    chatrequest[]      @relation("AstrologerChatRequests")
+  callrequests callrequest[] @relation("AstrologerToCallRequests")
+  walletTransactions wallettransaction[]
+  assistantchat assistantchat[]
+  order_requests order_request[]
+  followers     astrologer_followers[] 
+  assignGroups   astrologer_assign_group[]
+  liveastro      liveastro[]   
+  @@index([userId], map: "astrologers_userid_foreign")
+}
+
+
+model astrologers_gallery {
+  id           Int      @id @default(autoincrement())
+  astrologerId Int
+  userId       Int
+  image        String?  @db.VarChar(250)
+  status       Int
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "astrologerId")
+}
+
+model astrologers_session {
+  id           Int       @id @default(autoincrement())
+  astrologerId Int
+  status       Int
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+
+  @@index([astrologerId], map: "astrologerId")
+}
+
+model astrology_videos {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  youtubeLink String    @db.VarChar(255)
+  coverImage  String    @db.VarChar(255)
+  videoTitle  String    @db.VarChar(200)
+  isActive    Boolean   @default(true)
+  isDelete    Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  createdBy   Int
+  modifiedBy  Int
+}
+
+model astromall_products {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String    @db.VarChar(255)
+  features          String    @db.Text
+  productImage      String    @db.VarChar(255)
+  productCategoryId BigInt    @db.UnsignedBigInt
+  amount            Float
+  description       String?   @db.VarChar(255)
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+
+  product_category  product_categories @relation(fields: [productCategoryId], references: [id])
+  order_requests order_request[]
+
+  @@index([productCategoryId], map: "astromall_products_productcategoryid_foreign")
+}
+
+model astrotalk_in_news {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  newsDate    DateTime  @db.Timestamp(0)
+  channel     String    @db.VarChar(255)
+  link        String    @db.VarChar(255)
+  bannerImage String    @db.VarChar(255)
+  description String    @db.LongText
+  isActive    Boolean   @default(true)
+  isDelete    Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  createdBy   Int
+  modifiedBy  Int
+}
+
+model banner_types {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  appId      Int
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  // 👇 Add relation to banners
+  banners    banners[]
+}
+
+model banners {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  bannerImage  String?   @db.VarChar(255)
+  fromDate     DateTime  @db.Timestamp(0)
+  toDate       DateTime  @db.Timestamp(0)
+  bannerTypeId BigInt    @db.UnsignedBigInt
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  // 👇 Add the relation field
+  bannerType   banner_types @relation(fields: [bannerTypeId], references: [id])
+
+  @@index([bannerTypeId], map: "banners_bannertypeid_foreign")
+}
+
+
+model blockassistant {
+  id          Int      @id @default(autoincrement())
+  assistantId Int
+  userId      Int
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model blockastrologer {
+  id           Int      @id @default(autoincrement())
+  astrologerId Int
+  userId       Int
+  reason       String   @db.LongText
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model blockuserreview {
+  id         Int      @id @default(autoincrement())
+  reviewId   Int
+  isBlocked  Int?     @db.TinyInt
+  isReported Int?     @db.TinyInt
+  userId     Int
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model blog_categories {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+}
+
+model blog_images {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  blogId     BigInt    @db.UnsignedBigInt
+  imagePath  String    @db.VarChar(255)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+
+  @@index([blogId], map: "blog_images_blogid_foreign")
+}
+
+model blog_readers {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  blogId     BigInt    @db.UnsignedBigInt
+  userId     BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([blogId], map: "blog_readers_blogid_foreign")
+  @@index([userId], map: "blog_readers_userid_foreign")
+}
+
+model blogs {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  title          String    @db.VarChar(255)
+  blogImage      String    @db.VarChar(200)
+  blogCategoryId BigInt?   @db.UnsignedBigInt
+  description    String    @db.LongText
+  viewer         BigInt?
+  author         String    @db.VarChar(100)
+  postedOn       DateTime? @db.Timestamp(0)
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  createdBy      Int
+  modifiedBy     Int
+  extension      String?   @db.VarChar(45)
+  previewImage   String?   @db.VarChar(200)
+
+  @@index([blogCategoryId], map: "blogs_blogcategorprisma/schema.prismayid_foreign")
+}
+
+model callaudio {
+  id          Int     @id @default(autoincrement())
+  callId      Int
+  file        String  @db.LongText
+  channelName String? @db.LongText
+  sId         String? @db.VarChar(400)
+}
+
+model callrequest {
+  id                      Int       @id @default(autoincrement())
+  userId                  BigInt    @db.UnsignedBigInt
+  astrologerId            BigInt?   @db.UnsignedBigInt
+  callStatus              String?   @db.VarChar(45)
+  channelName             String?   @db.VarChar(45)
+  token                   String?   @db.VarChar(400)
+  totalMin                String?   @db.VarChar(45)
+  callRate                String?   @db.VarChar(45)
+  deduction               Float?
+  call_duration           String?   @db.VarChar(255)
+  created_at              DateTime? @default(now()) @db.Timestamp(0)
+  updated_at              DateTime? @default(now()) @db.Timestamp(0)
+  deductionFromAstrologer Float?
+  sId                     String?   @db.VarChar(45)
+  sId1                    String?   @db.VarChar(45)
+  chatId                  String?   @db.VarChar(200)
+  isFreeSession           Boolean?
+  call_type               Int       @default(0)
+
+  astrologer   astrologers?  @relation("AstrologerToCallRequests", fields: [astrologerId], references: [id])  
+  user         users         @relation("UserToCallRequests", fields: [userId], references: [id])
+  order_requests order_request[]
+
+  @@index([astrologerId], map: "callrequest_astrologer_idx")
+  @@index([userId], map: "callrequest_user_idx")
+}
+
+
+
+model categories {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.Text
+  image      String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model cdemo {
+  id          Int       @id @default(autoincrement())
+  name        String?   @db.VarChar(45)
+  description String?   @db.VarChar(45)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model chapters {
+  id           Int      @id @default(autoincrement())
+  course_id    Int?
+  title        String   @db.Text
+  description  String?  @db.Text
+  pdf_type     String?  @db.VarChar(255)
+  pdf          String?  @db.Text
+  image_type   String?  @db.VarChar(255)
+  image        String?  @db.Text
+  video_type   String?  @db.VarChar(255)
+  video        String?  @db.Text
+  video_format String?  @db.Text
+  is_paid      Int      @default(0)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model chat_log {
+  id         Int       @id @default(autoincrement())
+  type       Int
+  duration   Int
+  chatid     Int
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model chatrequest {
+  id                      Int       @id @default(autoincrement())
+  userId                  BigInt    @db.UnsignedBigInt
+  astrologerId            BigInt    @db.UnsignedBigInt
+  chatStatus              String?   @db.VarChar(45)
+  channelName             String?   @db.VarChar(45)
+  senderId                String?   @db.VarChar(45)
+  receiverId              String?   @db.VarChar(45)
+  deduction               Float?
+  chatId                  String?   @db.VarChar(400)
+  deductionFromAstrologer Float?
+  totalMin                String?   @db.VarChar(45)
+  chatRate                String?   @db.VarChar(45)
+  chat_duration           String?   @db.VarChar(255)
+  created_at              DateTime? @default(now()) @db.Timestamp(0)
+  updated_at              DateTime? @default(now()) @db.Timestamp(0)
+  isFreeSession           Boolean?
+  user            users         @relation("UserChatRequests", fields: [userId], references: [id])
+  astrologer      astrologers?   @relation("AstrologerChatRequests", fields: [astrologerId], references: [id])
+
+  @@index([userId], map: "chat_request_users_idx")
+  @@index([astrologerId], map: "chatrequest_astrologer_idx")
+}
+
+model chats {
+  id         Int       @id @default(autoincrement())
+  senderName String?   @db.VarChar(200)
+  message    String?   @db.LongText
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  senderId   Int?
+}
+
+model commission_types {
+  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  name                  String                  @db.VarChar(255)
+  isActive              Boolean                 @default(true)
+  isDelete              Boolean                 @default(false)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  createdBy             Int
+  modifiedBy            Int
+  admin_get_commissions admin_get_commissions[]
+}
+
+model commissions {
+  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  commissionTypeId      BigInt                  @db.UnsignedBigInt
+  commission            Float
+  isActive              Boolean                 @default(true)
+  isDelete              Boolean                 @default(false)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  createdBy             Int
+  modifiedBy            Int
+  astrologerId          BigInt?                 @db.UnsignedBigInt
+  admin_get_commissions admin_get_commissions[]
+
+  @@index([astrologerId], map: "commissions_astrologers_idx")
+  @@index([commissionTypeId], map: "commissions_commissiontypeid_foreign")
+}
+
+model contact_us {
+  id              Int       @id @default(autoincrement())
+  contact_email   String    @db.VarChar(100)
+  contact_name    String    @db.VarChar(100)
+  contact_message String    @db.VarChar(255)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+}
+
+model coupon_user_usages {
+  id            BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  coupon_id     BigInt         @db.UnsignedBigInt
+  userId        BigInt         @db.UnsignedBigInt
+  order_id      BigInt?        @db.UnsignedBigInt
+  amt           Int?
+  type          String?        @db.VarChar(50)
+  used_at       DateTime       @default(now()) @db.Timestamp(0)
+  created_at    DateTime?      @db.Timestamp(0)
+  updated_at    DateTime?      @db.Timestamp(0)
+  coupons       coupons        @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_coupon_id_foreign")
+  order_request order_request? @relation(fields: [order_id], references: [id], onUpdate: Restrict, map: "coupon_user_usages_order_id_foreign")
+  users         users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_userid_foreign")
+
+  @@index([coupon_id], map: "coupon_user_usages_coupon_id_foreign")
+  @@index([order_id], map: "coupon_user_usages_order_id_foreign")
+  @@index([userId], map: "coupon_user_usages_userid_foreign")
+}
+
+model coupons {
+  id                   BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  code                 String                @unique(map: "coupons_code_unique") @db.VarChar(255)
+  description          String?               @db.Text
+  discount_type        coupons_discount_type
+  discount_value       Decimal               @db.Decimal(10, 2)
+  max_discount         Decimal?              @db.Decimal(10, 2)
+  min_order_amount     Decimal?              @db.Decimal(10, 2)
+  usage_limit          Int?
+  usage_limit_per_user Int?
+  start_date           DateTime?             @db.Timestamp(0)
+  expiry_date          DateTime?             @db.Timestamp(0)
+  type                 coupons_type
+  is_active            Boolean               @default(true)
+  created_at           DateTime?             @db.Timestamp(0)
+  updated_at           DateTime?             @db.Timestamp(0)
+  coupon_user_usages   coupon_user_usages[]
+}
+
+model course_purchase {
+  id         Int      @id @default(autoincrement())
+  payment_id Int?
+  user_id    Int
+  course_id  Int
+  status     Int      @default(1)
+  price      Decimal? @db.Decimal(10, 0)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  course courses @relation(fields: [course_id], references: [id])
+
+}
+
+model courses {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.Text
+  price       Decimal? @db.Decimal(10, 0)
+  offer_price Decimal? @db.Decimal(10, 0)
+  description String?  @db.Text
+  image       String?  @db.Text
+  is_paid     Int?     @default(0)
+  category_id Int?
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
+  course_purchase course_purchase[]
+}
+
+model dailyhoroscope {
+  id              Int      @id @default(autoincrement())
+  category        String   @db.VarChar(100)
+  description     String   @db.LongText
+  percentage      Int
+  horoscopeSignId Int
+  horoscopeDate   DateTime @db.Timestamp(0)
+  created_at      DateTime @default(now()) @db.Timestamp(0)
+  updated_at      DateTime @default(now()) @db.Timestamp(0)
+}
+
+model dailyhoroscopeinsight {
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(400)
+  coverImage      String?  @db.VarChar(400)
+  title           String   @db.VarChar(400)
+  description     String?  @db.LongText
+  horoscopeSignId Int
+  horoscopeDate   DateTime @db.Timestamp(0)
+  created_at      DateTime @default(now()) @db.Timestamp(0)
+  updated_at      DateTime @default(now()) @db.Timestamp(0)
+  link            String?  @db.VarChar(45)
+}
+
+model dailyhoroscopestatics {
+  id              Int       @id @default(autoincrement())
+  horoscopeSignId Int
+  horoscopeDate   DateTime  @db.Timestamp(0)
+  luckyTime       String?   @db.VarChar(45)
+  luckyColor      String?   @db.VarChar(45)
+  luckyNumber     String?   @db.VarChar(45)
+  moodday         String?   @db.VarChar(45)
+  isActive        Int?      @default(1) @db.TinyInt
+  isDelete        Int?      @default(0) @db.TinyInt
+  created_at      DateTime? @default(now()) @db.Timestamp(0)
+  updated_at      DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model defaultprofile {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  profile    String   @db.VarChar(200)
+  isActive   Boolean  @default(true)
+  isDelete   Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model degree_or_diplomas {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  degreeName String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model demo {
+  id   Int     @id @default(autoincrement())
+  name String? @db.VarChar(45)
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model flaggroup {
+  id                Int       @id @default(autoincrement())
+  flagGroupName     String?   @db.VarChar(45)
+  parentFlagGroupId Int?
+  displayOrder      Int?
+  isActive          Int?      @default(1) @db.TinyInt
+  isDelete          Int?      @default(0) @db.TinyInt
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+  description       String    @db.LongText
+  viewenable        Boolean?  @default(true)
+}
+
+model fulltime_jobs {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  workName   String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model gifts {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name         String    @db.VarChar(255)
+  image        String?   @db.VarChar(255)
+  amount       Float
+  displayOrder Int?
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+}
+
+model help_support_quation_answers {
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  helpSupportId        BigInt    @db.UnsignedBigInt
+  helpSupportQuationId BigInt    @db.UnsignedBigInt
+  title                String?   @db.VarChar(255)
+  isActive             Boolean   @default(true)
+  isDelete             Boolean   @default(false)
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+  createdBy            Int
+  modifiedBy           Int
+  isChatWithus         Int?      @db.TinyInt
+  description          String?   @db.LongText
+
+  @@index([helpSupportId], map: "help_support_quation_answers_helpsupportid_foreign")
+  @@index([helpSupportQuationId], map: "help_support_quation_answers_helpsupportquationid_foreign")
+}
+
+model help_support_quations {
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  helpSupportId BigInt    @db.UnsignedBigInt
+  question      String    @db.VarChar(255)
+  answer        String?   @db.VarChar(255)
+  isActive      Boolean   @default(true)
+  isDelete      Boolean   @default(false)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  createdBy     Int
+  modifiedBy    Int
+  isChatWithus  Int?      @db.TinyInt
+
+  @@index([helpSupportId], map: "help_support_quations_helpsupportid_foreign")
+}
+
+model help_supports {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+  tickets tickets[]
+
+}
+
+model highest_qualifications {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  qualificationName String    @db.VarChar(255)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+}
+
+model hororscope_signs {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name         String    @db.VarChar(255)
+  displayOrder Int?
+  image        String    @db.VarChar(255)
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+}
+
+model horoscope {
+  id              Int      @id @default(autoincrement())
+  horoscopeType   String   @db.VarChar(100)
+  title           String   @db.VarChar(200)
+  description     String   @db.LongText
+  horoscopeSignId Int
+  created_at      DateTime @default(now()) @db.Timestamp(0)
+  updated_at      DateTime @default(now()) @db.Timestamp(0)
+}
+
+model horoscopefeedback {
+  id           Int      @id @default(autoincrement())
+  feedback     String?  @db.LongText
+  feedbacktype String?  @db.VarChar(50)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  userId       Int
+}
+
+model horoscopes {
+  id                  BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  zodiac              String    @db.VarChar(255)
+  total_score         Int
+  lucky_color         String    @db.VarChar(255)
+  lucky_color_code    String    @db.VarChar(255)
+  lucky_number        String    @db.LongText
+  physique            Int
+  status              Int
+  finances            Int
+  relationship        Int
+  career              Int
+  travel              Int
+  family              Int
+  friends             Int
+  health              Int
+  bot_response        String    @db.Text
+  created_at          DateTime? @db.Timestamp(0)
+  updated_at          DateTime? @db.Timestamp(0)
+  date                DateTime? @db.Date
+  type                Int
+  start_date          DateTime? @db.Date
+  end_date            DateTime? @db.Date
+  health_remark       String?   @db.Text
+  career_remark       String?   @db.Text
+  relationship_remark String?   @db.Text
+  travel_remark       String    @db.Text
+  family_remark       String    @db.Text
+  friends_remark      String    @db.Text
+  finances_remark     String    @db.Text
+  status_remark       String    @db.Text
+  langcode            String?   @db.VarChar(100)
+}
+
+model intakeform {
+  id                Int       @id @default(autoincrement())
+  name              String?   @db.VarChar(400)
+  phoneNumber       String    @db.VarChar(200)
+  countryCode       String?   @db.VarChar(20)
+  gender            String    @db.VarChar(10)
+  birthDate         DateTime  @db.Timestamp(0)
+  birthTime         String    @db.VarChar(45)
+  birthPlace        String    @db.VarChar(400)
+  maritalStatus     String    @db.VarChar(40)
+  occupation        String?    @db.VarChar(400)
+  topicOfConcern    String    @db.VarChar(200)
+  partnerName       String?   @db.VarChar(400)
+  partnerBirthDate  DateTime? @db.Timestamp(0)
+  partnerBirthTime  String?   @db.VarChar(40)
+  partnerBirthPlace String?   @db.VarChar(400)
+  longitude         String?   @db.VarChar(252)
+  latitude          String?   @db.VarChar(252)
+  timezone          String?   @db.VarChar(252)
+  userId            Int?
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model kundali_matchings {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId         BigInt    @default(0)
+  boyKundaliId   BigInt    @default(0)
+  boyName        String    @db.VarChar(255)
+  boyBirthDate   DateTime  @db.Timestamp(0)
+  boyBirthTime   String    @db.VarChar(255)
+  boyBirthPlace  String    @db.VarChar(255)
+  girlkundaliId  BigInt    @default(0)
+  girlName       String    @db.VarChar(255)
+  girlBirthDate  DateTime  @db.Timestamp(0)
+  girlBirthTime  String    @db.VarChar(255)
+  girlBirthPlace String    @db.VarChar(255)
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  createdBy      Int
+  modifiedBy     Int
+}
+
+model kundalis {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name             String    @db.VarChar(255)
+  gender           String    @db.VarChar(255)
+  birthDate        DateTime  @db.Timestamp(0)
+  birthTime        String    @db.VarChar(255)
+  birthPlace       String    @db.VarChar(255)
+  isActive         Boolean   @default(true)
+  isDelete         Boolean   @default(false)
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+  createdBy        Int
+  modifiedBy       Int
+  latitude         Float?
+  longitude        Float?
+  timezone         String?   @db.VarChar(45)
+  isForTrackPlanet Boolean?
+  pdf_type         String?   @db.VarChar(255)
+  match_type       String    @default("") @db.VarChar(255)
+  forMatch         String    @default("0") @db.VarChar(10)
+  pdf_link         String?   @db.Text
+}
+
+model languages {
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  languageName  String    @db.VarChar(255)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+  languageCode  String?   @db.VarChar(45)
+  language_sign String?   @db.VarChar(45)
+}
+
+model liveastro {
+  id            Int       @id @default(autoincrement())
+  astrologerId  BigInt?   @db.UnsignedBigInt
+  channelName   String?   @db.VarChar(45)
+  token         String?   @db.LongText
+  liveChatToken String?   @db.VarChar(45)
+  isActive      Int?      @db.TinyInt
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+
+  astrologer    astrologers?  @relation(fields: [astrologerId], references: [id])
+  @@index([astrologerId], map: "liveastro_astrologers_idx")
+}
+
+model livechat {
+  id         Int       @id @default(autoincrement())
+  userId     String?   @db.VarChar(45)
+  partnerId  String?   @db.VarChar(45)
+  chatId     String?   @db.VarChar(45)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model liveuser {
+  id          Int      @id @default(autoincrement())
+  userId      BigInt   // ✅ Fix type to match users.id
+  fcmToken    String   @db.VarChar(400)
+  channelName String   @db.VarChar(400)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
+
+  users       users    @relation(fields: [userId], references: [id])
+}
+
+model main_source_of_businesses {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  jobName    String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model marital_statuses {
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  maritalStatus String    @db.VarChar(255)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model mst_control {
+  id                  BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astro_api_call_type Int
+  created_at          DateTime? @default(now()) @db.Timestamp(0)
+  updated_at          DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model notifications {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  title       String    @db.VarChar(255)
+  description String    @db.VarChar(255)
+  isActive    Boolean   @default(true)
+  isDelete    Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  createdBy   Int
+  modifiedBy  Int
+}
+
+model oauth_access_tokens {
+  id         String    @id @db.VarChar(100)
+  user_id    BigInt?   @db.UnsignedBigInt
+  client_id  BigInt    @db.UnsignedBigInt
+  name       String?   @db.VarChar(255)
+  scopes     String?   @db.Text
+  revoked    Boolean
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  expires_at DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "oauth_access_tokens_user_id_index")
+}
+
+model oauth_auth_codes {
+  id         String    @id @db.VarChar(100)
+  user_id    BigInt    @db.UnsignedBigInt
+  client_id  BigInt    @db.UnsignedBigInt
+  scopes     String?   @db.Text
+  revoked    Boolean
+  expires_at DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "oauth_auth_codes_user_id_index")
+}
+
+model oauth_clients {
+  id                     BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id                BigInt?   @db.UnsignedBigInt
+  name                   String    @db.VarChar(255)
+  secret                 String?   @db.VarChar(100)
+  provider               String?   @db.VarChar(255)
+  redirect               String    @db.Text
+  personal_access_client Boolean
+  password_client        Boolean
+  revoked                Boolean
+  created_at             DateTime? @db.Timestamp(0)
+  updated_at             DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "oauth_clients_user_id_index")
+}
+
+model oauth_personal_access_clients {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  client_id  BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model oauth_refresh_tokens {
+  id              String    @id @db.VarChar(100)
+  access_token_id String    @db.VarChar(100)
+  revoked         Boolean
+  expires_at      DateTime? @db.Timestamp(0)
+
+  @@index([access_token_id], map: "oauth_refresh_tokens_access_token_id_index")
+}
+
+model order_addresses {
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId               BigInt    @db.UnsignedBigInt
+  name                 String    @db.VarChar(255)
+  phoneNumber          String    @db.VarChar(20)
+  phoneNumber2         String?   @db.VarChar(20)
+  flatNo               String    @db.VarChar(255)
+  locality             String    @db.VarChar(255)
+  landmark             String?   @db.VarChar(255)
+  city                 String    @db.VarChar(255)
+  state                String    @db.VarChar(255)
+  country              String    @db.VarChar(255)
+  pincode              Int
+  isActive             Boolean   @default(true)
+  isDelete             Boolean   @default(false)
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+  createdBy            Int
+  modifiedBy           Int
+  countryCode          String?   @db.VarChar(45)
+  alternateCountryCode String?   @db.VarChar(45)
+  order_requests order_request[]
+
+
+  @@index([userId], map: "order_addresses_userid_foreign")
+}
+
+model order_payments {
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  orderId               BigInt    @db.UnsignedBigInt
+  grossAmount           Int
+  gstPercent            Float
+  gstAmount             Float
+  discountAmount        Float
+  walletBalanceDeducted Float
+  netAmount             Float
+  astrologerId          BigInt    @db.UnsignedBigInt
+  paymentMethod         String    @db.VarChar(255)
+  astrologerPayment     Int
+  isActive              Boolean   @default(true)
+  isDelete              Boolean   @default(false)
+  created_at            DateTime? @db.Timestamp(0)
+  updated_at            DateTime? @db.Timestamp(0)
+  createdBy             Int
+  modifiedBy            Int
+
+  @@index([astrologerId], map: "order_payments_astrologerid_foreign")
+  @@index([orderId], map: "order_payments_orderid_foreign")
+}
+
+model order_request {
+  id                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId                Int
+  astrologerId          BigInt?
+  aiAstrologerId        Int?
+  orderType             String?  @db.VarChar(45)
+  productCategoryId     BigInt?  // ✅ changed from Int? to BigInt?
+  productId             BigInt?  // ✅ changed from Int? to BigInt?
+  orderAddressId        BigInt?  // ✅ changed from Int? to BigInt?
+  payableAmount         Decimal? @db.Decimal(10, 2)
+  walletBalanceDeducted Decimal? @db.Decimal(10, 2)
+  gstPercent            Decimal? @db.Decimal(10, 2)
+  totalPayable          Decimal? @db.Decimal(10, 2)
+  couponCode            String?  @db.VarChar(45)
+  paymentMethod         String?  @db.VarChar(45)
+  orderStatus           String?  @db.VarChar(45)
+  totalMin              String?  @db.VarChar(45)
+  isActive              String?  @default("1") @db.VarChar(45)
+  isDelete              String?  @default("0") @db.VarChar(45)
+  created_at            DateTime? @default(now()) @db.Timestamp(0)
+  updated_at            DateTime? @default(now()) @db.Timestamp(0)
+  chatId                Int?
+  callId                Int?
+
+  // ✅ Relations
+  product_category      product_categories?  @relation(fields: [productCategoryId], references: [id])
+  product               astromall_products?  @relation(fields: [productId], references: [id])
+  order_address         order_addresses?     @relation(fields: [orderAddressId], references: [id])
+
+  astrologer            astrologers?         @relation(fields: [astrologerId], references: [id])
+  callrequest           callrequest?         @relation(fields: [callId], references: [id])
+
+  coupon_user_usages    coupon_user_usages[]
+  walletTransactions    wallettransaction[]
+
+  @@index([astrologerId], map: "astrologerId")
+  @@index([orderAddressId], map: "orderAddressId")
+  @@index([productCategoryId], map: "productCategoryId")
+  @@index([productId], map: "productId")
+  @@index([userId], map: "userId")
+}
+
+
+
+model pages {
+  id          Int         @id @default(autoincrement())
+  title       String?     @db.Text
+  type        pages_type?
+  description String?     @db.LongText
+  isActive    Boolean?    @default(true)
+  created_at  DateTime    @default(now()) @db.Timestamp(0)
+  updated_at  DateTime    @default(now()) @db.Timestamp(0)
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model password_resets {
+  email      String    @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "password_resets_email_index")
+  @@ignore
+}
+
+model payment {
+  id               Int       @id @default(autoincrement())
+  paymentMode      String?   @db.VarChar(45)
+  paymentReference String?   @db.VarChar(45)
+  attachment       String?   @db.VarChar(250)
+  amount           Float?
+  userId           BigInt?   @db.UnsignedBigInt
+  paymentStatus    String?   @db.VarChar(45)
+  signature        String?   @db.VarChar(200)
+  orderId          String?   @db.LongText
+  cashback_amount  Float?
+  referred_user_id Int?
+  type             String?   @db.VarChar(255)
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  updated_at       DateTime? @default(now()) @db.Timestamp(0)
+  createdBy        BigInt?   @db.UnsignedBigInt
+  modifiedBy       BigInt?   @db.UnsignedBigInt
+
+  user users? @relation(fields: [userId], references: [id])
+
+
+  @@index([referred_user_id], map: "referred_user_id")
+  @@index([userId], map: "userId")
+}
+
+model permissions {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model product_categories {
+  id            BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  name          String               @db.VarChar(255)
+  displayOrder  Int?
+  categoryImage String               @db.VarChar(255)
+  isActive      Boolean              @default(true)
+  isDelete      Boolean              @default(false)
+  created_at    DateTime?            @db.Timestamp(0)
+  updated_at    DateTime?            @db.Timestamp(0)
+  createdBy     Int
+  modifiedBy    Int
+
+  products      astromall_products[] // back relation
+  order_requests order_request[]
+}
+
+
+model product_details {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astromallProductId BigInt    @db.UnsignedBigInt
+  question           String    @db.VarChar(255)
+  answer             String    @db.LongText
+  isActive           Int       @default(1) @db.TinyInt
+  isDelete           Int       @default(0) @db.TinyInt
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+
+  @@index([astromallProductId], map: "product_details_astromallproductid_foreign")
+}
+
+model product_suggestions {
+  id            Int      @id @default(autoincrement())
+  astrologer_id Int
+  user_id       Int
+  chat_id       Int?
+  product_id    String?  @db.Text
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+  updated_at    DateTime @default(now()) @db.Timestamp(0)
+}
+
+model rechargeamount {
+  id         Int      @id @default(autoincrement())
+  amount     Int
+  cashback   Int?
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model report_types {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  reportImage String    @db.VarChar(255)
+  title       String    @db.VarChar(255)
+  description String?   @db.LongText
+  isActive    Boolean   @default(true)
+  isDelete    Boolean   @default(false)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model review_blocks {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt    @db.UnsignedBigInt
+  reviewId   BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([reviewId], map: "review_blocks_reviewid_foreign")
+  @@index([userId], map: "review_blocks_userid_foreign")
+}
+
+model rolepages {
+  id          Int       @id @default(autoincrement())
+  teamRoleId  Int?
+  adminPageId Int?
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model roles {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(50)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model sessiontoken {
+  id         Int       @id @default(autoincrement())
+  token      String?   @db.VarChar(400)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  expire_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model skills {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name         String    @unique(map: "name") @db.VarChar(100)
+  displayOrder Int?
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+}
+
+model story_view_counts {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  storyId    Int?
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model sub_category {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  parent_id      Int       @default(0)
+  category_name  String    @default("") @db.VarChar(100)
+  category_image String    @default("") @db.VarChar(200)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+}
+
+model systemflag {
+  id          Int       @id @default(autoincrement())
+  valueType   String?   @db.VarChar(45)
+  name        String?   @db.VarChar(45)
+  value       String?   @db.Text
+  isActive    String?   @default("1") @db.VarChar(45)
+  isDelete    String?   @default("0") @db.VarChar(45)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+  displayName String?   @db.VarChar(100)
+  flagGroupId Int
+  description String    @db.LongText
+  parent_id   Int       @default(0)
+  viewenable  Boolean?  @default(true)
+}
+
+model teammember {
+  id         Int       @id @default(autoincrement())
+  name       String?   @db.VarChar(45)
+  contactNo  String?   @db.VarChar(45)
+  email      String?   @db.VarChar(200)
+  password   String?   @db.VarChar(200)
+  isActive   Int?      @default(1) @db.TinyInt
+  isDelete   Int?      @default(0) @db.TinyInt
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  profile    String?   @db.LongText
+  teamRoleId Int?
+  userId     Int?
+}
+
+model teamrole {
+  id         Int       @id @default(autoincrement())
+  name       String?   @db.VarChar(45)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model ticketreview {
+  id         Int      @id @default(autoincrement())
+  review     String?  @db.LongText
+  rating     Float?   @db.Float
+  ticketId   Int
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  userId     Int
+  @@unique([userId, ticketId])
+}
+
+model tickets {
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  helpSupportId BigInt    @db.UnsignedBigInt
+  subject       String    @db.VarChar(255)
+  description   String    @db.VarChar(255)
+  ticketNumber  String    @db.VarChar(255)
+  userId        BigInt    @db.UnsignedBigInt
+  isActive      Boolean   @default(true)
+  isDelete      Boolean   @default(false)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  createdBy     Int
+  modifiedBy    Int
+  chatId        String?   @db.VarChar(45)
+  ticketStatus  String?   @db.VarChar(45)
+  user     users? @relation(fields: [userId], references: [id]) // ✅ Optional
+  help_support  help_supports? @relation(fields: [helpSupportId], references: [id])
+
+  @@index([helpSupportId], map: "tickets_helpsupportId_idx")
+  @@index([userId], map: "tickets_userid_foreign")
+}
+
+model travel_countries {
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  NoOfCountriesTravell String    @db.VarChar(255)
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+}
+
+model user_call_histories {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  callHistoryNumber Int
+  userId            BigInt    @db.UnsignedBigInt
+  astrologerId      BigInt    @db.UnsignedBigInt
+  callStatus        String    @db.VarChar(255)
+  deductionAmount   Float
+  callDuration      Int
+  callType          String    @db.VarChar(255)
+  isIncoming        Boolean
+  callAudioFile     String    @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  gender            String    @db.VarChar(255)
+  birthDate         DateTime  @db.Timestamp(0)
+  birthTime         String    @db.VarChar(255)
+  birthPlace        String    @db.VarChar(255)
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+
+  @@index([astrologerId], map: "user_call_histories_astrologerid_foreign")
+  @@index([userId], map: "user_call_histories_userid_foreign")
+}
+
+model user_chat_histories {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @db.UnsignedBigInt
+  astrologerId      BigInt    @db.UnsignedBigInt
+  chatStatus        String    @db.VarChar(255)
+  deductionAmount   Float
+  chatDuration      Int
+  chatType          String    @db.VarChar(255)
+  chatHistoryNumber String    @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  birthDate         DateTime  @db.Timestamp(0)
+  birthPlace        String    @db.VarChar(255)
+  birthTime         String    @db.VarChar(255)
+  gender            String    @db.VarChar(255)
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+
+  @@index([astrologerId], map: "user_chat_histories_astrologerid_foreign")
+  @@index([userId], map: "user_chat_histories_userid_foreign")
+}
+
+model user_chats {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  chatId       Int
+  userId       BigInt    @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  isActive     Boolean   @default(true)
+  isDelete     Boolean   @default(false)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "user_chats_astrologerid_foreign")
+  @@index([userId], map: "user_chats_userid_foreign")
+}
+
+model user_device_details {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt    @db.UnsignedBigInt
+  appId              String    @db.VarChar(20)
+  deviceId           String?   @db.VarChar(255)
+  fcmToken           String?   @db.VarChar(255)
+  deviceLocation     String?   @db.VarChar(255)
+  deviceManufacturer String?   @db.VarChar(255)
+  deviceModel        String?   @db.VarChar(255)
+  appVersion         String?   @db.VarChar(255)
+  isActive           Boolean?  @default(true)
+  isDelete           Boolean?  @default(false)
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+  users              users     @relation(fields: [userId], references: [id], name: "UserToDeviceDetails")
+  
+  @@index([userId], map: "user_device_details_userid_foreign")
+}
+
+model user_followings {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt    @db.UnsignedBigInt
+  astrologerId BigInt    @db.UnsignedBigInt
+  isActive     Boolean
+  isDelete     Boolean
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
+  createdBy    Int
+  modifiedBy   Int
+
+  @@index([astrologerId], map: "user_followings_astrologerid_foreign")
+  @@index([userId], map: "user_followings_userid_foreign")
+}
+
+model user_notifications {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @db.UnsignedBigInt
+  title             String    @db.VarChar(255)
+  description       String    @db.VarChar(255)
+  notificationId    BigInt?   @db.UnsignedBigInt
+  chatRequestId     Int?
+  callRequestId     Int?
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  notification_type Int       @default(0)
+  is_read           Boolean?  @default(false)
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+
+  @@index([notificationId], map: "user_notifications_notificationid_foreign")
+  @@index([userId], map: "user_notifications_userid_foreign")
+}
+
+model user_orders {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt    @db.UnsignedBigInt
+  orderAddressId     BigInt    @db.UnsignedBigInt
+  astromallProductId BigInt    @db.UnsignedBigInt
+  isActive           Boolean   @default(true)
+  isDelete           Boolean   @default(false)
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+  createdBy          Int
+  modifiedBy         Int
+
+  @@index([astromallProductId], map: "user_orders_astromallproductid_foreign")
+  @@index([orderAddressId], map: "user_orders_orderaddressid_foreign")
+  @@index([userId], map: "user_orders_userid_foreign")
+}
+
+model user_reports {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @db.UnsignedBigInt
+  firstName         String    @db.VarChar(255)
+  lastName          String    @db.VarChar(255)
+  contactNo         String    @db.VarChar(20)
+  gender            String    @db.VarChar(255)
+  birthDate         DateTime  @db.Timestamp(0)
+  birthTime         String    @db.VarChar(255)
+  birthPlace        String    @db.VarChar(255)
+  occupation        String?   @db.VarChar(255)
+  maritalStatus     String?   @db.VarChar(255)
+  answerLanguage    String?   @db.VarChar(255)
+  partnerName       String?   @db.VarChar(255)
+  partnerBirthDate  DateTime? @db.Timestamp(0)
+  partnerBirthTime  String?   @db.VarChar(255)
+  partnerBirthPlace String?   @db.VarChar(255)
+  comments          String    @db.VarChar(255)
+  reportFile        String?   @db.LongText
+  reportType        Int?
+  astrologerId      Int?
+  isActive          Boolean   @default(true)
+  isDelete          Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  createdBy         Int
+  modifiedBy        Int
+  countryCode       String?   @db.VarChar(45)
+  reportRate        Float
+
+  @@index([astrologerId], map: "astrologerId")
+  @@index([reportType], map: "reportType")
+  @@index([userId], map: "user_reports_userid_foreign")
+}
+
+model user_reviews {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt    @db.UnsignedBigInt
+  rating             Float
+  review             String    @db.VarChar(255)
+  astrologerId       BigInt?   @db.UnsignedBigInt
+  aiAstrologerId     BigInt?   @db.UnsignedBigInt
+  astromallProductId BigInt?   @db.UnsignedBigInt
+  reply              String?   @db.VarChar(100)
+  isActive           Boolean   @default(true)
+  isDelete           Boolean   @default(false)
+  isPublic           Boolean?
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+  createdBy          Int
+  modifiedBy         Int
+
+  user users? @relation(fields: [userId], references: [id])
+
+  @@index([astromallProductId], map: "test")
+  @@index([astrologerId], map: "user_reviews_astrologerid_foreign")
+  @@index([userId], map: "user_reviews_userid_foreign")
+  @@unique([userId, astrologerId])
+  @@unique([userId, aiAstrologerId]) // ✅ ADD THIS LINE
+}
+
+
+model user_roles {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt    @db.UnsignedBigInt
+  roleId     BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  user   users   @relation(fields: [userId], references: [id])
+
+  @@index([roleId], map: "user_roles_roleid_foreign")
+  @@index([userId], map: "user_roles_userid_foreign")
+}
+
+model user_wallets {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt    @db.UnsignedBigInt
+  amount     Decimal?  @db.Decimal(8, 2)
+  isActive   Boolean   @default(true)
+  isDelete   Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  createdBy  Int
+  modifiedBy Int
+
+  @@index([userId], map: "user_wallets_userid_foreign")
+}
+
+model users {
+  id                 BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id            Int?
+  name               String?              @db.VarChar(50)
+  refer_code         String?              @db.VarChar(255)
+  contactNo          String?              @db.VarChar(50)
+  email              String?              @db.VarChar(255)
+  password           String?              @db.VarChar(255)
+  birthDate          DateTime?            @db.Timestamp(0)
+  birthTime          String?              @db.VarChar(50)
+  profile            String?              @db.Text
+  birthPlace         String?              @db.VarChar(50)
+  addressLine1       String?              @db.Text
+  addressLine2       String?              @db.Text
+  location           String?              @db.VarChar(100)
+  pincode            Int?
+  gender             String?              @db.VarChar(30)
+  isActive           Boolean              @default(true)
+  isDelete           Boolean              @default(false)
+  created_at         DateTime?            @db.Timestamp(0)
+  updated_at         DateTime?            @db.Timestamp(0)
+  fcm_token          String?              @db.VarChar(400)
+  token              String?              @db.LongText
+  jwt_token          String?              @db.LongText
+  otp                String?              @db.VarChar(50)
+  expirationDate     DateTime?            @db.Timestamp(0)
+  countryCode        String?              @db.VarChar(45)
+  deleted_at         DateTime?            @db.Timestamp(0)
+  app_reviews        app_reviews[]
+  astrologers        astrologers[]
+  coupon_user_usages coupon_user_usages[]
+  userRoles  user_roles[]
+  reviews  user_reviews[]
+  tickets tickets[]
+  liveuser    liveuser[]    
+  payments payment[]
+  wallettransactions wallettransaction[] @relation("UserWalletRelation")
+
+  user_device_details user_device_details[] @relation("UserToDeviceDetails")
+  chatrequests    chatrequest[]   @relation("UserChatRequests")
+  callrequests callrequest[] @relation("UserToCallRequests")
+}
+
+model waitlist {
+  id           Int       @id @default(autoincrement())
+  userName     String?   @db.VarChar(45)
+  profile      String?   @db.VarChar(400)
+  time         String?   @db.VarChar(45)
+  channelName  String?   @db.VarChar(45)
+  requestType  String?   @db.VarChar(45)
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
+  status       String?   @db.VarChar(45)
+  userId       Int?
+  userFcmToken String?   @db.VarChar(400)
+  astrologerId Int
+}
+
+model wallettransaction {
+  id               Int       @id @default(autoincrement())
+  amount           Float?
+  userId           BigInt? @db.UnsignedBigInt
+  referred_user_id Int?
+  transactionType  String?   @db.VarChar(45)
+  transaction_id   String?   @db.Text
+  orderId          BigInt?
+  astrologerId     BigInt?
+  aiAstrologerId   BigInt?
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  updated_at       DateTime? @default(now()) @db.Timestamp(0)
+  createdBy        Int?
+  modifiedBy       Int?
+  isCredit         Boolean?
+
+  // Relations
+  order_request order_request? @relation(fields: [orderId], references: [id])
+  astrologer     astrologers?  @relation(fields: [astrologerId], references: [id])
+  ai_astrologer     aiastrologers?     @relation("AiAstroWalletRelation", fields: [aiAstrologerId], references: [id])
+  user users? @relation("UserWalletRelation", fields: [userId], references: [id]) 
+
+  @@index([astrologerId], map: "astrologerId")
+  @@index([orderId], map: "orderId")
+  @@index([referred_user_id], map: "referred_user_id")
+  @@index([userId], map: "userId")
+}
+
+
+model withdrawmethods {
+  id          Int       @id @default(autoincrement())
+  method_name String?   @db.VarChar(255)
+  method_id   Int?
+  isActive    Boolean?
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model withdrawrequest {
+  id                Int       @id @default(autoincrement())
+  astrologerId      BigInt?   @db.UnsignedBigInt
+  withdrawAmount    Decimal?  @db.Decimal(10, 2)
+  status            String?   @db.VarChar(45)
+  isActive          Int?      @default(1) @db.TinyInt
+  isDelete          Int?      @default(0) @db.TinyInt
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+  createdBy         Int?
+  modifiedBy        Int?
+  paymentMethod     String?   @db.VarChar(45)
+  upiId             String?   @db.VarChar(45)
+  accountNumber     String?   @db.VarChar(45)
+  ifscCode          String?   @db.VarChar(45)
+  accountHolderName String?   @db.VarChar(100)
+
+  @@index([astrologerId], map: "withdrawrequest_astrologer_idx")
+}
+
+model withdraws {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  astrologerId   BigInt    @db.UnsignedBigInt
+  withdrawAmount Float
+  status         String    @db.VarChar(255)
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  createdBy      Int
+  modifiedBy     Int
+
+  @@index([astrologerId], map: "withdraws_astrologerid_foreign")
+}
+
+model ai_chat_histories {
+  id                      BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id                 BigInt    @db.UnsignedBigInt
+  ai_astrologer_id        BigInt    @db.UnsignedBigInt
+  chat_min                String?   @db.VarChar(255)
+  chat_rate               String?   @db.VarChar(255)
+  inr_usd_conversion_rate Int       @default(1)
+  deduction               String?   @db.VarChar(255)
+  chat_duration           String?   @db.VarChar(255)
+  is_free                 String?   @db.VarChar(255)
+  created_at              DateTime? @default(now()) @db.Timestamp(0)
+  updated_at              DateTime? @default(now()) @db.Timestamp(0)
+
+  aiastrologer aiastrologers @relation("AiAstrologerToChatHistories", fields: [ai_astrologer_id], references: [id])
+
+  @@index([ai_astrologer_id], map: "ai_chat_histories_ai_astrologer_id_foreign")
+  @@index([user_id], map: "ai_chat_histories_user_id_foreign")
+}
+
+model aiastrologers {
+  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name                 String    @db.VarChar(255)
+  image                String?   @db.VarChar(255)
+  about                String?   @db.Text
+  astrologerCategoryId String?   @db.VarChar(255)
+  primary_skill        String?   @db.VarChar(255)
+  all_skills           String?   @db.VarChar(255)
+  chat_charge          String?   @db.VarChar(255)
+  chat_charge_usd      String?   @db.VarChar(255)
+  experience           String?   @db.VarChar(255)
+  system_intruction    String?   @db.Text
+  slug                 String?   @db.VarChar(255)
+  type                 String?   @db.VarChar(255)
+  aiType               String?   @db.VarChar(255)
+  referral_code        String?   @db.VarChar(50)
+  created_at           DateTime? @default(now()) @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+
+  aiChatHistories ai_chat_histories[] @relation("AiAstrologerToChatHistories")
+  wallettransactions   wallettransaction[] @relation("AiAstroWalletRelation")
+}
+
+
+
+
+enum pages_type {
+  privacy
+  terms
+  aboutus
+}
+
+enum coupons_discount_type {
+  percentage
+  fixed
+}
+
+enum coupons_type {
+  giftcard
+  coupon
+}
