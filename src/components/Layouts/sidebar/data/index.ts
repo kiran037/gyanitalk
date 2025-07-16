@@ -17,6 +17,12 @@ export const NAV_DATA = [
         items: [],
       },
       {
+        title: "Astrologers",
+        url: "/astrologers",
+        icon: Icons.User,
+        items: [],
+      },
+      {
         title: "Calendar",
         url: "/calendar",
         icon: Icons.Calendar,

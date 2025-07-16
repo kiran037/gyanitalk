@@ -1,10 +1,10 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { CustomerTable } from "@/components/Tables/invoice-table";
-import { TopProductsSkeleton } from "@/components/Tables/top-products/skeleton";
+import { CustomerTable } from "@/components/customers/customer-table";
+import { CustomersSkeleton } from "@/components/customers/customer-skeleton";
 import { Suspense } from "react";
 
 
-export default async function TablesPage({
+export default async function CustomersPage({
   searchParams,
 }: {
   searchParams: { page?: string; search?: string; startDate?: string; endDate?: string };
@@ -42,7 +42,7 @@ export default async function TablesPage({
         </button>
       </form>
 
-      <Suspense fallback={<TopProductsSkeleton />}>
+      <Suspense fallback={<CustomersSkeleton />}>
         <CustomerTable page={page} search={search} startDate={startDate} endDate={endDate} />
       </Suspense>
     </div>
