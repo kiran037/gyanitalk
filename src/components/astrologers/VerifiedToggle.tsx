@@ -32,6 +32,9 @@ export const VerifyStatusToggle = ({ id, isVerified }: Props) => {
                     `Astrologer ${currentStatus ? "unverified" : "verified"} successfully!`
                 );
 
+                // ✅ Reload page after success
+                location.reload();
+
             } catch (error) {
                 toast.error("Something went wrong!");
 
