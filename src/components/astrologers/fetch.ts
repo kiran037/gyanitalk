@@ -106,12 +106,53 @@ export async function getProfileDetails({ id }: { id?: any }) {
     where: { id: Number(id) },
   });
 
-  const callRequests = await prisma.callrequest.findMany({
-    where: { astrologerId: Number(id) },
+  const callHistory = await prisma.callrequest.findMany({
+    where: {
+      astrologerId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+      astrologer: {
+        select: {
+          name: true,
+          charge: true,
+        },
+      },
+    },
   });
 
-  const chatRequests = await prisma.chatrequest.findMany({
-    where: { astrologerId: Number(id) },
+
+  const chatHistory = await prisma.chatrequest.findMany({
+    where: {
+      astrologerId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+      astrologer: {
+        select: {
+          name: true,
+          charge: true,
+        },
+      },
+    },
   });
 
   const walletTransactions = await prisma.wallettransaction.findMany({
@@ -126,23 +167,22 @@ export async function getProfileDetails({ id }: { id?: any }) {
     where: { astrologerId: Number(id) },
   });
 
-  
-  const totalCallMinutes = callRequests.reduce((sum: number, req: any) => {
-    const min = Number(req.totalMin) || 0;
-    return sum + min;
-  }, 0);
-  
-  const totalChatMinutes = chatRequests.reduce((sum: number, req: any) => {
-    const min = Number(req.totalMin) || 0;
-    return sum + min;
-  }, 0);
-  
 
-  
+  const totalCallMinutes = callHistory.reduce((sum: number, req: any) => {
+    const min = Number(req.totalMin) || 0;
+    return sum + min;
+  }, 0);
+
+  const totalChatMinutes = chatHistory.reduce((sum: number, req: any) => {
+    const min = Number(req.totalMin) || 0;
+    return sum + min;
+  }, 0);
+
+
   return {
     astroDetail,
-    callRequests,
-    chatRequests,
+    callHistory,
+    chatHistory,
     walletTransactions,
     totalCallMinutes,
     totalChatMinutes,

@@ -585,7 +585,7 @@ model callrequest {
   call_type               Int       @default(0)
 
   astrologer   astrologers?  @relation("AstrologerToCallRequests", fields: [astrologerId], references: [id])  
-  user         users         @relation("UserToCallRequests", fields: [userId], references: [id])
+  user         users?         @relation("UserToCallRequests", fields: [userId], references: [id])
   order_requests order_request[]
 
   @@index([astrologerId], map: "callrequest_astrologer_idx")
@@ -652,7 +652,7 @@ model chatrequest {
   created_at              DateTime? @default(now()) @db.Timestamp(0)
   updated_at              DateTime? @default(now()) @db.Timestamp(0)
   isFreeSession           Boolean?
-  user            users         @relation("UserChatRequests", fields: [userId], references: [id])
+  user            users?         @relation("UserChatRequests", fields: [userId], references: [id])
   astrologer      astrologers?   @relation("AstrologerChatRequests", fields: [astrologerId], references: [id])
 
   @@index([userId], map: "chat_request_users_idx")

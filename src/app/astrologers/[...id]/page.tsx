@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
 import dayjs from "dayjs";
 import ProfileDetailsAccordion from "@/components/astrologers/details/details-accordion";
+import ChatSessionList from "@/components/astrologers/details/chatHistory";
+import CallSessionList from "@/components/astrologers/details/callHistory";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -121,7 +123,7 @@ export default function Page() {
         <div className="mx-auto w-full">
             <div className="overflow-hidden rounded-lg bg-white shadow-sm border dark:bg-gray-dark dark:border-gray-700">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div className="flex items-center space-x-5">
                             <div className="relative">
                                 <Image
@@ -198,6 +200,25 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
+                                Astrologer Rates
+                            </h3>
+                            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                                <div className="flex justify-between">
+                                    <span>Chat/Call</span>
+                                    <span className="text-blue-600 font-semibold">{data?.astroDetail?.charge}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Video Call</span>
+                                    <span className="text-pink-600 font-semibold">{data?.astroDetail?.videoCallRate}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Report</span>
+                                    <span className="text-orange-600 font-semibold">{data?.astroDetail?.reportRate}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -224,7 +245,16 @@ export default function Page() {
                     <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                 )}
 
-                {/* Other tab content can be added here */}
+
+                {activeTab === "Chat History" && (
+                    <ChatSessionList sessions={data?.chatHistory} />
+                )}
+                {activeTab === "Call History" && (
+                    <CallSessionList sessions={data?.callHistory} />
+                )}
+
+
+
                 {activeTab !== "Basic Detail" && (
                     <div className="p-6">
                         <div className="text-center py-12">
