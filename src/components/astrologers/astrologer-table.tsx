@@ -58,8 +58,6 @@ export async function AstrologerTable({
             <TableHead className="min-w-[130px]">Gender</TableHead>
             <TableHead className="min-w-[110px]">Total Req.</TableHead>
             <TableHead className="min-w-[110px]">Live</TableHead>
-
-
             <TableHead className="cursor-pointer">
               <a
                 href={`?page=${page}&search=${search}&sortBy=chatStatus&sortOrder=${sortBy === "chatStatus" && sortOrder === "asc" ? "desc" : "asc"
