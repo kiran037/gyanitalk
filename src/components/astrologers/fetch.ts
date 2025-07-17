@@ -180,6 +180,20 @@ export async function getProfileDetails({ id }: { id?: any }) {
     where: { astrologerId: Number(id) },
   });
 
+  const followersList = await prisma.astrologer_followers.findMany({
+    where: { astrologerId: Number(id) },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+    },
+  });
+
   const astroAvailability = await prisma.astrologer_availabilities.findMany({
     where: { astrologerId: Number(id) },
   });
@@ -203,12 +217,17 @@ export async function getProfileDetails({ id }: { id?: any }) {
     totalCallMinutes,
     totalChatMinutes,
     followersCount,
+    followersList,
     astroAvailability
   };
 }
 
 
-
+export async function unFollow({ id }: any) {
+  const deleted = await prisma.astrologer_followers.delete({
+    where: { id },
+  });
+}
 
 
 

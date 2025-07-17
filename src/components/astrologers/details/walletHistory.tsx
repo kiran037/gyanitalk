@@ -3,10 +3,6 @@ import { format } from "date-fns";
 export default function WalletTransactionList({ transactions }: { transactions: any[] }) {
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-        Wallet Transactions
-      </h2>
-
       {/* Header */}
       <div className="grid grid-cols-5 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 py-2">
         <div>User</div>
@@ -22,7 +18,7 @@ export default function WalletTransactionList({ transactions }: { transactions: 
           const userName = txn.order_request?.user?.name || "Unknown";
           const type = txn.transactionType || "-";
           const amount = txn.amount || 0;
-          const totalMin = txn.order_request?.totalMin || "-";
+          const totalMin = txn.order_request?.totalMin || "0";
           const date = format(new Date(txn.created_at), "dd MMM yyyy, hh:mm a");
 
           return (

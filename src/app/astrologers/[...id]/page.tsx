@@ -8,6 +8,7 @@ import ProfileDetailsAccordion from "@/components/astrologers/details/details-ac
 import ChatSessionList from "@/components/astrologers/details/chatHistory";
 import CallSessionList from "@/components/astrologers/details/callHistory";
 import WalletTransactionList from "@/components/astrologers/details/walletHistory";
+import AstroFollowerList from "@/components/astrologers/details/followersList";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -34,6 +35,7 @@ export default function Page() {
     const id = params?.id;
 
     const [data, setData] = useState<any>(null);
+
 
     useEffect(() => {
         if (id) {
@@ -73,7 +75,6 @@ export default function Page() {
         "Wallet",
         "Chat History",
         "Call History",
-        "Report",
         "Followers List",
         "Notification List",
         "Gift List",
@@ -256,8 +257,9 @@ export default function Page() {
                 {activeTab === "Call History" && (
                     <CallSessionList sessions={data?.callHistory} />
                 )}
-
-
+                {activeTab === "Followers List" && (
+                    <AstroFollowerList followers={data?.followersList} />
+                )}
 
                 {activeTab !== "Basic Detail" && (
                     <div className="p-6">

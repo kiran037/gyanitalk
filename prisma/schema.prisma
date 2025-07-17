@@ -184,7 +184,10 @@ model astrologer_followers {
   updated_at     DateTime? @db.Timestamp(0)
   createdBy      Int
   modifiedBy     Int
-  astrologer astrologers? @relation(fields: [astrologerId], references: [id])
+
+  astrologer    astrologers?     @relation(fields: [astrologerId], references: [id])
+  user          users?            @relation("UserFollowers", fields: [userId], references: [id])
+  aiAstrologer  aiastrologers?   @relation("AiAstroFollowers", fields: [aiAstrologerId], references: [id])
 
   @@index([astrologerId], map: "astrologer_followers_astrologerid_foreign")
   @@index([userId], map: "astrologer_followers_userid_foreign")
@@ -352,7 +355,7 @@ model astrologers {
   call_select                 Int
   deleted_at                  DateTime? @db.Timestamp(0)
 
-  users        users         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "astrologers_userid_foreign")
+  users        users?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "astrologers_userid_foreign")
 
   chatrequests    chatrequest[]      @relation("AstrologerChatRequests")
   callrequests callrequest[] @relation("AstrologerToCallRequests")
@@ -718,7 +721,7 @@ model coupon_user_usages {
   updated_at    DateTime?      @db.Timestamp(0)
   coupons       coupons        @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_coupon_id_foreign")
   order_request order_request? @relation(fields: [order_id], references: [id], onUpdate: Restrict, map: "coupon_user_usages_order_id_foreign")
-  users         users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_userid_foreign")
+  users         users?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_userid_foreign")
 
   @@index([coupon_id], map: "coupon_user_usages_coupon_id_foreign")
   @@index([order_id], map: "coupon_user_usages_order_id_foreign")
@@ -1658,7 +1661,7 @@ model user_device_details {
   isDelete           Boolean?  @default(false)
   created_at         DateTime? @db.Timestamp(0)
   updated_at         DateTime? @db.Timestamp(0)
-  users              users     @relation(fields: [userId], references: [id], name: "UserToDeviceDetails")
+  users              users?     @relation(fields: [userId], references: [id], name: "UserToDeviceDetails")
   
   @@index([userId], map: "user_device_details_userid_foreign")
 }
@@ -1842,6 +1845,7 @@ model users {
   liveuser    liveuser[]    
   payments payment[]
   order_request order_request[]
+  followedAstrologers astrologer_followers[] @relation("UserFollowers")
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
   user_wallets user_wallets[]  
   user_device_details user_device_details[] @relation("UserToDeviceDetails")
@@ -1977,6 +1981,8 @@ model aiastrologers {
 
   aiChatHistories ai_chat_histories[] @relation("AiAstrologerToChatHistories")
   wallettransactions   wallettransaction[] @relation("AiAstroWalletRelation")
+  aiFollowers astrologer_followers[] @relation("AiAstroFollowers")
+
 }
 
 
