@@ -2,8 +2,7 @@
 
 import { ApexOptions } from "apexcharts";
 import Chart from "react-apexcharts";
-import dayjs from "dayjs"; // You must install dayjs
-
+import dayjs from "dayjs";
 type ApiResponse = {
     labels: string[];
     callData: number[];

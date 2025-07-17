@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui-elements/shadcn-card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type React from "react"
 
 export function OverviewStatCard({
@@ -80,7 +80,7 @@ export function OverviewStatCard({
                 <span className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover/stat:scale-105 transition-transform">
                   {stat.value}
                 </span>
-              
+
               </div>
             </div>
           ))}
