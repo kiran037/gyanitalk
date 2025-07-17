@@ -7,14 +7,14 @@ export async function getAstrologers({
   search = "",
   sortBy = "id",
   sortOrder = "desc",
-  isVerified,
+  isVerifiedKey,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   sortBy?: string;
   sortOrder?: string;
-  isVerified?: string;
+  isVerifiedKey?: string;
 }) {
   const offset = (page - 1) * limit;
   const isNumericSearch = /^\d+$/.test(search);
@@ -29,8 +29,8 @@ export async function getAstrologers({
       isNumericSearch && {
       contactNo: { contains: search },
     }),
-    ...(isVerified === "true" && { isVerified: true }),
-    ...(isVerified === "false" && { isVerified: false }),
+    ...(isVerifiedKey === "true" && { isVerified: true }),
+    ...(isVerifiedKey === "false" && { isVerified: false }),
   };
 
   const shouldSort =
@@ -89,12 +89,20 @@ export async function updateLiveStatus({ id, isLiveOff }: UpdateLiveStatusProps)
     data: { isLiveOff },
   });
 
-  console.log(updated);
-  
+}
 
+export async function updateVerifyStatus({ id, isVerified }: UpdateVerifiedStatusProps) {
+  const updated = await prisma.astrologers.update({
+    where: { id },
+    data: { isVerified },
+  });
 }
 
 type UpdateLiveStatusProps = {
   id: number;
   isLiveOff: 0 | 1;
+};
+type UpdateVerifiedStatusProps = {
+  id: number;
+  isVerified: boolean;
 };

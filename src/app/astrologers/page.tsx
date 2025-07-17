@@ -54,7 +54,7 @@ export default async function AstrologersPage({
           search={search}
           sortBy={sortBy}
           sortOrder={sortOrder}
-          isVerified={isVerified}
+          isVerifiedKey={isVerified}
         />
       </Suspense>
     </div>

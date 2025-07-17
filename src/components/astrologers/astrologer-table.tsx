@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { getAstrologers } from "./fetch";
 import { PreviewIcon } from "./icons";
 import { LiveStatusToggle } from "./LiveStatusToggle";
+import { VerifyStatusToggle } from "./VerifiedToggle";
 
 
 export async function AstrologerTable({
@@ -27,14 +28,14 @@ export async function AstrologerTable({
   search = "",
   sortBy = "",
   sortOrder = "asc",
-  isVerified,
+  isVerifiedKey,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  isVerified?: string;
+  isVerifiedKey?: string;
 }) {
   const { astrologers, totalPages, currentPage } = await getAstrologers({
     page,
@@ -42,9 +43,7 @@ export async function AstrologerTable({
     search,
     sortBy,
     sortOrder: sortBy === "isVerified" ? "" : sortOrder,
-    isVerified,
-
-
+    isVerifiedKey,
   });
 
   return (
@@ -169,16 +168,7 @@ export async function AstrologerTable({
                 )}
               </TableCell>
               <TableCell>
-                <span
-                  className={cn(
-                    "inline-flex items-center px-2 py-1 text-xs rounded-full font-semibold",
-                    item.isVerified
-                      ? "bg-green-100 text-green-700 dark:bg-green-800/30 dark:text-green-300"
-                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-800/30 dark:text-yellow-300"
-                  )}
-                >
-                  {item.isVerified ? "Verified" : "Unverified"}
-                </span>
+                <VerifyStatusToggle id={item.id} isVerified={item.isVerified} />
               </TableCell>
               <TableCell>
                 <div className="flex justify-center gap-2">
