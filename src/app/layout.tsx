@@ -14,6 +14,7 @@ import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
 import { Providers } from "./providers";
 import { usePathname } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({ children }: PropsWithChildren) {
   const pathname = usePathname();
@@ -42,7 +43,8 @@ export default function RootLayout({ children }: PropsWithChildren) {
                 <Header />
                 <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
                   {children}
-                </main>
+                  <Toaster position="top-right" />
+                  </main>
               </div>
             </div>
           )}

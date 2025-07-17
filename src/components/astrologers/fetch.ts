@@ -92,10 +92,13 @@ export async function updateLiveStatus({ id, isLiveOff }: UpdateLiveStatusProps)
 }
 
 export async function updateVerifyStatus({ id, isVerified }: UpdateVerifiedStatusProps) {
+
   const updated = await prisma.astrologers.update({
     where: { id },
-    data: { isVerified },
+    data: { isVerified: !isVerified },
   });
+
+  console.log(isVerified, updated.isVerified);
 }
 
 type UpdateLiveStatusProps = {

@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { updateVerifyStatus } from "./fetch";
+import toast from "react-hot-toast";
+
 
 interface Props {
     id: number;
@@ -16,11 +18,24 @@ export const VerifyStatusToggle = ({ id, isVerified }: Props) => {
     const [currentStatus, setCurrentStatus] = useState(isVerified);
     const [isPending, startTransition] = useTransition();
 
+
+
     const handleToggle = () => {
         startTransition(async () => {
-            await updateVerifyStatus({ id, isVerified });
-            setCurrentStatus(!currentStatus);
-            setOpen(false);
+            try {
+                await updateVerifyStatus({ id, isVerified });
+
+                setCurrentStatus(!currentStatus);
+                setOpen(false);
+
+                toast.success(
+                    `Astrologer ${currentStatus ? "unverified" : "verified"} successfully!`
+                );
+
+            } catch (error) {
+                toast.error("Something went wrong!");
+
+            }
         });
     };
 
