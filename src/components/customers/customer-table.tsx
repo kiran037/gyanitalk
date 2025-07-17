@@ -60,7 +60,7 @@ export async function CustomerTable({
                   <Image
                     src={
                       item.profile
-                        ? `${process.env.BASEURL}${item.profile}`
+                        ? `${process.env.NEXT_PUBLIC_BASEURL}${item.profile}`
                         : "https://gyanitalk.com/build/assets/images/person.png"
                     }
                     className="rounded-full object-cover"

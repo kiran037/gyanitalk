@@ -98,8 +98,22 @@ export async function updateVerifyStatus({ id, isVerified }: UpdateVerifiedStatu
     data: { isVerified: !isVerified },
   });
 
-  console.log(isVerified, updated.isVerified);
 }
+
+
+export async function getProfileDetails({ id }: { id?: any; }) {
+
+  const astroDetail = await prisma.astrologers.findFirst({
+    where: { id: Number(id) },
+  });
+
+  return { astroDetail };
+}
+
+
+
+
+
 
 type UpdateLiveStatusProps = {
   id: number;

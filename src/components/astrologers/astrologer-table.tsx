@@ -20,6 +20,7 @@ import { getAstrologers } from "./fetch";
 import { PreviewIcon } from "./icons";
 import { LiveStatusToggle } from "./LiveStatusToggle";
 import { VerifyStatusToggle } from "./VerifiedToggle";
+import Link from "next/link";
 
 
 export async function AstrologerTable({
@@ -91,12 +92,15 @@ export async function AstrologerTable({
               className="border-b border-gray-100 dark:border-dark-3 hover:bg-muted/30 dark:hover:bg-muted/10 transition"
             >
               <TableCell>
-                <div className="flex items-center gap-4">
+                <Link
+                  href={`/astrologers/${item.id}`}
+                  className="flex items-center gap-4 hover:underline"
+                >
                   <div className="w-10 h-10 rounded-full overflow-hidden shadow-md bg-gray-100">
                     <Image
                       src={
                         item.profileImage
-                          ? `${process.env.BASEURL}${item.profileImage}`
+                          ? `${process.env.NEXT_PUBLIC_BASEURL}${item.profileImage}`
                           : "https://gyanitalk.com/build/assets/images/person.png"
                       }
                       alt={`${item.name || "User"} Logo`}
@@ -108,7 +112,7 @@ export async function AstrologerTable({
                   <span className="text-sm font-medium text-gray-800 dark:text-white truncate">
                     {item.name || "-"}
                   </span>
-                </div>
+                </Link>
               </TableCell>
 
               <TableCell>
@@ -172,9 +176,13 @@ export async function AstrologerTable({
               </TableCell>
               <TableCell>
                 <div className="flex justify-center gap-2">
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Preview">
+                  <Link
+                    href={`/astrologers/${item.id}`}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    title="Preview"
+                  >
                     <PreviewIcon />
-                  </button>
+                  </Link>
                   <button className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/30 text-red-600 dark:text-red-400 transition" title="Delete">
                     <TrashIcon />
                   </button>
