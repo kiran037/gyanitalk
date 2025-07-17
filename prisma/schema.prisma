@@ -1254,7 +1254,7 @@ model order_payments {
 
 model order_request {
   id                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
-  userId                Int
+  userId                BigInt
   astrologerId          BigInt?
   aiAstrologerId        Int?
   orderType             String?  @db.VarChar(45)
@@ -1280,6 +1280,7 @@ model order_request {
   product_category      product_categories?  @relation(fields: [productCategoryId], references: [id])
   product               astromall_products?  @relation(fields: [productId], references: [id])
   order_address         order_addresses?     @relation(fields: [orderAddressId], references: [id])
+  user users? @relation(fields: [userId], references: [id])
 
   astrologer            astrologers?         @relation(fields: [astrologerId], references: [id])
   callrequest           callrequest?         @relation(fields: [callId], references: [id])
@@ -1840,6 +1841,7 @@ model users {
   tickets tickets[]
   liveuser    liveuser[]    
   payments payment[]
+  order_request order_request[]
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
   user_wallets user_wallets[]  
   user_device_details user_device_details[] @relation("UserToDeviceDetails")

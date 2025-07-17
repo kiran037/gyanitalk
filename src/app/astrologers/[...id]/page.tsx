@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import ProfileDetailsAccordion from "@/components/astrologers/details/details-accordion";
 import ChatSessionList from "@/components/astrologers/details/chatHistory";
 import CallSessionList from "@/components/astrologers/details/callHistory";
+import WalletTransactionList from "@/components/astrologers/details/walletHistory";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -40,6 +41,8 @@ export default function Page() {
                 try {
                     const result = await getProfileDetails({ id });
                     setData(result);
+                    console.log(result);
+
                 } catch (error) {
                     console.error("Failed to fetch profile:", error);
                 }
@@ -244,8 +247,9 @@ export default function Page() {
                 {activeTab === "Basic Detail" && (
                     <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                 )}
-
-
+                {activeTab === "Wallet" && (
+                    <WalletTransactionList transactions={data?.walletTransactions} />
+                )}
                 {activeTab === "Chat History" && (
                     <ChatSessionList sessions={data?.chatHistory} />
                 )}

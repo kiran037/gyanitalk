@@ -156,7 +156,24 @@ export async function getProfileDetails({ id }: { id?: any }) {
   });
 
   const walletTransactions = await prisma.wallettransaction.findMany({
-    where: { userId: Number(id) },
+    where: {
+      astrologerId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      order_request: {
+        select: {
+          totalMin: true,
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   const followersCount = await prisma.astrologer_followers.count({
@@ -177,7 +194,6 @@ export async function getProfileDetails({ id }: { id?: any }) {
     const min = Number(req.totalMin) || 0;
     return sum + min;
   }, 0);
-
 
   return {
     astroDetail,
