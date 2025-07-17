@@ -4,7 +4,6 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
 import dayjs from "dayjs";
-import { ChevronDownIcon } from "lucide-react";
 import ProfileDetailsAccordion from "@/components/astrologers/details/details-accordion";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
@@ -78,7 +77,7 @@ export default function Page() {
 
     const skillDetails = [
         { label: "Gender", value: data?.astroDetail?.gender || "N/A" },
-        { label: "Date of Birth",value: data?.astroDetail?.birthDate? dayjs(data.astroDetail.birthDate).format("DD MMM YYYY"): "-" },
+        { label: "Date of Birth", value: data?.astroDetail?.birthDate ? dayjs(data.astroDetail.birthDate).format("DD MMM YYYY") : "-" },
         { label: "Astrologer Category", value: data?.astroDetail?.astrologerCategoryId || "N/A" },
         { label: "Primary Skill", value: data?.astroDetail?.primarySkill || "N/A" },
         { label: "All Skill", value: data?.astroDetail?.allSkill || "N/A" },
@@ -106,6 +105,17 @@ export default function Page() {
         { label: "Biggest challenge you faced", value: `${data?.astroDetail?.biggestChallenge || "N/A"}` },
         { label: "A customer asking same question repatedly: What will you do", value: `${data?.astroDetail?.whatwillDo || "N/A"}` },
     ]
+
+
+    const weekDays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+    const availability = weekDays.map(day => {
+        const dayAvailability = data?.astroAvailability?.find((item: any) => item.day.toLowerCase() === day);
+        return {
+            label: day.charAt(0).toUpperCase() + day.slice(1),
+            value: dayAvailability ? `${dayAvailability.fromTime || "N/A"} - ${dayAvailability.toTime || "N/A"}` : "Not Available"
+        };
+    });
 
     return (
         <div className="mx-auto w-full">
@@ -211,7 +221,7 @@ export default function Page() {
 
                 {/* Content Area */}
                 {activeTab === "Basic Detail" && (
-                    <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} />
+                    <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                 )}
 
                 {/* Other tab content can be added here */}

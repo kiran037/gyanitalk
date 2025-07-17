@@ -120,9 +120,13 @@ export async function getProfileDetails({ id }: { id?: any }) {
 
   const followersCount = await prisma.astrologer_followers.count({
     where: { astrologerId: Number(id) },
-
   });
 
+  const astroAvailability = await prisma.astrologer_availabilities.findMany({
+    where: { astrologerId: Number(id) },
+  });
+
+  
   const totalCallMinutes = callRequests.reduce((sum: number, req: any) => {
     const min = Number(req.totalMin) || 0;
     return sum + min;
@@ -134,6 +138,7 @@ export async function getProfileDetails({ id }: { id?: any }) {
   }, 0);
   
 
+  
   return {
     astroDetail,
     callRequests,
@@ -141,7 +146,8 @@ export async function getProfileDetails({ id }: { id?: any }) {
     walletTransactions,
     totalCallMinutes,
     totalChatMinutes,
-    followersCount
+    followersCount,
+    astroAvailability
   };
 }
 

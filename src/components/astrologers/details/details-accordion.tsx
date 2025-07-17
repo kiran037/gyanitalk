@@ -1,7 +1,7 @@
 import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 
-export default function ProfileDetailsAccordion({ skillDetails, otherDetails }: { skillDetails: any, otherDetails: any }) {
+export default function ProfileDetailsAccordion({ skillDetails, otherDetails, dayAvailability }: { skillDetails: any, otherDetails: any, dayAvailability: any }) {
     const [openSection, setOpenSection] = useState<string | null>(null);
 
     const toggleSection = (section: string) => {
@@ -55,10 +55,13 @@ export default function ProfileDetailsAccordion({ skillDetails, otherDetails }: 
     );
 
     return (
-        <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 bg-white dark:bg-gray-900">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
                 <Section title="🧠 Skill Details" id="skills" data={skillDetails} />
                 <Section title="📋 Other Details" id="others" data={otherDetails} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                <Section title="🧠 Day Availablity" id="availablity" data={dayAvailability} />
             </div>
         </div>
     );
