@@ -14,10 +14,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import { getAstrologers } from "./fetch";
 import { PreviewIcon } from "./icons";
+import { LiveStatusToggle } from "./LiveStatusToggle";
 
 
 export async function AstrologerTable({
@@ -52,6 +53,7 @@ export async function AstrologerTable({
         <TableHeader>
           <TableRow className="bg-[#F7F9FC] dark:bg-dark-2 [&>th]:py-4 [&>th]:text-base [&>th]:text-dark [&>th]:dark:text-white">
             <TableHead className="min-w-[180px]">Name</TableHead>
+            <TableHead className="min-w-[140px]">Live Mode</TableHead>
             <TableHead className="min-w-[140px]">Contact</TableHead>
             <TableHead className="min-w-[130px]">Gender</TableHead>
             <TableHead className="min-w-[110px]">Total Req.</TableHead>
@@ -80,18 +82,7 @@ export async function AstrologerTable({
                 {sortBy === "callStatus" && (sortOrder === "asc" ? "▲" : "▼")}
               </a>
             </TableHead>
-
-
-            <TableHead className="cursor-pointer">
-              <a
-                href={`?page=${page}&search=${search}&sortBy=isVerified&sortOrder=${sortBy === "isVerified" && sortOrder === "asc" ? "desc" : "asc"
-                  }`}
-                className="flex items-center gap-1"
-              >
-                Status
-                {sortBy === "isVerified" && (sortOrder === "asc" ? "▲" : "▼")}
-              </a>
-            </TableHead>
+            <TableHead className="min-w-[100px]">Status</TableHead>
             <TableHead className="min-w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -122,6 +113,15 @@ export async function AstrologerTable({
                   </span>
                 </div>
               </TableCell>
+
+              <TableCell>
+                <LiveStatusToggle
+                  id={item.id}
+                  isLiveOff={item.isLiveOff === 0}
+                />
+              </TableCell>
+
+
               <TableCell className="text-sm text-gray-600 dark:text-gray-300">
                 {item.contactNo || "-"}
               </TableCell>

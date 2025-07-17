@@ -1,3 +1,4 @@
+"use server"
 const prisma = require("../../prismaClient");
 
 export async function getAstrologers({
@@ -16,23 +17,21 @@ export async function getAstrologers({
   isVerified?: string;
 }) {
   const offset = (page - 1) * limit;
-
+  const isNumericSearch = /^\d+$/.test(search);
+  const isAlphaSearch = /[a-zA-Z]/.test(search);
   const whereClause = {
     isDelete: false,
-    ...(search && {
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { contactNo: { contains: search, mode: "insensitive" } },
-      ],
+    ...(search &&
+      isAlphaSearch && {
+      name: { contains: search },
+    }),
+    ...(search &&
+      isNumericSearch && {
+      contactNo: { contains: search },
     }),
     ...(isVerified === "true" && { isVerified: true }),
     ...(isVerified === "false" && { isVerified: false }),
   };
-
-  // Default sort fallback
-  const safeSortBy = ["chatStatus", "callStatus", "isVerified", "id"].includes(sortBy)
-    ? sortBy
-    : "id";
 
   const shouldSort =
     sortBy && (sortOrder === "asc" || sortOrder === "desc");
@@ -82,3 +81,20 @@ export async function getAstrologers({
     currentPage: page,
   };
 }
+
+
+export async function updateLiveStatus({ id, isLiveOff }: UpdateLiveStatusProps) {
+  const updated = await prisma.astrologers.update({
+    where: { id },
+    data: { isLiveOff },
+  });
+
+  console.log(updated);
+  
+
+}
+
+type UpdateLiveStatusProps = {
+  id: number;
+  isLiveOff: 0 | 1;
+};

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/app/ui-elements/shadcn-card";
+import { Card, CardContent, CardHeader } from "@/components/ui-elements/shadcn-card";
 import type React from "react"
 
 export function OverviewStatCard({

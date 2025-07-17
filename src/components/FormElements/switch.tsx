@@ -7,6 +7,8 @@ type PropsType = {
   background?: "dark" | "light";
   backgroundSize?: "sm" | "default";
   name?: string;
+  checked?: boolean;
+  onCheckedChange?: (value: boolean) => void;
 };
 
 export function Switch({
@@ -14,6 +16,8 @@ export function Switch({
   withIcon,
   backgroundSize,
   name,
+  checked,
+  onCheckedChange,
 }: PropsType) {
   const id = useId();
 
@@ -23,7 +27,14 @@ export function Switch({
       className="flex max-w-fit cursor-pointer select-none items-center"
     >
       <div className="relative">
-        <input type="checkbox" name={name} id={id} className="peer sr-only" />
+        <input
+          type="checkbox"
+          name={name}
+          id={id}
+          className="peer sr-only"
+          checked={checked}
+          onChange={(e) => onCheckedChange?.(e.target.checked)}
+        />
         <div
           className={cn("h-8 w-14 rounded-full bg-gray-3 dark:bg-[#5A616B]", {
             "h-5": backgroundSize === "sm",

@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import { getCustomers } from "./fetch";
