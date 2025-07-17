@@ -101,14 +101,50 @@ export async function updateVerifyStatus({ id, isVerified }: UpdateVerifiedStatu
 }
 
 
-export async function getProfileDetails({ id }: { id?: any; }) {
-
+export async function getProfileDetails({ id }: { id?: any }) {
   const astroDetail = await prisma.astrologers.findFirst({
     where: { id: Number(id) },
   });
 
-  return { astroDetail };
+  const callRequests = await prisma.callrequest.findMany({
+    where: { astrologerId: Number(id) },
+  });
+
+  const chatRequests = await prisma.chatrequest.findMany({
+    where: { astrologerId: Number(id) },
+  });
+
+  const walletTransactions = await prisma.wallettransaction.findMany({
+    where: { userId: Number(id) },
+  });
+
+  const followersCount = await prisma.astrologer_followers.count({
+    where: { astrologerId: Number(id) },
+
+  });
+
+  const totalCallMinutes = callRequests.reduce((sum: number, req: any) => {
+    const min = Number(req.totalMin) || 0;
+    return sum + min;
+  }, 0);
+  
+  const totalChatMinutes = chatRequests.reduce((sum: number, req: any) => {
+    const min = Number(req.totalMin) || 0;
+    return sum + min;
+  }, 0);
+  
+
+  return {
+    astroDetail,
+    callRequests,
+    chatRequests,
+    walletTransactions,
+    totalCallMinutes,
+    totalChatMinutes,
+    followersCount
+  };
 }
+
 
 
 

@@ -3,6 +3,9 @@ import { getProfileDetails } from "@/components/astrologers/fetch";
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
+import dayjs from "dayjs";
+import { ChevronDownIcon } from "lucide-react";
+import ProfileDetailsAccordion from "@/components/astrologers/details/details-accordion";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -25,11 +28,10 @@ function CameraIcon(props: PropsType) {
 
 
 export default function Page() {
-
     const params = useParams();
     const id = params?.id;
 
-    const [data, setData] = useState<{ astroDetail: any } | null>(null);
+    const [data, setData] = useState<any>(null);
 
     useEffect(() => {
         if (id) {
@@ -75,105 +77,114 @@ export default function Page() {
     ]
 
     const skillDetails = [
-        { label: "Gender", value: "Male" },
-        { label: "Date of Birth", value: "09-11-2002" },
-        { label: "Astrologer Category", value: "Love & Relationship," },
-        { label: "Primary Skill", value: "Vedic Astrology, Love and Relationship," },
-        { label: "All Skill", value: "Vedic Astrology, Love and Relationship," },
-        { label: "Language", value: "Hindi," },
-        { label: "Your charges(per min)", value: "INR20" },
-        { label: "Video charges", value: "INR20" },
-    ]
+        { label: "Gender", value: data?.astroDetail?.gender || "N/A" },
+        { label: "Date of Birth",value: data?.astroDetail?.birthDate? dayjs(data.astroDetail.birthDate).format("DD MMM YYYY"): "-" },
+        { label: "Astrologer Category", value: data?.astroDetail?.astrologerCategoryId || "N/A" },
+        { label: "Primary Skill", value: data?.astroDetail?.primarySkill || "N/A" },
+        { label: "All Skill", value: data?.astroDetail?.allSkill || "N/A" },
+        { label: "Language", value: data?.astroDetail?.languageKnown || "N/A" },
+        { label: "Your charges(per min)", value: `INR${data?.astroDetail?.charge || "N/A"}` },
+        { label: "Video charges", value: `INR${data?.astroDetail?.videoCallRate || "N/A"}` },
+        { label: "Report charges", value: `INR${data?.astroDetail?.reportRate || "N/A"}` },
+        { label: "Experience", value: `${data?.astroDetail?.experienceInYears || "N/A"}` },
+        { label: "How many hours you can contribute daily", value: `${data?.astroDetail?.dailyContribution || "N/A"}` },
+        { label: "Where did you hear about GyaniTalk", value: `${data?.astroDetail?.hearAboutAstroguru || "N/A"}` },
+    ];
+
 
     const otherDetails = [
-        { label: "Why do you think we should onboard you?", value: "NA" },
-        { label: "Suitable time for interview", value: "11" },
-        { label: "Currently Live City", value: "Gonda" },
-        { label: "Main source of bussiness", value: "Own Business" },
-        { label: "Highest Qualification", value: "Gratuated" },
-        { label: "Degree/Diploma", value: "B.Sc" },
-        { label: "Expected Minimum Earning", value: "1000" },
-        { label: "Expected Maximum Earning", value: "10000" },
+        { label: "Why do you think we should onboard you?", value: `${data?.astroDetail?.whyOnBoard || "N/A"}` },
+        { label: "Suitable time for interview", value: `${data?.astroDetail?.interviewSuitableTime || "N/A"}` },
+        { label: "Currently Live City", value: `${data?.astroDetail?.currentCity || "N/A"}` },
+        { label: "Main source of bussiness", value: `${data?.astroDetail?.mainSourceOfBusiness || "N/A"}` },
+        { label: "Highest Qualification", value: `${data?.astroDetail?.highestQualification || "N/A"}` },
+        { label: "Degree/Diploma", value: `${data?.astroDetail?.degree || "N/A"}` },
+        { label: "Expected Minimum Earning", value: `${data?.astroDetail?.minimumEarning || "N/A"}` },
+        { label: "Number of Foreign Country you Lived", value: `${data?.astroDetail?.maximumEarning || "N/A"}` },
+        { label: "Currently Working", value: `${data?.astroDetail?.currentlyworkingfulltimejob || "N/A"}` },
+        { label: "Good Quality", value: `${data?.astroDetail?.goodQuality || "N/A"}` },
+        { label: "Biggest challenge you faced", value: `${data?.astroDetail?.biggestChallenge || "N/A"}` },
+        { label: "A customer asking same question repatedly: What will you do", value: `${data?.astroDetail?.whatwillDo || "N/A"}` },
     ]
 
     return (
-        <div className="mx-auto w-full max-w-[1200px]">
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">Astrologer Details</h1>
-            </div>
-
+        <div className="mx-auto w-full">
             <div className="overflow-hidden rounded-lg bg-white shadow-sm border dark:bg-gray-dark dark:border-gray-700">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-5">
                             <div className="relative">
-                                {data?.astroDetail?.profileImage && (
-                                    <>
-                                        <Image
-                                            src={
-                                                data?.astroDetail?.profileImage
-                                                    ? `${process.env.NEXT_PUBLIC_BASEURL}${data.astroDetail.profileImage}`
-                                                    : "https://gyanitalk.com/build/assets/images/person.png"
-                                            }
-                                            width={80}
-                                            height={80}
-                                            className="rounded-full object-cover"
-                                            alt="profile"
-                                        />
-                                        <label
-                                            htmlFor="profilePhoto"
-                                            className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
-                                        >
-                                            <CameraIcon />
-                                            <input
-                                                type="file"
-                                                name="profilePhoto"
-                                                id="profilePhoto"
-                                                className="sr-only"
-                                                onChange={handleChange}
-                                                accept="image/png, image/jpg, image/jpeg"
-                                            />
-                                        </label>
-                                    </>
-                                )}
+                                <Image
+                                    src={
+                                        data?.astroDetail?.profileImage
+                                            ? `${process.env.NEXT_PUBLIC_BASEURL}${data.astroDetail.profileImage}`
+                                            : "https://gyanitalk.com/build/assets/images/person.png"
+                                    }
+                                    width={90}
+                                    height={90}
+                                    className="rounded-full border-4 border-blue-500 object-cover shadow-md"
+                                    alt="profile"
+                                />
+                                <label
+                                    htmlFor="profilePhoto"
+                                    className="absolute bottom-0 right-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700"
+                                >
+                                    <CameraIcon className="w-4 h-4" />
+                                    <input
+                                        type="file"
+                                        name="profilePhoto"
+                                        id="profilePhoto"
+                                        className="sr-only"
+                                        onChange={handleChange}
+                                        accept="image/png, image/jpg, image/jpeg"
+                                    />
+                                </label>
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{data?.astroDetail?.name}</h2>
-                                <p className="text-gray-600 dark:text-gray-400">{data?.astroDetail?.id}</p>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{data?.astroDetail?.name}</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Astrologer</p>
                             </div>
                         </div>
-
-                        {/* Contact Details */}
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Contact Details</h3>
-                            <div className="flex items-center space-x-2">
-                                <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                </svg>
-                                <span className="text-gray-700 dark:text-gray-300">{data?.astroDetail?.email}</span>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
+                                Contact Details
+                            </h3>
+                            <div className="space-y-3 text-gray-700 dark:text-gray-300 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                    <span>{data?.astroDetail?.email || "Not available"}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M3 5.75C3 4.784 3.784 4 4.75 4h2.5c.966 0 1.75.784 1.75 1.75v1c0 .966-.784 1.75-1.75 1.75H6.91c.265.516.607 1.01 1.02 1.474 2.095 2.354 4.542 4.183 7.35 5.488a1.75 1.75 0 001.72-.205l1.287-.964c.7-.524 1.678-.466 2.303.137l1.763 1.705c.674.651.71 1.722.08 2.426a3.25 3.25 0 01-3.46.812c-3.968-1.485-7.646-3.97-11.032-7.41C4.017 9.757 2.42 6.882 2.04 4.25A3.25 3.25 0 013 5.75z" />
+                                    </svg>
+                                    <span>{data?.astroDetail?.contactNo || "Not available"}</span>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Details Stats */}
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Details</h3>
-                            <div className="space-y-2 text-sm">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
+                                Stats Overview
+                            </h3>
+                            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Total Order:</span>
-                                    <span className="text-teal-600 font-medium">-- Order</span>
+                                    <span>Total Orders</span>
+                                    <span className="text-blue-600 font-semibold">{data?.astroDetail?.totalOrder} Orders</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Followers:</span>
-                                    <span className="text-red-600 font-medium">-- Follower</span>
+                                    <span>Followers</span>
+                                    <span className="text-pink-600 font-semibold">{data?.followersCount} Follower</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Total Chat Min:</span>
-                                    <span className="text-orange-600 font-medium">-- Minutes</span>
+                                    <span>Chat Minutes</span>
+                                    <span className="text-orange-600 font-semibold">{data?.totalChatMinutes} Min</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Total Call Min:</span>
-                                    <span className="text-orange-600 font-medium">-- Minutes</span>
+                                    <span>Call Minutes</span>
+                                    <span className="text-orange-600 font-semibold">{data?.totalCallMinutes} Min</span>
                                 </div>
                             </div>
                         </div>
@@ -200,35 +211,7 @@ export default function Page() {
 
                 {/* Content Area */}
                 {activeTab === "Basic Detail" && (
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {/* Skill Details */}
-                            <div>
-                                <h3 className="text-lg font-semibold text-teal-600 mb-6">Skill Details</h3>
-                                <div className="space-y-4">
-                                    {skillDetails.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-start py-2">
-                                            <span className="text-gray-600 dark:text-gray-400 font-medium min-w-[140px]">{item.label}</span>
-                                            <span className="text-gray-900 dark:text-white text-right flex-1">{item.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Other Details */}
-                            <div>
-                                <h3 className="text-lg font-semibold text-teal-600 mb-6">Other Details</h3>
-                                <div className="space-y-4">
-                                    {otherDetails.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-start py-2">
-                                            <span className="text-gray-600 dark:text-gray-400 font-medium min-w-[180px]">{item.label}</span>
-                                            <span className="text-gray-900 dark:text-white text-right flex-1">{item.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} />
                 )}
 
                 {/* Other tab content can be added here */}
