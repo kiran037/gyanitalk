@@ -194,11 +194,45 @@ export async function getProfileDetails({ id }: { id?: any }) {
     },
   });
 
+  const astrologer_gifts_raw = await prisma.astrologer_gifts.findMany({
+    where: {
+      astrologerId: Number(id),
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+      gift: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  // Convert Decimal to number
+  const gifts = astrologer_gifts_raw.map((item:any) => ({
+    ...item,
+    giftAmount: item.giftAmount?.toNumber() ?? null,
+  }));
   const astroAvailability = await prisma.astrologer_availabilities.findMany({
     where: { astrologerId: Number(id) },
   });
 
-
+  const notification = await prisma.user_notifications.findMany({
+    where: { userId: Number(astroDetail.userId) }
+  });
+  const gallery = await prisma.astrologers_gallery.findMany({
+    where: { astrologerId: Number(id) }
+  });
+  
   const totalCallMinutes = callHistory.reduce((sum: number, req: any) => {
     const min = Number(req.totalMin) || 0;
     return sum + min;
@@ -218,15 +252,30 @@ export async function getProfileDetails({ id }: { id?: any }) {
     totalChatMinutes,
     followersCount,
     followersList,
-    astroAvailability
+    astroAvailability,
+    notification,
+    gifts,
+    gallery
   };
 }
+
+
 
 
 export async function unFollow({ id }: any) {
   const deleted = await prisma.astrologer_followers.delete({
     where: { id },
   });
+}
+
+export async function verifyGallery({ id, status }: any) {
+  const updated = await prisma.astrologers_gallery.update({
+    where: { id },
+    data: {status}
+  });
+
+  console.log(updated);
+  
 }
 
 
