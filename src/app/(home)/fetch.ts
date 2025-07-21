@@ -19,7 +19,6 @@ export async function getDashboardOverview() {
 
   const statuses = ['success', 'failed', 'pending'] as const;
 
-
   const [
     totalCallRequest,
     completedCalls,
@@ -328,74 +327,74 @@ export async function getDashboardOverview() {
 
 export async function getDashboardChartData() {
   const today = dayjs();
-    const months = [];
+  const months = [];
 
-    for (let i = 11; i >= 0; i--) {
-      months.push(today.subtract(i, 'month').format('YYYY-MM'));
-    }
+  for (let i = 11; i >= 0; i--) {
+    months.push(today.subtract(i, 'month').format('YYYY-MM'));
+  }
 
-    const callData = [];
-    const chatData = [];
-    const reportData = [];
-    const earningData = [];
-    const labels = [];
+  const callData = [];
+  const chatData = [];
+  const reportData = [];
+  const earningData = [];
+  const labels = [];
 
-    for (const monthStr of months) {
-      const [year, month] = monthStr.split('-').map(Number);
-      labels.push(dayjs(monthStr + '-01').format('MMM YYYY'));
+  for (const monthStr of months) {
+    const [year, month] = monthStr.split('-').map(Number);
+    labels.push(dayjs(monthStr + '-01').format('MMM YYYY'));
 
-      const callCount = await prisma.callrequest.count({
-        where: {
-          created_at: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
+    const callCount = await prisma.callrequest.count({
+      where: {
+        created_at: {
+          gte: new Date(year, month - 1, 1),
+          lt: new Date(year, month, 1),
         },
-      });
+      },
+    });
 
-      const chatCount = await prisma.chatrequest.count({
-        where: {
-          created_at: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
+    const chatCount = await prisma.chatrequest.count({
+      where: {
+        created_at: {
+          gte: new Date(year, month - 1, 1),
+          lt: new Date(year, month, 1),
         },
-      });
+      },
+    });
 
-      const reportCount = await prisma.user_reports.count({
-        where: {
-          created_at: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
+    const reportCount = await prisma.user_reports.count({
+      where: {
+        created_at: {
+          gte: new Date(year, month - 1, 1),
+          lt: new Date(year, month, 1),
         },
-      });
+      },
+    });
 
-      const earningSumResult = await prisma.admin_get_commissions.aggregate({
-        _sum: {
-          amount: true,
+    const earningSumResult = await prisma.admin_get_commissions.aggregate({
+      _sum: {
+        amount: true,
+      },
+      where: {
+        created_at: {
+          gte: new Date(year, month - 1, 1),
+          lt: new Date(year, month, 1),
         },
-        where: {
-          created_at: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
-        },
-      });
+      },
+    });
 
-      callData.push(callCount);
-      chatData.push(chatCount);
-      reportData.push(reportCount);
-      earningData.push(earningSumResult._sum.amount || 0);
-    }
+    callData.push(callCount);
+    chatData.push(chatCount);
+    reportData.push(reportCount);
+    earningData.push(earningSumResult._sum.amount || 0);
+  }
 
-    return {
-      labels,
-      callData,
-      chatData,
-      reportData,
-      earningData,
-    };
+  return {
+    labels,
+    callData,
+    chatData,
+    reportData,
+    earningData,
+  };
 }
 
 

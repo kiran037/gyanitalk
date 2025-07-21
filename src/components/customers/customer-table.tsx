@@ -10,7 +10,7 @@ import {
 } from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
-import { getCustomers } from "./fetch";
+import { getCustomers, isValidImageUrl } from "./fetch";
 import { DownloadIcon, PreviewIcon } from "./icons";
 import moment from "moment";
 
@@ -59,7 +59,7 @@ export async function CustomerTable({
                 <div className="flex items-center gap-3">
                   <Image
                     src={
-                      item.profile
+                      isValidImageUrl(item?.profile)
                         ? `${process.env.NEXT_PUBLIC_BASEURL}${item.profile}`
                         : "https://gyanitalk.com/build/assets/images/person.png"
                     }
