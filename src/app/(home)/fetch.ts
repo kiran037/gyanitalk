@@ -319,8 +319,6 @@ export async function getDashboardOverview() {
     totalDeposit: totalDepositMap,
     todayDeposit: todayDepositMap,
     pendingRequests, successRequests,
-
-
   };
 }
 
@@ -335,56 +333,61 @@ export async function getDashboardChartData() {
 
   const callData = [];
   const chatData = [];
-  const reportData = [];
   const earningData = [];
+  const userData = [];
   const labels = [];
 
   for (const monthStr of months) {
     const [year, month] = monthStr.split('-').map(Number);
-    labels.push(dayjs(monthStr + '-01').format('MMM YYYY'));
+    labels.push(dayjs(`${monthStr}-01`).format('MMM YYYY'));
 
-    const callCount = await prisma.callrequest.count({
-      where: {
-        created_at: {
-          gte: new Date(year, month - 1, 1),
-          lt: new Date(year, month, 1),
-        },
-      },
-    });
+    const fromDate = new Date(year, month - 1, 1);
+    const toDate = new Date(year, month, 1);
 
-    const chatCount = await prisma.chatrequest.count({
-      where: {
-        created_at: {
-          gte: new Date(year, month - 1, 1),
-          lt: new Date(year, month, 1),
+    const [callCount, chatCount, userCount, earningSumResult] = await Promise.all([
+      prisma.callrequest.count({
+        where: {
+          created_at: {
+            gte: fromDate,
+            lt: toDate,
+          },
         },
-      },
-    });
+      }),
 
-    const reportCount = await prisma.user_reports.count({
-      where: {
-        created_at: {
-          gte: new Date(year, month - 1, 1),
-          lt: new Date(year, month, 1),
+      prisma.chatrequest.count({
+        where: {
+          created_at: {
+            gte: fromDate,
+            lt: toDate,
+          },
         },
-      },
-    });
+      }),
 
-    const earningSumResult = await prisma.admin_get_commissions.aggregate({
-      _sum: {
-        amount: true,
-      },
-      where: {
-        created_at: {
-          gte: new Date(year, month - 1, 1),
-          lt: new Date(year, month, 1),
+      prisma.users.count({
+        where: {
+          created_at: {
+            gte: fromDate,
+            lt: toDate,
+          },
         },
-      },
-    });
+      }),
+
+      prisma.admin_get_commissions.aggregate({
+        _sum: {
+          amount: true,
+        },
+        where: {
+          created_at: {
+            gte: fromDate,
+            lt: toDate,
+          },
+        },
+      }),
+    ]);
 
     callData.push(callCount);
     chatData.push(chatCount);
-    reportData.push(reportCount);
+    userData.push(userCount);
     earningData.push(earningSumResult._sum.amount || 0);
   }
 
@@ -392,82 +395,11 @@ export async function getDashboardChartData() {
     labels,
     callData,
     chatData,
-    reportData,
     earningData,
+    userData,
   };
 }
 
-
-
-
-
-export async function getChatsData() {
-  // Fake delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  return [
-    {
-      name: "Jacob Jones",
-      profile: "/images/user/user-01.png",
-      isActive: true,
-      lastMessage: {
-        content: "See you tomorrow at the meeting!",
-        type: "text",
-        timestamp: "2024-12-19T14:30:00Z",
-        isRead: false,
-      },
-      unreadCount: 3,
-    },
-    {
-      name: "Wilium Smith",
-      profile: "/images/user/user-03.png",
-      isActive: true,
-      lastMessage: {
-        content: "Thanks for the update",
-        type: "text",
-        timestamp: "2024-12-19T10:15:00Z",
-        isRead: true,
-      },
-      unreadCount: 0,
-    },
-    {
-      name: "Johurul Haque",
-      profile: "/images/user/user-04.png",
-      isActive: false,
-      lastMessage: {
-        content: "What's up?",
-        type: "text",
-        timestamp: "2024-12-19T10:15:00Z",
-        isRead: true,
-      },
-      unreadCount: 0,
-    },
-    {
-      name: "M. Chowdhury",
-      profile: "/images/user/user-05.png",
-      isActive: false,
-      lastMessage: {
-        content: "Where are you now?",
-        type: "text",
-        timestamp: "2024-12-19T10:15:00Z",
-        isRead: true,
-      },
-      unreadCount: 2,
-    },
-    {
-      name: "Akagami",
-      profile: "/images/user/user-07.png",
-      isActive: false,
-      lastMessage: {
-        content: "Hey, how are you?",
-        type: "text",
-        timestamp: "2024-12-19T10:15:00Z",
-        isRead: true,
-      },
-      unreadCount: 0,
-    },
-  ];
-}
 
 
 type DepositGroup = {
