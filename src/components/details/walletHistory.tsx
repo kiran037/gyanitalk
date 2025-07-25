@@ -1,6 +1,8 @@
 import { format } from "date-fns";
 
-export default function WalletTransactionList({ transactions }: { transactions: any[] }) {
+export default function WalletTransactionList({ transactions, isUser }: { transactions: any[], isUser: boolean }) {
+
+
   return (
     <div className="p-6">
       <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
@@ -21,8 +23,9 @@ export default function WalletTransactionList({ transactions }: { transactions: 
         <div className="divide-y divide-gray-100 dark:divide-gray-700">
           {transactions.length > 0 ? (
             transactions.map((txn) => {
-              const userName = txn?.order_request?.user?.name || "Unknown";
               const type = txn?.transactionType || "-";
+
+              const userName = isUser === true ? txn?.order_request?.astrologer?.name || txn?.order_request?.aiAstrologer?.name : txn?.order_request?.user?.name || "Unknown";
               const amount = txn?.amount || 0;
               const totalMin = txn?.order_request?.totalMin || 0;
               const date = txn?.created_at ? format(new Date(txn.created_at), "dd MMM yyyy, hh:mm a") : "N/A";

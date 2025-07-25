@@ -7,6 +7,7 @@ import { AstrologerSkeleton } from "@/components/astrologers/astrologer-skeleton
 import { UserCallSessionList } from "@/components/details/callHistory";
 import { UserChatSessionList } from "@/components/details/chatHistory";
 import UserOrderDetails from "@/components/details/orderDetails";
+import WalletTransactionList from "@/components/details/walletHistory";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -212,16 +213,17 @@ export default function Page() {
                         {activeTab === "Call History" && (
                             <UserCallSessionList sessions={data?.callHistory} />
                         )}
-                         {activeTab === "Mall Orders" && (
+                        {activeTab === "Mall Orders" && (
                             <UserOrderDetails details={data?.orderDetails} />
+                        )}
+                        {activeTab === "Wallet" && (
+                            <WalletTransactionList transactions={data?.walletTransactions} isUser={true} />
                         )}
                         {/* Content Area */}
                         {/* {activeTab === "Mall Orders" && (
                             <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                         )}
-                        {activeTab === "Wallet" && (
-                            <WalletTransactionList transactions={data?.walletTransactions} />
-                        )}
+                       
                         {activeTab === "Chat History" && (
                             <ChatSessionList sessions={data?.chatHistory} />
                         )}

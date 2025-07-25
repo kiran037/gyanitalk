@@ -1264,7 +1264,7 @@ model order_request {
   id                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
   userId                BigInt
   astrologerId          BigInt?
-  aiAstrologerId        Int?
+  aiAstrologerId        BigInt?
   orderType             String?  @db.VarChar(45)
   productCategoryId     BigInt?  // ✅ changed from Int? to BigInt?
   productId             BigInt?  // ✅ changed from Int? to BigInt?
@@ -1290,8 +1290,10 @@ model order_request {
   order_address         order_addresses?     @relation(fields: [orderAddressId], references: [id])
   user users? @relation(fields: [userId], references: [id])
 
-  astrologer            astrologers?         @relation(fields: [astrologerId], references: [id])
-  callrequest           callrequest?         @relation(fields: [callId], references: [id])
+  astrologer     astrologers?     @relation(fields: [astrologerId], references: [id])
+  aiAstrologer   aiastrologers? @relation("AiAstroOrders", fields: [aiAstrologerId], references: [id])
+  callrequest    callrequest?     @relation(fields: [callId], references: [id])
+
 
   coupon_user_usages    coupon_user_usages[]
   walletTransactions    wallettransaction[]
@@ -1988,6 +1990,7 @@ model aiastrologers {
   aiChatHistories ai_chat_histories[] @relation("AiAstrologerToChatHistories")
   wallettransactions   wallettransaction[] @relation("AiAstroWalletRelation")
   aiFollowers astrologer_followers[] @relation("AiAstroFollowers")
+  order_requests order_request[] @relation("AiAstroOrders")
 
 }
 

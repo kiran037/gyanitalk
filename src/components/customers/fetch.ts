@@ -1,33 +1,6 @@
 "use server"
 const prisma = require("../../prismaClient");
 
-
-import { Decimal } from "@prisma/client/runtime/library";
-
-function serializeDecimalFields(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(serializeDecimalFields);
-  }
-
-  if (obj && typeof obj === "object") {
-    const result: any = {};
-    for (const key in obj) {
-      const value = obj[key];
-      if (value instanceof Decimal) {
-        result[key] = value.toNumber(); // or value.toFixed(2)
-      } else if (typeof value === "object") {
-        result[key] = serializeDecimalFields(value);
-      } else {
-        result[key] = value;
-      }
-    }
-    return result;
-  }
-
-  return obj;
-}
-
-
 export async function getCustomers({
   page = 1,
   limit = 15,
@@ -220,12 +193,42 @@ export async function getUserDetails({ id }: { id?: any }) {
     gstPercent: String(order.gstPercent),
   }));
 
+  const walletTransactions = await prisma.wallettransaction.findMany({
+    where: {
+      userId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      order_request: {
+        select: {
+          totalMin: true,
+          astrologer: {
+            select: {
+              name: true,
+            },
+          },
+          aiAstrologer: {
+            select: {
+              name: true
+            }
+          }
+        },
+      },
+    },
+  });
+
+
+  console.log(walletTransactions);
+  
 
   return {
     userDetail,
     callHistory,
     chatHistory,
-    orderDetails
+    orderDetails,
+    walletTransactions
   };
 }
 

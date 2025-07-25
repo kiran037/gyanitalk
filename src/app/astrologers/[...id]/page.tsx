@@ -257,7 +257,7 @@ export default function Page() {
                             <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                         )}
                         {activeTab === "Wallet" && (
-                            <WalletTransactionList transactions={data?.walletTransactions} />
+                            <WalletTransactionList transactions={data?.walletTransactions} isUser={false} />
                         )}
                         {activeTab === "Chat History" && (
                             <AstroChatSessionList sessions={data?.chatHistory} />
