@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type React from "react"
+import Link from "next/link";
 
 export function OverviewStatCard({
   title,
@@ -9,7 +10,7 @@ export function OverviewStatCard({
 }: {
   title: string
   Icon: React.ElementType
-  stats: { label: string; value: string | number; trend?: "up" | "down" | "neutral" }[]
+  stats: { label: string; value: string | number; path?: string; }[]
   variant?: "default" | "customers" | "astrologers" | "live" | "earnings" | "calls" | "chats"
 }) {
   const getVariantStyles = () => {
@@ -63,29 +64,32 @@ export function OverviewStatCard({
 
   return (
     <Card className={`group hover:shadow-lg transition-all duration-300 border-l-4 ${styles.accent} hover:scale-[1.02] bg-white`}>
-      <CardHeader className="pb-0">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${styles.iconBg} group-hover:scale-110 transition-transform duration-300`}>
-            <Icon className={`w-5 h-5 ${styles.iconColor}`} />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">{title}</h3>
+    <CardHeader className="pb-0">
+      <div className="flex items-center gap-3">
+        <div className={`p-2.5 rounded-xl ${styles.iconBg} group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className={`w-5 h-5 ${styles.iconColor}`} />
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="flex items-center justify-between group/stat">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">{title}</h3>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-0">
+      <div className="space-y-3">
+        {stats.map((stat, idx) => (
+          <div key={idx} className="flex items-center justify-between group/stat">
+            {stat.path ? (
+              <Link href={`/${stat.path}`}><span className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</span></Link>
+            ) :
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover/stat:scale-105 transition-transform">
-                  {stat.value}
-                </span>
-
-              </div>
+            }
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover/stat:scale-105 transition-transform">
+                {stat.value}
+              </span>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
   )
 }

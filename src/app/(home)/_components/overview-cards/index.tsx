@@ -16,7 +16,7 @@ export async function OverviewCardsGroup() {
             Icon={icons.Users}
             variant="customers"
             stats={[
-              { label: "Total", value: data.totalCustomer.toLocaleString() },
+              { label: "Total", value: data.totalCustomer.toLocaleString(), path: 'customers' },
               { label: "Active", value: data.totalActiveCustomer.toLocaleString() },
               { label: "Report Req.", value: data.totalReportRequest.toLocaleString() },
             ]}
@@ -106,7 +106,11 @@ export async function OverviewCardsGroup() {
             Icon={icons.Users}
             variant="customers"
             stats={[
-              { label: "Today New", value: data.todayCustomer, trend: "up" },
+              {
+                label: "Today New", value: data.todayCustomer,
+                path: `customers?startDate=${new Date().toISOString().slice(0, 10)}&endDate=${new Date().toISOString().slice(0, 10)}`
+
+              },
             ]}
           />
           <OverviewStatCard
@@ -114,7 +118,7 @@ export async function OverviewCardsGroup() {
             Icon={icons.Profit}
             variant="earnings"
             stats={[
-              { label: "Today", value: `₹${data.todayEarning.toFixed(2)}`, trend: "up" },
+              { label: "Today", value: `₹${data.todayEarning.toFixed(2)}`, },
               { label: "Astro Today", value: `₹${data.todayAstroEarning.toFixed(2)}` },
               { label: "Today Withdraw", value: `₹${data.todayWithdraw.toLocaleString()}` },
 
@@ -125,9 +129,9 @@ export async function OverviewCardsGroup() {
             Icon={icons.Call}
             variant="calls"
             stats={[
-              { label: "Today's Req", value: data.todayCallRequest, trend: "neutral" },
+              { label: "Today's Req", value: data.todayCallRequest, },
               { label: "Today's Time", value: `${data.todayCallRequestTime} min` },
-              { label: "Rejected Today", value: data.todayCallRequestReject, trend: "down" },
+              { label: "Rejected Today", value: data.todayCallRequestReject, },
             ]}
           />
           <OverviewStatCard
@@ -135,9 +139,9 @@ export async function OverviewCardsGroup() {
             Icon={icons.Chat}
             variant="chats"
             stats={[
-              { label: "Today's Req", value: data.todayChatRequest, trend: "up" },
+              { label: "Today's Req", value: data.todayChatRequest, },
               { label: "Today's Time", value: `${data.todayChatRequestTime} min` },
-              { label: "Rejected Today", value: data.todayChatRequestReject, trend: "down" },
+              { label: "Rejected Today", value: data.todayChatRequestReject, },
             ]}
           />
           <OverviewStatCard

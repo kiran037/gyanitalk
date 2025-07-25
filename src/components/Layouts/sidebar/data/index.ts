@@ -1,4 +1,14 @@
-import * as Icons from "../icons";
+import {
+  Home,
+  User,
+  IndianRupee,
+  Calendar,
+  BadgeInfo,
+  ListChecks,
+  Settings,
+  FileText,
+  Square,
+} from "lucide-react";
 
 export const NAV_DATA = [
   {
@@ -7,41 +17,52 @@ export const NAV_DATA = [
       {
         title: "Dashboard",
         url: "/",
-        icon: Icons.HomeIcon,
+        icon: Home,
         items: [],
       },
       {
         title: "Customers",
         url: "/customers",
-        icon: Icons.User,
+        icon: User,
         items: [],
       },
       {
         title: "Astrologers",
         url: "/astrologers",
-        icon: Icons.User,
+        icon: User,
         items: [],
       },
       {
-        title: "Calendar",
-        url: "/calendar",
-        icon: Icons.Calendar,
+        title: "Transactions",
+        icon: IndianRupee,
+        items: [
+          {
+            title: "Wallet Transactions",
+            url: "/wallet",
+          },
+          {
+            title: "Payment Transactions",
+            url: "/payments",
+          },
+        ],
+      },
+
+      {
+        title: "Coupons",
+        url: "/coupons",
+        icon: Calendar,
         items: [],
       },
       {
         title: "Profile",
         url: "/profile",
-        icon: Icons.User,
+        icon: User,
         items: [],
       },
       {
         title: "Forms",
-        icon: Icons.Alphabet,
+        icon: FileText,
         items: [
-          {
-            title: "Form Elements",
-            url: "/forms/form-elements",
-          },
           {
             title: "Form Layout",
             url: "/forms/form-layout",
@@ -50,7 +71,7 @@ export const NAV_DATA = [
       },
       {
         title: "Pages",
-        icon: Icons.Alphabet,
+        icon: BadgeInfo,
         items: [
           {
             title: "Settings",
@@ -65,7 +86,7 @@ export const NAV_DATA = [
     items: [
       {
         title: "UI Elements",
-        icon: Icons.FourCircle,
+        icon: Square,
         items: [
           {
             title: "Alerts",
