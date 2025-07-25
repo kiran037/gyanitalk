@@ -1,13 +1,12 @@
 "use client"
-import { getProfileDetails } from "@/components/astrologers/fetch";
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
-import userDetailsSkeleton from "@/components/astrologers/astrologer-details-skeleton";
 import { getUserDetails } from "@/components/customers/fetch";
 import { AstrologerSkeleton } from "@/components/astrologers/astrologer-skeleton";
 import { UserCallSessionList } from "@/components/details/callHistory";
 import { UserChatSessionList } from "@/components/details/chatHistory";
+import UserOrderDetails from "@/components/details/orderDetails";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -78,7 +77,7 @@ export default function Page() {
     const tabs = [
         "Chat History",
         "Call History",
-        "Order Detail",
+        "Mall Orders",
         "Wallet",
         "Following List",
         "Notification List",
@@ -213,8 +212,11 @@ export default function Page() {
                         {activeTab === "Call History" && (
                             <UserCallSessionList sessions={data?.callHistory} />
                         )}
+                         {activeTab === "Mall Orders" && (
+                            <UserOrderDetails details={data?.orderDetails} />
+                        )}
                         {/* Content Area */}
-                        {/* {activeTab === "Order Detail" && (
+                        {/* {activeTab === "Mall Orders" && (
                             <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
                         )}
                         {activeTab === "Wallet" && (
