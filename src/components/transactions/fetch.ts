@@ -151,10 +151,6 @@ export async function getPaymentTransactions({
     }),
   ]);
 
-
-  console.log(records);
-  
-
   return {
     records,
     total: totalCount,
@@ -162,3 +158,5 @@ export async function getPaymentTransactions({
     currentPage: page,
   };
 }
+
+
