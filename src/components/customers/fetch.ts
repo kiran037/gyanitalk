@@ -207,6 +207,7 @@ export async function getUserDetails({ id }: { id?: any }) {
           astrologer: {
             select: {
               name: true,
+
             },
           },
           aiAstrologer: {
@@ -219,16 +220,69 @@ export async function getUserDetails({ id }: { id?: any }) {
     },
   });
 
+  const followersList = await prisma.astrologer_followers.findMany({
+    where: { userId: Number(id) },
+    include: {
+      astrologer: {
+        select: {
+          id: true,
+          name: true,
+          contactNo: true,
+          profileImage: true,
+        },
+      },
+      aiAstrologer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
 
-  console.log(walletTransactions);
-  
+    },
+  });
+
+  const notification = await prisma.user_notifications.findMany({
+    where: { userId: Number(id) }
+  });
+
+
+  const astrologer_gifts_raw = await prisma.astrologer_gifts.findMany({
+    where: {
+      userId: Number(id),
+    },
+    include: {
+      astrologer: {
+        select: {
+          name: true,
+          profileImage: true,
+        },
+      },
+      gift: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  const gifts = astrologer_gifts_raw.map((item: any) => ({
+    ...item,
+    giftAmount: item.giftAmount?.toNumber() ?? null,
+  }));
+
 
   return {
     userDetail,
     callHistory,
     chatHistory,
     orderDetails,
-    walletTransactions
+    walletTransactions,
+    followersList,
+    notification,
+    gifts
   };
 }
 

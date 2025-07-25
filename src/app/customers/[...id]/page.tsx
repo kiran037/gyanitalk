@@ -8,6 +8,9 @@ import { UserCallSessionList } from "@/components/details/callHistory";
 import { UserChatSessionList } from "@/components/details/chatHistory";
 import UserOrderDetails from "@/components/details/orderDetails";
 import WalletTransactionList from "@/components/details/walletHistory";
+import AstroFollowerList, { UserFollowerList } from "@/components/details/followersList";
+import NoitificationsList from "@/components/details/notification";
+import GiftList, { UserGiftList } from "@/components/details/giftList";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -219,30 +222,15 @@ export default function Page() {
                         {activeTab === "Wallet" && (
                             <WalletTransactionList transactions={data?.walletTransactions} isUser={true} />
                         )}
-                        {/* Content Area */}
-                        {/* {activeTab === "Mall Orders" && (
-                            <ProfileDetailsAccordion otherDetails={otherDetails} skillDetails={skillDetails} dayAvailability={availability} />
-                        )}
-                       
-                        {activeTab === "Chat History" && (
-                            <ChatSessionList sessions={data?.chatHistory} />
-                        )}
-                        {activeTab === "Call History" && (
-                            <CallSessionList sessions={data?.callHistory} />
-                        )}
-                        {activeTab === "Following List" && (
-                            <AstroFollowerList followers={data?.followersList} />
+                          {activeTab === "Following List" && (
+                            <UserFollowerList followers={data?.followersList} />
                         )}
                         {activeTab === "Notification List" && (
                             <NoitificationsList noitifications={data?.notification} />
                         )}
                         {activeTab === "Gift List" && (
-                            <GiftList gifts={data?.gifts} />
+                            <UserGiftList gifts={data?.gifts} />
                         )}
-                        {activeTab === "Gallery" && (
-                            <GalleryList gallery={data?.gallery} />
-                        )} */}
-
                     </div>
                 </div>
             )}

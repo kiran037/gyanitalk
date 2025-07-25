@@ -208,6 +208,7 @@ model astrologer_gifts {
  
   user         users?     @relation("UserGiftsRelation", fields: [userId], references: [id])
   gift         gifts?     @relation("GiftsRelation", fields: [giftId], references: [id])
+  astrologer   astrologers? @relation("AstrologerGiftsRelation", fields: [astrologerId], references: [id])
 
   @@index([astrologerId], map: "astrologer_gifts_astrologerid_foreign")
   @@index([giftId], map: "astrologer_gifts_giftid_foreign")
@@ -366,6 +367,7 @@ model astrologers {
   assistantchat assistantchat[]
   order_requests order_request[]
   followers     astrologer_followers[] 
+  astrologerGifts   astrologer_gifts[]  @relation("AstrologerGiftsRelation")
   assignGroups   astrologer_assign_group[]
   liveastro      liveastro[]   
   @@index([userId], map: "astrologers_userid_foreign")
