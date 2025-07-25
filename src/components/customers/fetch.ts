@@ -1,3 +1,4 @@
+"use server"
 const prisma = require("../../prismaClient");
 
 export async function getCustomers({
@@ -98,7 +99,7 @@ export async function getCustomers({
       return acc + Number(item.amount || 0);
     }, 0);
 
-    
+
     return {
       ...user,
       balance,
@@ -114,6 +115,74 @@ export async function getCustomers({
     currentPage: page,
   };
 }
+
+
+export async function getUserDetails({ id }: { id?: any }) {
+  const userDetail = await prisma.users.findFirst({
+    where: { id: Number(id) },
+  });
+
+  const callHistory = await prisma.callrequest.findMany({
+    where: {
+      userId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+      astrologer: {
+        select: {
+          name: true,
+          charge: true,
+          contactNo: true,
+          profileImage: true
+        },
+      },
+    },
+  });
+
+  const chatHistory = await prisma.chatrequest.findMany({
+    where: {
+      userId: Number(id),
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          contactNo: true,
+          profile: true,
+        },
+      },
+      astrologer: {
+        select: {
+          name: true,
+          charge: true,
+          contactNo: true,
+          profileImage: true
+        },
+      },
+    },
+  });
+
+
+  return {
+    userDetail,
+    callHistory,
+    chatHistory
+  };
+}
+
+
 
 
 type User = {
@@ -146,13 +215,4 @@ const formatToIST = (utcDate: Date) => {
   }).format(new Date(utcDate));
 };
 
-export function isValidImageUrl(url: string | undefined | null): boolean {
-  if (!url || typeof url !== "string") return false;
 
-  try {
-    const parsedUrl = new URL(url, process.env.NEXT_PUBLIC_BASEURL);
-    return /\.(jpg|jpeg|png|webp|gif|bmp|svg)$/i.test(parsedUrl.pathname);
-  } catch (e) {
-    return false;
-  }
-}

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { format } from "date-fns";
 import { useState } from "react";
-import { verifyGallery } from "../fetch";
+import { verifyGallery } from "../astrologers/fetch";
 import toast from "react-hot-toast";
 
 export default function GalleryList({ gallery }: { gallery: any[] }) {

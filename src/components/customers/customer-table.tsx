@@ -10,9 +10,10 @@ import {
 } from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
-import { getCustomers, isValidImageUrl } from "./fetch";
+import { getCustomers } from "./fetch";
 import { DownloadIcon, PreviewIcon } from "./icons";
 import moment from "moment";
+import { isValidImageUrl } from "../functions";
 
 export async function CustomerTable({
   page = 1,

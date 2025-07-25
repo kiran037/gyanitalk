@@ -4,14 +4,14 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
 import dayjs from "dayjs";
-import ProfileDetailsAccordion from "@/components/astrologers/details/details-accordion";
-import ChatSessionList from "@/components/astrologers/details/chatHistory";
-import CallSessionList from "@/components/astrologers/details/callHistory";
-import WalletTransactionList from "@/components/astrologers/details/walletHistory";
-import AstroFollowerList from "@/components/astrologers/details/followersList";
-import NoitificationsList from "@/components/astrologers/details/notification";
-import GiftList from "@/components/astrologers/details/giftList";
-import GalleryList from "@/components/astrologers/details/galleryList";
+import ProfileDetailsAccordion from "@/components/details/details-accordion";
+import AstroChatSessionList from "@/components/details/chatHistory";
+import AstroCallSessionList from "@/components/details/callHistory";
+import WalletTransactionList from "@/components/details/walletHistory";
+import AstroFollowerList from "@/components/details/followersList";
+import NoitificationsList from "@/components/details/notification";
+import GiftList from "@/components/details/giftList";
+import GalleryList from "@/components/details/galleryList";
 import AstroDetailsSkeleton from "@/components/astrologers/astrologer-details-skeleton";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
@@ -62,17 +62,17 @@ export default function Page() {
 
     useEffect(() => {
         return () => {
-          localStorage.removeItem("activeAstroTab");
+            localStorage.removeItem("activeAstroTab");
         };
-      }, []);
-      
+    }, []);
 
-      const [activeTab, setActiveTab] = useState(() => {
+
+    const [activeTab, setActiveTab] = useState(() => {
         if (typeof window !== "undefined") {
-          return localStorage.getItem("activeAstroTab") || "Basic Detail";
+            return localStorage.getItem("activeAstroTab") || "Basic Detail";
         }
         return "Basic Detail";
-      });
+    });
 
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
@@ -260,10 +260,10 @@ export default function Page() {
                             <WalletTransactionList transactions={data?.walletTransactions} />
                         )}
                         {activeTab === "Chat History" && (
-                            <ChatSessionList sessions={data?.chatHistory} />
+                            <AstroChatSessionList sessions={data?.chatHistory} />
                         )}
                         {activeTab === "Call History" && (
-                            <CallSessionList sessions={data?.callHistory} />
+                            <AstroCallSessionList sessions={data?.callHistory} />
                         )}
                         {activeTab === "Followers List" && (
                             <AstroFollowerList followers={data?.followersList} />

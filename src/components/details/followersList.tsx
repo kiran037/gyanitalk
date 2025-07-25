@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useTransition } from "react";
-import { unFollow } from "../fetch";
 import toast from "react-hot-toast";
+import { unFollow } from "../astrologers/fetch";
 
 export default function AstroFollowerList({ followers }: { followers: any[] }) {
   const [isPending, startTransition] = useTransition();
