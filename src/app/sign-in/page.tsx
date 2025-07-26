@@ -22,7 +22,7 @@ export default function SigninWithPassword() {
     const token = await new SignJWT({ userId: Number(user.id) })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
-      .setExpirationTime("7d")
+      .setExpirationTime("2h")
       .sign(secret);
 
       return {

@@ -31,7 +31,7 @@ export default function SigninWithPasswordClient({ loginUser }: Props) {
 
       localStorage.setItem("token", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
-      document.cookie = `token=${result.token}; path=/; max-age=604800`;
+      document.cookie = `token=${result.token}; path=/; max-age=7200`;
 
       window.location.href = "/";
     } catch (err: any) {
