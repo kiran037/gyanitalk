@@ -25,14 +25,14 @@ export default function SigninWithPassword() {
       .setExpirationTime("2h")
       .sign(secret);
 
-      return {
-        token,
-        user: {
-          id: Number(user.id), 
-          email: user.email
-        }
-      };
-      
+    return {
+      token,
+      user: {
+        id: Number(user.id),
+        email: user.email
+      }
+    };
+
   }
 
   return (
