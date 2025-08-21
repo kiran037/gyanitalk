@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "flatpickr": "^4.6.13",
+    "fs": "^0.0.1-security",
     "jose": "^6.0.11",
     "jsonwebtoken": "^9.0.2",
     "jsvectormap": "^1.6.0",

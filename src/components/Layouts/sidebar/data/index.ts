@@ -54,18 +54,20 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Profile",
-        url: "/profile",
-        icon: User,
-        items: [],
-      },
-      {
-        title: "Forms",
+        title: "Courses",
         icon: FileText,
         items: [
           {
-            title: "Form Layout",
-            url: "/forms/form-layout",
+            title: "Courses",
+            url: "/courses",
+          },
+          {
+            title: "Category",
+            url: "/category",
+          },
+          {
+            title: "Chapter",
+            url: "/chapter",
           },
         ],
       },
