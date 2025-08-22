@@ -15,15 +15,12 @@ export async function getCourses() {
   return { courses: serializedCourses };
 }
 
-export async function getCategories() {
-  const categories = await prisma.categories.findMany();
-  return { categories };
-}
+
 
 
 export async function deleteCourses(id: number) {
   try {
-    const deletedCourse = await prisma.courses.delete({
+    await prisma.courses.delete({
       where: { id },
     });
 
@@ -67,6 +64,59 @@ export async function createCourse(data: any) {
     return { success: true, course };
   } catch (error: any) {
     console.error("Error creating course:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+
+export async function getCategories() {
+  const categories = await prisma.categories.findMany();
+  return { categories };
+}
+
+
+export async function deleteCategory(id: number) {
+  try {
+    await prisma.categories.delete({
+      where: { id },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting category:", error);
+    return { success: false, message: error.message };
+  }
+} 
+
+
+
+export async function updateCategory(id: number, data: any) {
+  try {
+    const updatedCourse = await prisma.categories.update({
+      where: { id },
+      data,
+    });
+
+    return { success: true, course: updatedCourse };
+  } catch (error: any) {
+    console.error("Error updating Category:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+
+export async function createCategory(data: any) {
+  try {
+    const categories = await prisma.categories.create({
+      data: {
+        name: data.name,
+        image: data.image || null,
+      },
+    });
+
+    return { success: true, categories };
+  } catch (error: any) {
+    console.error("Error creating Category:", error);
     return { success: false, message: error.message };
   }
 }

@@ -57,13 +57,14 @@ export const NAV_DATA = [
         title: "Courses",
         icon: FileText,
         items: [
-          {
-            title: "Courses",
-            url: "/courses",
-          },
+          
           {
             title: "Category",
             url: "/category",
+          },
+          {
+            title: "Courses",
+            url: "/courses",
           },
           {
             title: "Chapter",
