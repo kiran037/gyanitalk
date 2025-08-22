@@ -634,6 +634,8 @@ model chapters {
   is_paid      Int      @default(0)
   created_at   DateTime @default(now()) @db.Timestamp(0)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
+
+  course courses? @relation(fields: [course_id], references: [id])
 }
 
 model chat_log {
@@ -768,20 +770,21 @@ model course_purchase {
 }
 
 model courses {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.Text
-  price       Decimal? @db.Decimal(10, 0)
-  offer_price Decimal? @db.Decimal(10, 0)
-  description String?  @db.Text
-  image       String?  @db.Text
-  is_paid     Int?     @default(0)
-  category_id Int?
-  created_at  DateTime @default(now()) @db.Timestamp(0)
-  updated_at  DateTime @default(now()) @db.Timestamp(0)
+  id            Int              @id @default(autoincrement())
+  name          String           @db.Text
+  price         Decimal?         @db.Decimal(10, 0)
+  offer_price   Decimal?         @db.Decimal(10, 0)
+  description   String?          @db.Text
+  image         String?          @db.Text
+  is_paid       Int?             @default(0)
+  category_id   Int?
+  created_at    DateTime         @default(now()) @db.Timestamp(0)
+  updated_at    DateTime         @default(now()) @db.Timestamp(0)
 
-  category      categories?      @relation(fields: [category_id], references: [id])
-
+  category       categories?      @relation(fields: [category_id], references: [id])
   course_purchase course_purchase[]
+  
+  chapters chapters[]
 }
 
 model dailyhoroscope {
