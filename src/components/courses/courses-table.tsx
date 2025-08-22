@@ -353,11 +353,13 @@ export function CoursesTable() {
                                     if (formData.image instanceof File) {
                                         const uploadForm = new FormData();
                                         uploadForm.append("image", formData.image);
+
                                         const uploadData = await uploadImage(formData.image);
 
 
                                         if (uploadData.success && uploadData.path) {
                                             updatedFormData.image = uploadData.path;
+                                            toast.success("Image Upload Success");
                                         } else {
                                             toast.error("Image upload failed");
                                             return;
