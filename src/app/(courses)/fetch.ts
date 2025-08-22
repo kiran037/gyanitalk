@@ -36,10 +36,6 @@ export async function deleteCourses(id: number) {
 
 
 export async function updateCourse(id: number, data: any) {
-
-  console.log(data);
-  return { success: true };
-
   try {
     const updatedCourse = await prisma.courses.update({
       where: { id },
@@ -53,3 +49,24 @@ export async function updateCourse(id: number, data: any) {
   }
 }
 
+
+export async function createCourse(data: any) {
+  try {
+    const course = await prisma.courses.create({
+      data: {
+        name: data.name,
+        category_id: data.category_id || null,
+        price: data.price || 0,
+        offer_price: data.offer_price || 0,
+        is_paid: data.is_paid || 0,
+        description: data.description || "",
+        image: data.image || null,
+      },
+    });
+
+    return { success: true, course };
+  } catch (error: any) {
+    console.error("Error creating course:", error);
+    return { success: false, message: error.message };
+  }
+}

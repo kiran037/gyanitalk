@@ -13,20 +13,23 @@ import {
 } from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import { isValidImageUrl } from "../functions";
-import { PreviewIcon } from "../customers/icons";
-import { deleteCourses, getCategories, getCourses, updateCourse } from "@/app/(courses)/fetch";
+import {
+    createCourse,
+    deleteCourses,
+    getCategories,
+    getCourses,
+    updateCourse,
+} from "@/app/(courses)/fetch";
 import { uploadImage } from "@/upload";
 import toast from "react-hot-toast";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 
 export function CoursesTable() {
     const [courses, setCourses] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
-
     const [showModal, setShowModal] = useState(false);
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingCourse, setEditingCourse] = useState<any>(null);
@@ -34,6 +37,18 @@ export function CoursesTable() {
     const [formData, setFormData] = useState<any>({});
     const [categories, setCategories] = useState<any[]>([]);
 
+    // 🔧 NEW: Add Course modal state
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [addFormData, setAddFormData] = useState<any>({
+        name: "",
+        category_id: "",
+        price: 0,
+        offer_price: 0,
+        is_paid: 0,
+        description: "",
+        image: null as File | null,
+    });
+    const [addImagePreview, setAddImagePreview] = useState<string | null>(null);
 
     // Fetch Courses
     const fetchCourses = async () => {
@@ -48,12 +63,10 @@ export function CoursesTable() {
         }
     };
 
-
     const fetchCategories = async () => {
         const res = await getCategories();
         setCategories(res.categories);
     };
-
 
     useEffect(() => {
         fetchCourses();
@@ -62,6 +75,30 @@ export function CoursesTable() {
 
     return (
         <div className="rounded-2xl border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5 p-4 overflow-x-auto">
+
+            {/* 🔧 NEW: Add Course button */}
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={() => {
+                        // reset add form each open
+                        setAddFormData({
+                            name: "",
+                            category_id: "",
+                            price: 0,
+                            offer_price: 0,
+                            is_paid: 0,
+                            description: "",
+                            image: null,
+                        });
+                        setAddImagePreview(null);
+                        setShowAddModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                    <Plus size={16} /> Add Course
+                </button>
+            </div>
+
             {loading ? (
                 <p className="text-center py-4">Loading courses...</p>
             ) : (
@@ -91,6 +128,7 @@ export function CoursesTable() {
                                                     ? `${process.env.NEXT_PUBLIC_BASEURL}${item?.image}`
                                                     : "https://gyanitalk.com/build/assets/images/person.png"
                                             }
+
                                             className="object-cover rounded-md border border-gray-300 dark:border-dark-3"
                                             width={42}
                                             height={42}
@@ -146,7 +184,11 @@ export function CoursesTable() {
                                             onClick={() => {
                                                 setEditingCourse(item);
                                                 setFormData({ ...item });
-                                                setImagePreview(`${process.env.NEXT_PUBLIC_BASEURL}${item.image}`);
+                                                setImagePreview(
+                                                    isValidImageUrl(item?.image)
+                                                        ? `${process.env.NEXT_PUBLIC_BASEURL}${item.image}`
+                                                        : null
+                                                );
                                                 setShowEditModal(true);
                                             }}
                                             className="text-blue-500 hover:text-blue-600 transition-colors"
@@ -159,7 +201,6 @@ export function CoursesTable() {
                                                 setSelectedCourseId(item.id);
                                                 setShowModal(true);
                                             }}
-
                                             className="text-red-500 hover:text-red-600 transition-colors"
                                             title="Delete"
                                         >
@@ -174,11 +215,13 @@ export function CoursesTable() {
                 </Table>
             )}
 
-
+            {/* Delete Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Delete Course</h2>
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                            Delete Course
+                        </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
                             Are you sure you want to delete this course? This action cannot be undone.
                         </p>
@@ -212,6 +255,7 @@ export function CoursesTable() {
                 </div>
             )}
 
+            {/* Edit Modal */}
             {showEditModal && editingCourse && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6">
@@ -273,7 +317,9 @@ export function CoursesTable() {
                                 <input
                                     type="number"
                                     value={formData.offer_price}
-                                    onChange={(e) => setFormData({ ...formData, offer_price: Number(e.target.value) })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, offer_price: Number(e.target.value) })
+                                    }
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                                 />
                             </div>
@@ -351,13 +397,8 @@ export function CoursesTable() {
                                     let updatedFormData = { ...formData };
 
                                     if (formData.image instanceof File) {
-                                        const uploadForm = new FormData();
-                                        uploadForm.append("image", formData.image);
-
-                                        const uploadData = await uploadImage(formData.image);
-
-
-                                        if (uploadData.success && uploadData.path) {
+                                        const uploadData = await uploadImage(formData.image, "images");
+                                        if (uploadData?.success && uploadData?.path) {
                                             updatedFormData.image = uploadData.path;
                                             toast.success("Image Upload Success");
                                         } else {
@@ -365,9 +406,9 @@ export function CoursesTable() {
                                             return;
                                         }
                                     }
-                                    return;
 
-                                    const result = await updateCourse(12, updatedFormData);
+                                    // 🔧 FIX: use editingCourse.id instead of 12
+                                    const result = await updateCourse(editingCourse.id, updatedFormData);
 
                                     if (result.success) {
                                         toast.success("Course updated successfully");
@@ -388,9 +429,211 @@ export function CoursesTable() {
                 </div>
             )}
 
+            {/* 🔧 NEW: Add Course Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6">
+                        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6 border-b pb-3">
+                            ➕ Add Course
+                        </h2>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Course Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Course Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={addFormData.name}
+                                    onChange={(e) => setAddFormData({ ...addFormData, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+
+                            {/* Category */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Category
+                                </label>
+                                <select
+                                    value={addFormData.category_id || ""}
+                                    onChange={(e) =>
+                                        setAddFormData({ ...addFormData, category_id: Number(e.target.value) })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                >
+                                    <option value="">Select Category</option>
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Price */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Price (₹)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={addFormData.price}
+                                    onChange={(e) =>
+                                        setAddFormData({ ...addFormData, price: Number(e.target.value) })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+
+                            {/* Offer Price */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Offer Price (₹)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={addFormData.offer_price}
+                                    onChange={(e) =>
+                                        setAddFormData({
+                                            ...addFormData,
+                                            offer_price: Number(e.target.value),
+                                        })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                />
+                            </div>
+
+                            {/* Paid Status */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Course Type
+                                </label>
+                                <select
+                                    value={addFormData.is_paid}
+                                    onChange={(e) =>
+                                        setAddFormData({ ...addFormData, is_paid: Number(e.target.value) })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                >
+                                    <option value={0}>Free</option>
+                                    <option value={1}>Paid</option>
+                                </select>
+                            </div>
+
+                            {/* Image Upload */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Course Image
+                                </label>
+                                {addImagePreview && (
+                                    <img
+                                        src={addImagePreview}
+                                        alt="Preview"
+                                        className="w-24 h-24 rounded object-cover mb-2 border"
+                                    />
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0] || null;
+                                        setAddFormData({ ...addFormData, image: file });
+                                        setAddImagePreview(file ? URL.createObjectURL(file) : null);
+                                    }}
+                                    className="w-full text-sm text-gray-700 dark:text-gray-300"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Description - Full Width */}
+                        <div className="mt-6">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Description
+                            </label>
+                            <textarea
+                                rows={4}
+                                value={addFormData.description}
+                                onChange={(e) =>
+                                    setAddFormData({ ...addFormData, description: e.target.value })
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                            />
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowAddModal(false);
+                                    setAddImagePreview(null);
+                                }}
+                                className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        let payload: any = { ...addFormData };
+
+                                        // upload image if provided
+                                        if (addFormData.image instanceof File) {
+                                            const uploadData = await uploadImage(addFormData.image, "images");
+                                            if (uploadData?.success && uploadData?.path) {
+                                                payload.image = uploadData.path;
+                                                toast.success("Image Upload Success");
+                                            } else {
+                                                toast.error("Image upload failed");
+                                                return;
+                                            }
+                                        } else {
+                                            // if no image chosen, remove key so backend doesn’t get null/undefined
+                                            delete payload.image;
+                                        }
+
+                                        // coerce types / clean
+                                        payload.category_id = payload.category_id
+                                            ? Number(payload.category_id)
+                                            : null;
+                                        payload.price = Number(payload.price || 0);
+                                        payload.offer_price = Number(payload.offer_price || 0);
+                                        payload.is_paid = Number(payload.is_paid || 0);
+
+                                        const result = await createCourse(payload);
+
+                                        if (result?.success) {
+                                            toast.success("Course created successfully");
+                                            setShowAddModal(false);
+                                            setAddImagePreview(null);
+                                            setAddFormData({
+                                                name: "",
+                                                category_id: "",
+                                                price: 0,
+                                                offer_price: 0,
+                                                is_paid: 0,
+                                                description: "",
+                                                image: null,
+                                            });
+                                            fetchCourses();
+                                        } else {
+                                            toast.error(result?.message || "Failed to create course");
+                                        }
+                                    } catch (e) {
+                                        console.error(e);
+                                        toast.error("Something went wrong");
+                                    }
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Create Course
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-
-
     );
 }
