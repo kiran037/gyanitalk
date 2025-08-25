@@ -1,5 +1,5 @@
 "use server"
-const prisma = require("../../prismaClient");
+const prisma = require("@/prismaClient");
 
 export async function getAstrologers({
   page = 1,
@@ -218,7 +218,7 @@ export async function getProfileDetails({ id }: { id?: any }) {
   });
 
   // Convert Decimal to number
-  const gifts = astrologer_gifts_raw.map((item:any) => ({
+  const gifts = astrologer_gifts_raw.map((item: any) => ({
     ...item,
     giftAmount: item.giftAmount?.toNumber() ?? null,
   }));
@@ -232,7 +232,7 @@ export async function getProfileDetails({ id }: { id?: any }) {
   const gallery = await prisma.astrologers_gallery.findMany({
     where: { astrologerId: Number(id) }
   });
-  
+
   const totalCallMinutes = callHistory.reduce((sum: number, req: any) => {
     const min = Number(req.totalMin) || 0;
     return sum + min;
@@ -271,11 +271,11 @@ export async function unFollow({ id }: any) {
 export async function verifyGallery({ id, status }: any) {
   const updated = await prisma.astrologers_gallery.update({
     where: { id },
-    data: {status}
+    data: { status }
   });
 
   console.log(updated);
-  
+
 }
 
 

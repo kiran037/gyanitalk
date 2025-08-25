@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_ROUTES = ["/auth/signin", "/auth/register"];
+const PUBLIC_ROUTES = ["/sign-in"];
 const PROTECTED_ROUTES = ["/", "/profile"];
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);

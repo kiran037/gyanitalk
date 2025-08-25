@@ -1,5 +1,5 @@
-import { AstrologerSkeleton } from "@/components/astrologers/astrologer-skeleton";
-import { AstrologerTable } from "@/components/astrologers/astrologer-table";
+import { AstrologerSkeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
+import { AstrologerTable } from "@/components/(astros)/astrologers/astrologer-table";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { Suspense } from "react";
 

@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { format } from "date-fns";
 import { useState } from "react";
-import { verifyGallery } from "../astrologers/fetch";
 import toast from "react-hot-toast";
+import { verifyGallery } from "../(astros)/astrologers/fetch";
 
 export default function GalleryList({ gallery }: { gallery: any[] }) {
   const [selectedImage, setSelectedImage] = useState<any | null>(null);

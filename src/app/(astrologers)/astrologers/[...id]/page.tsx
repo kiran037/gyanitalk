@@ -1,5 +1,4 @@
 "use client"
-import { getProfileDetails } from "@/components/astrologers/fetch";
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
@@ -12,7 +11,8 @@ import AstroFollowerList from "@/components/details/followersList";
 import NoitificationsList from "@/components/details/notification";
 import GiftList from "@/components/details/giftList";
 import GalleryList from "@/components/details/galleryList";
-import AstroDetailsSkeleton from "@/components/astrologers/astrologer-details-skeleton";
+import { getProfileDetails } from "@/components/(astros)/astrologers/fetch";
+import AstroDetailsSkeleton from "@/components/(astros)/astrologers/astrologer-details-skeleton";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {

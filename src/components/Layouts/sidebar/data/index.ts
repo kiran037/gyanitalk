@@ -26,11 +26,20 @@ export const NAV_DATA = [
         icon: User,
         items: [],
       },
+
       {
         title: "Astrologers",
-        url: "/astrologers",
         icon: User,
-        items: [],
+        items: [
+          {
+            title: "Astrologers",
+            url: "/astrologers",
+          },
+          {
+            title: "AI Astrologers",
+            url: "/ai-astrologers",
+          },
+        ],
       },
       {
         title: "Transactions",
@@ -57,7 +66,7 @@ export const NAV_DATA = [
         title: "Courses",
         icon: FileText,
         items: [
-          
+
           {
             title: "Category",
             url: "/category",

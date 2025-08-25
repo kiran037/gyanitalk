@@ -1,7 +1,7 @@
 "use client";
 import { useTransition, useState } from "react";
-import { Switch } from "../FormElements/switch";
 import { updateLiveStatus } from "./fetch";
+import { Switch } from "@/components/FormElements/switch";
 
 interface Props {
     id: number;

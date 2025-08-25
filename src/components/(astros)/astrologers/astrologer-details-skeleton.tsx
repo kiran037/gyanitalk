@@ -1,6 +1,7 @@
 "use client";
 
-import { Skeleton } from "../ui-elements/skeleton";
+import { Skeleton } from "@/components/ui-elements/skeleton";
+
 
 export default function AstroDetailsSkeleton() {
   return (
