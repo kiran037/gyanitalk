@@ -110,11 +110,16 @@ export default function Page() {
 
         if (formData.imageFile) {
             // Upload the image first
-            const result = await uploadImage(formData.imageFile, "assets/images/aiastrologer-profile");
+            const result = await uploadImage(formData.imageFile, "images/aiastrologer-profile", 'public/assets');
             if (result.success) {
-                imagePath = result.path; 
+                imagePath = result.path;
             }
         }
+
+
+
+        console.log(`profile path ${imagePath}`);
+
 
         // Prepare payload
         const payload = {
@@ -126,16 +131,16 @@ export default function Page() {
         };
 
         // Call your API or server action
-        const res = await fetch(`/api/ai-astrologer/${id}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-        });
+        // const res = await fetch(`/api/ai-astrologer/${id}`, {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify(payload),
+        // });
 
-        const data = await res.json();
-        console.log("Updated profile:", data);
+        // const data = await res.json();
+        console.log("Updated profile: payload", payload);
     };
 
 
@@ -152,20 +157,38 @@ export default function Page() {
             >
                 {/* Header */}
                 <div className="p-8 border-b border-gray-200 dark:border-gray-700 flex items-center gap-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
-                    <div className="relative">
+                    <div className="relative w-32 h-32">
+                        {/* Profile Image */}
                         <Image
                             src={
-                                data.astroDetail?.image
-                                    ? `${process.env.NEXT_PUBLIC_BASEURL}${data.astroDetail.image}`
-                                    : "https://gyanitalk.com/build/assets/images/person.png"
+                                formData.imageFile
+                                    ? URL.createObjectURL(formData.imageFile) // preview if selected
+                                    : data.astroDetail?.image
+                                        ? `${process.env.NEXT_PUBLIC_BASEURL}${data.astroDetail.image}`
+                                        : "https://gyanitalk.com/build/assets/images/person.png"
                             }
-                            width={120}
-                            height={120}
+                            fill
                             className="rounded-full border-4 border-white shadow-lg object-cover"
                             alt="profile"
                         />
+
+                        {/* Status Dot */}
                         <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
+
+                        {/* File Input Overlay */}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    setFormData({ ...formData, imageFile: e.target.files[0] });
+                                }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer rounded-full"
+                            title="Click to change image"
+                        />
                     </div>
+
                     <div className="flex-1">
                         <input
                             type="text"
@@ -450,8 +473,7 @@ export default function Page() {
                         />
                     </section>
 
-                    {/* Image Upload */}
-                    <section>
+                    {/* <section>
                         <label className="block mb-2 font-medium">Profile Image</label>
                         <input
                             type="file"
@@ -459,7 +481,7 @@ export default function Page() {
                             onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] })}
                             className="w-full"
                         />
-                    </section>
+                    </section> */}
 
                 </div>
 
