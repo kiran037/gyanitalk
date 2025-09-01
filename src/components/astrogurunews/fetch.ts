@@ -1,74 +1,120 @@
-"use server"
-import { NextResponse } from "next/server";
-const prisma = require("../../prismaClient");
+"use server";
 
+import prisma from "../../prismaClient"; // ✅ adjust path if needed
+
+// Get all news
 export async function getAstroguruNews() {
+  const news = await prisma.astrotalk_in_news.findMany({
+    where: {isDelete: false},
+    orderBy: { id: "desc" },
+  });
 
-  const [astrotalk_in_news] = await Promise.all([
-    prisma.astrotalk_in_news.findMany({
-      // skip: offset,
-      // take: limit,
-      orderBy: { id: "desc" },
-    }),
-  ]);
-
-  // ✅ Format Date objects into strings
-  const data = astrotalk_in_news.map((c: any) => ({
-    ...c,
-    created_at: c.created_at ? c.created_at.toISOString() : null,
+  const data = news.map((n: any) => ({
+    ...n,
+    created_at: n.created_at ? n.created_at.toISOString() : null,
+    updated_at: n.updated_at ? n.updated_at.toISOString() : null,
+    newsDate: n.newsDate ? n.newsDate.toISOString() : null,
   }));
 
-  return {
-    data,
-  };
+  return { data };
 }
 
-// GET all astrologer videos
-export async function GET() {
-  const pages = await prisma.astrotalk_in_news.findMany({ orderBy: { id: "desc" } });
-  return NextResponse.json(pages);
+// Create new news
+export async function createAstroguruNews(payload: {
+  channel: string;
+  link: string;
+  newsDate: string;
+  description: string;
+  bannerImage: string;
+  createdBy?: number;
+}) {
+  try {
+    const created = await prisma.astrotalk_in_news.create({
+      data: {
+        channel: payload.channel,
+        link: payload.link,
+        newsDate: new Date(payload.newsDate),
+        description: payload.description,
+        bannerImage: payload.bannerImage,
+        isActive: true,
+        isDelete: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+        createdBy: payload.createdBy ?? 1, // 👈 adjust with session user
+        modifiedBy: payload.createdBy ?? 1,
+      },
+    });
+    return { success: true, data: created };
+  } catch (err: any) {
+    console.error("createAstroguruNews error:", err);
+    return { success: false, message: "Failed to create news" };
+  }
 }
 
-// ADD new astrologer video
-export async function POST(req: Request) {
-  const body = await req.json();
-  const { title, type, description } = body;
-
-  const page = await prisma.astrotalk_in_news.create({
-    data: { title, type, description },
-  });
-
-  return NextResponse.json(page);
+// Update news
+export async function updateAstroguruNews(
+  id: number,
+  payload: {
+    channel: string;
+    link: string;
+    newsDate: string;
+    description: string;
+    bannerImage: string;
+    modifiedBy?: number;
+  }
+) {
+  try {
+    const updated = await prisma.astrotalk_in_news.update({
+      where: { id: BigInt(id) },
+      data: {
+        channel: payload.channel,
+        link: payload.link,
+        newsDate: new Date(payload.newsDate),
+        description: payload.description,
+        bannerImage: payload.bannerImage,
+        updated_at: new Date(),
+        modifiedBy: payload.modifiedBy ?? 1,
+      },
+    });
+    return { success: true, data: updated };
+  } catch (err: any) {
+    console.error("updateAstroguruNews error:", err);
+    return { success: false, message: "Failed to update news" };
+  }
 }
 
-// UPDATE astrologer video
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const body = await req.json();
-  const { title, type, description } = body;
-
-  const updated = await prisma.astrotalk_in_news.update({
-    where: { id: Number(params.id) },
-    data: { title, type, description },
-  });
-
-  return NextResponse.json(updated);
+export async function deleteAstroguruNews(id: number) {
+  try {
+    const deleted = await prisma.astrotalk_in_news.update({
+      where: { id: BigInt(id) },
+      data: {
+        isDelete: true,
+        updated_at: new Date(),
+      },
+    });
+    return { success: true, data: deleted };
+  } catch (err: any) {
+    console.error("deleteAstroguruNews error:", err);
+    return { success: false, message: "Failed to delete news" };
+  }
 }
 
-// DELETE astrologer video
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.astrotalk_in_news.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({ success: true });
-}
-
-// TOGGLE Active astrologer video
-export async function PATCH(_: Request, { params }: { params: { id: string } }) {
-  const page = await prisma.astrotalk_in_news.findUnique({ where: { id: Number(params.id) } });
-  if (!page) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const updated = await prisma.page.update({
-    where: { id: page.id },
-    data: { isActive: !page.isActive },
-  });
-
-  return NextResponse.json(updated);
+// Toggle Active/Inactive
+export async function updateAstroguruNewsStatus(
+  id: number,
+  isActive: boolean
+) {
+  try {
+    const updated = await prisma.astrotalk_in_news.update({
+      where: { id: BigInt(id) },
+      data: {
+        isActive,
+        updated_at: new Date(),
+      },
+    });
+    return { success: true, data: updated };
+  } catch (err: any) {
+    console.error("updateAstroguruNewsStatus error:", err);
+    return { success: false, message: "Failed to update status" };
+  }
 }
