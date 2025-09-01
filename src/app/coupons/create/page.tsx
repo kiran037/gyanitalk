@@ -134,7 +134,7 @@ export default function CouponForm() {
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   <SelectItem value="fixed">Fixed</SelectItem>
-                  <SelectItem value="percent">Percent</SelectItem>
+                  <SelectItem value="percentage">Percent</SelectItem>
                 </SelectContent>
               </Select>
             </div>

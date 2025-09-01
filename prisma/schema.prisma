@@ -262,11 +262,17 @@ model astrologer_request {
 
 model astrologer_stories {
   id           Int       @id @default(autoincrement())
-  astrologerId Int?
+  astrologerId BigInt?
   mediaType    String?   @db.Text
   media        String?   @db.Text
   created_at   DateTime? @default(now()) @db.Timestamp(0)
   updated_at   DateTime? @default(now()) @db.Timestamp(0)
+  isActive     Boolean   @default(true)   // ✅ you added this
+  isDelete     Boolean   @default(false)  // ✅ you added this
+  astrologer   astrologers? @relation("AstrologerStoriesRelation", fields: [astrologerId], references: [id])
+  story_view_count story_view_counts[] @relation("StoryViewCounts")
+
+  @@index([astrologerId], map: "astrologer_product_astrologer_idx")
 }
 
 model astrologer_wait_lists {
@@ -370,6 +376,7 @@ model astrologers {
   astrologerGifts   astrologer_gifts[]  @relation("AstrologerGiftsRelation")
   assignGroups   astrologer_assign_group[]
   liveastro      liveastro[]   
+  stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -710,12 +717,12 @@ model commissions {
 }
 
 model contact_us {
-  id              Int       @id @default(autoincrement())
-  contact_email   String    @db.VarChar(100)
-  contact_name    String    @db.VarChar(100)
-  contact_message String    @db.VarChar(255)
-  created_at      DateTime? @db.Timestamp(0)
-  updated_at      DateTime? @db.Timestamp(0)
+  id              Int      @id @default(autoincrement())
+  contact_email   String    @db.VarChar(225)
+  contact_name    String    @db.VarChar(225)
+  contact_message String    @db.VarChar(225)
+  created_at      DateTime?   @db.Timestamp(0)
+  updated_at      DateTime?   @db.Timestamp(0)
 }
 
 model coupon_user_usages {
@@ -1504,9 +1511,11 @@ model skills {
 model story_view_counts {
   id         Int       @id @default(autoincrement())
   userId     Int
-  storyId    Int?
+  storyId    Int
   created_at DateTime? @default(now()) @db.Timestamp(0)
   updated_at DateTime? @default(now()) @db.Timestamp(0)
+  story astrologer_stories @relation("StoryViewCounts", fields: [storyId], references: [id])
+  @@index([storyId], map: "story_view_counts_storyId_foreign")
 }
 
 model sub_category {
