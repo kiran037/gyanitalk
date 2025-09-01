@@ -267,8 +267,6 @@ model astrologer_stories {
   media        String?   @db.Text
   created_at   DateTime? @default(now()) @db.Timestamp(0)
   updated_at   DateTime? @default(now()) @db.Timestamp(0)
-  isActive     Boolean   @default(true)   // ✅ you added this
-  isDelete     Boolean   @default(false)  // ✅ you added this
   astrologer   astrologers? @relation("AstrologerStoriesRelation", fields: [astrologerId], references: [id])
   story_view_count story_view_counts[] @relation("StoryViewCounts")
 
