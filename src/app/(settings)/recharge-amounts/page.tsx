@@ -1,124 +1,169 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { getDefaultProfiles, updateDefaultProfiles } from "./fetch"
-import { uploadImage } from "@/upload"
+import { getrechargeamount, createrechargeamount, updaterechargeamount } from "./fetch"
 
-type DefaultProfile = {
-    id: number
-    name: string
-    profile: string
-    isActive: boolean
+type Recharge = {
+  id: number
+  amount: number
+  cashback?: number | null
 }
 
-const buildImgSrc = (val?: string) => {
-    if (!val) return "/placeholder.svg"
-    return `${process.env.NEXT_PUBLIC_BASEURL}${val}`
-}
+export default function RechargePage() {
+  const { toast } = useToast()
+  const [items, setItems] = useState<Recharge[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default function DefaultProfilesPage() {
-    const { toast } = useToast()
-    const [profiles, setProfiles] = useState<DefaultProfile[]>([])
-    const [loading, setLoading] = useState(true)
+  // Form for creating
+  const [newAmount, setNewAmount] = useState("")
+  const [newCashback, setNewCashback] = useState("")
 
-    const [editingId, setEditingId] = useState<number | null>(null)
-    const [editName, setEditName] = useState("")
-    const [editFile, setEditFile] = useState<File | null>(null)
-    const [preview, setPreview] = useState<string | null>(null)
-    const [uploadBusy, setUploadBusy] = useState(false)
+  // Editing state
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editAmount, setEditAmount] = useState("")
+  const [editCashback, setEditCashback] = useState("")
 
-    const load = async () => {
-        setLoading(true)
-        const res = await getDefaultProfiles()
-        setProfiles(res.profiles)
-        setLoading(false)
+  const load = async () => {
+    setLoading(true)
+    const res = await getrechargeamount()
+    setItems(res.rechargeamount)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const handleCreate = async () => {
+    const res = await createrechargeamount({
+      amount: parseInt(newAmount, 10),
+      cashback: newCashback ? parseInt(newCashback, 10) : undefined,
+    })
+    if (res.status) {
+      toast({ title: "Success", description: "Recharge amount added" })
+      setNewAmount("")
+      setNewCashback("")
+      load()
+    } else {
+      toast({ title: "Error", description: res.message, variant: "destructive" })
     }
+  }
 
-    useEffect(() => {
-        load()
-    }, [])
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        setEditFile(file)
-        setPreview(URL.createObjectURL(file))
+  const handleUpdate = async (id: number) => {
+    const res = await updaterechargeamount(id, {
+      amount: parseInt(editAmount, 10),
+      cashback: editCashback ? parseInt(editCashback, 10) : undefined,
+    })
+    if (res.status) {
+      toast({ title: "Updated", description: "Recharge amount updated" })
+      setEditingId(null)
+      load()
+    } else {
+      toast({ title: "Error", description: res.message, variant: "destructive" })
     }
+  }
 
-    const handleUpdate = async (id: number) => {
-        try {
-            setUploadBusy(true)
-            const profileUrl = await uploadImage(editFile!, "images");
-            const res = await updateDefaultProfiles(id, profileUrl.path)
-            if (res.status) {
-                toast({ title: "Updated", description: "Profile updated" })
-                setEditingId(null)
-                setEditFile(null)
-                setPreview(null)
-                load()
-            } else {
-                toast({ title: "Error", description: res.message || "Update failed", variant: "destructive" })
-            }
-        } finally {
-            setUploadBusy(false)
-        }
-    }
+  if (loading) return <p className="p-4">Loading...</p>
 
-    if (loading) return <p>Loading...</p>
+  return (
+    <main className="container py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">Recharge Amounts</h1>
 
-    return (
-        <main className="container py-8">
-            <h1 className="text-2xl font-bold mb-6">Default Profiles</h1>
+      {/* Add Form */}
+      <Card className="mb-8 shadow-lg border border-border rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <CardHeader>
+          <CardTitle className="text-lg">Add New Recharge</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <div>
+            <Label>Amount</Label>
+            <Input
+              type="number"
+              value={newAmount}
+              onChange={(e) => setNewAmount(e.target.value)}
+              placeholder="Enter recharge amount"
+            />
+          </div>
+          <div>
+            <Label>Cashback</Label>
+            <Input
+              type="number"
+              value={newCashback}
+              onChange={(e) => setNewCashback(e.target.value)}
+              placeholder="Enter cashback (optional)"
+            />
+          </div>
+          <Button onClick={handleCreate} className="self-end mt-2">Add Recharge</Button>
+        </CardContent>
+      </Card>
 
-            <div className="grid gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {profiles.map((p) => {
-                    const isEditing = editingId === p.id
-                    const imgSrc = isEditing ? preview || buildImgSrc(p.profile) : buildImgSrc(p.profile)
-
-                    return (
-                        <Card key={p.id} className="flex  flex-col items-center p-4 border rounded-lg bg-white shadow hover:shadow-md transition-shadow duration-200 ">
-                            <img
-                                src={imgSrc}
-                                alt={p.name}
-                                className="h-20 w-20 object-cover rounded-md"
-                            />
-
-                            <div className="mt-2 text-sm font-medium text-center">{isEditing ? "Edit Profile" : p.name}</div>
-
-                            {isEditing ? (
-                                <div className="mt-2 w-full space-y-2">
-                                    <Input type="file" accept="image/*" onChange={handleFileChange} />
-                                    <div className="flex justify-between gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => { setEditingId(null); setPreview(null) }}>
-                                            Cancel
-                                        </Button>
-                                        <Button size="sm" onClick={() => handleUpdate(p.id)} disabled={uploadBusy}>
-                                            {uploadBusy ? "Saving..." : "Save"}
-                                        </Button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="mt-2"
-                                    onClick={() => {
-                                        setEditingId(p.id)
-                                        setEditName(p.name)
-                                        setPreview(null)
-                                    }}
-                                >
-                                    Change
-                                </Button>
-                            )}
-                        </Card>
-                    )
-                })}
-            </div>
-        </main>
-    )
+      {/* Grid of Cards */}
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {items.map((item) => {
+          const isEditing = editingId === item.id
+          return (
+            <Card
+              key={item.id}
+              className="shadow-md hover:shadow-xl transition-shadow rounded-xl border border-border bg-white dark:bg-slate-900"
+            >
+              <CardHeader>
+                <CardTitle className="text-lg">Recharge #{item.id}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isEditing ? (
+                  <>
+                    <div>
+                      <Label>Amount</Label>
+                      <Input
+                        type="number"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Cashback</Label>
+                      <Input
+                        type="number"
+                        value={editCashback}
+                        onChange={(e) => setEditCashback(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
+                      <Button size="sm" onClick={() => handleUpdate(item.id)}>Save</Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm">
+                      <span className="font-semibold">Amount:</span> ₹{item.amount}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">Cashback:</span> {item.cashback ? `₹${item.cashback}` : "—"}
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setEditingId(item.id)
+                        setEditAmount(item.amount.toString())
+                        setEditCashback(item.cashback?.toString() || "")
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </main>
+  )
 }
