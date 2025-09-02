@@ -16,7 +16,7 @@ export async function getSystemFlags() {
 }
 
 
-export async function updateSystemFlag(id:any, data:any) {
+export async function updateSystemFlag(id: any, data: any) {
   try {
     const flag = await prisma.systemflag.update({
       where: { id },

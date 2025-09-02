@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { getSystemFlags, updateSystemFlag } from "./fetch"
+import { uploadImage } from "@/upload"
 
 type SystemFlag = {
     id: number
@@ -103,7 +104,7 @@ export default function SystemFlagsPage() {
     const [editingId, setEditingId] = useState<number | null>(null)
     const [formData, setFormData] = useState<Partial<SystemFlag>>({})
     const [filePreview, setFilePreview] = useState<string | null>(null)
-
+    const [uploadBusy, setUploadBusy] = useState(false)
     const startEdit = (flag: SystemFlag) => {
         setEditingId(flag.id)
         setFormData({ ...flag })
@@ -114,6 +115,7 @@ export default function SystemFlagsPage() {
         setEditingId(null)
         setFormData({})
         setFilePreview(null)
+        setUploadBusy(false)
     }
 
     const onFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -125,12 +127,26 @@ export default function SystemFlagsPage() {
         setFormData((prev) => ({ ...prev, value }))
     }
 
-    const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
-        const url = URL.createObjectURL(file)
-        setFilePreview(url)
-        setFormData((prev) => ({ ...prev, value: file.name }))
+        try {
+            setUploadBusy(true)
+            const localUrl = URL.createObjectURL(file)
+            setFilePreview(localUrl)
+            // upload & set server path
+            const uploadedUrl = await uploadImage(file, "images")
+            setFormData((prev) => ({ ...prev, value: uploadedUrl.path }))
+            toast({ title: "Uploaded", description: "Image uploaded successfully." + uploadedUrl.path })
+        } catch (err: any) {
+            toast({
+                title: "Upload failed",
+                description: err?.message ?? "Please try again.",
+                variant: "destructive",
+            })
+        } finally {
+            setUploadBusy(false)
+        }
     }
 
     const saveEdit = async (id: number) => {
@@ -149,6 +165,9 @@ export default function SystemFlagsPage() {
         }
     }
 
+    const isMasterImageGroup = (g: FlagGroup) =>
+        (g.flagGroupName ?? "").toLowerCase().includes("masterimage")
+
     const renderInput = (flag: SystemFlag) => {
         const type = flag.valueType?.toLowerCase()
         if (editingId !== flag.id) {
@@ -157,20 +176,25 @@ export default function SystemFlagsPage() {
 
         switch (type) {
             case "text":
-                return <Input name="value" value={formData.value ?? ""} onChange={onFieldChange} placeholder="Enter value" className="bg-background border border-input rounded-md px-3 py-2
-             focus:ring-2 focus:ring-primary/50 focus:border-primary"/>
+                return (
+                    <Input
+                        name="value"
+                        value={formData.value ?? ""}
+                        onChange={onFieldChange}
+                        placeholder="Enter value"
+                        className="bg-background border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    />
+                )
             case "number":
                 return (
                     <Input
                         type="number"
                         name="value"
-                        className="bg-background border border-input rounded-md px-3 py-2
-             focus:ring-2 focus:ring-primary/50 focus:border-primary"
-
                         value={formData.value ?? ""}
                         onChange={onFieldChange}
                         placeholder="0"
                         inputMode="numeric"
+                        className="bg-background border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     />
                 )
             case "radio": {
@@ -193,15 +217,22 @@ export default function SystemFlagsPage() {
                 )
             }
             case "file":
+                // NOTE: normal file-type flags (non-masterimage) also use upload flow
                 return (
                     <div className="space-y-3">
-                        <Input type="file" onChange={onFileChange} className="bg-background border border-input rounded-md px-3 py-2
-             focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={onFileChange}
+                            disabled={uploadBusy}
+                            className="bg-background border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary"
                         />
                         {filePreview ? (
                             <div className="flex items-center gap-3">
                                 <img src={filePreview} alt="Selected preview" className="h-16 w-16 rounded-md object-cover border" />
-                                <div className="text-sm text-muted-foreground">Preview</div>
+                                <div className="text-sm text-muted-foreground">
+                                    {uploadBusy ? "Uploading..." : "Preview"}
+                                </div>
                             </div>
                         ) : null}
                     </div>
@@ -212,8 +243,8 @@ export default function SystemFlagsPage() {
                         name="value"
                         value={formData.value ?? ""}
                         onChange={onFieldChange}
-                        placeholder="Enter value" className="bg-background border border-input rounded-md px-3 py-2
-             focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        placeholder="Enter value"
+                        className="bg-background border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-primary/50 focus:border-primary min-h-24"
                     />
                 )
         }
@@ -232,14 +263,17 @@ export default function SystemFlagsPage() {
         )
     }
 
+    const buildImgSrc = (val?: string | null) => {
+        if (!val) return "/placeholder.svg"
+        return `${process.env.NEXT_PUBLIC_BASEURL}${val}`
+    }
+
     return (
         <main className="container mx-auto py-8">
             <header className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-balance">System Flags</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Manage application-wide feature toggles and configuration values.
-                    </p>
+                    <p className="text-sm text-muted-foreground">Manage application-wide feature toggles and configuration values.</p>
                 </div>
             </header>
 
@@ -251,29 +285,103 @@ export default function SystemFlagsPage() {
                         <TabsTrigger
                             key={pg.id}
                             value={String(pg.id)}
-                            className="data-[state=active]:bg-primary/10 
-                 data-[state=active]:text-primary 
-                 rounded-md px-4 py-2 transition-colors"
+                            className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 transition-colors"
                         >
                             {pg.flagGroupName || `Group ${pg.id}`}
                         </TabsTrigger>
                     ))}
                 </TabsList>
 
-
                 {parentGroups.map((pg) => {
                     const generalFlags = groups.find((g) => g.id === pg.id)?.systemflags ?? []
                     const children = groups.filter((g) => g.parentFlagGroupId === pg.id)
 
+                    // ---- MASTERIMAGE special rendering (card grid + upload per card) ----
+                    if (isMasterImageGroup(pg)) {
+                        // combine own + children flags for a unified gallery (optional)
+                        const childFlags = children.flatMap((c) => c.systemflags || [])
+                        const allFlags = [...generalFlags, ...childFlags]
+
+                        return (
+                            <TabsContent key={pg.id} value={String(pg.id)} className="mt-6 space-y-6">
+                                <Card className="bg-white dark:bg-slate-900 shadow-md border border-border rounded-xl">
+                                    <CardHeader className="bg-muted/40 dark:bg-slate-800/50 rounded-t-xl px-4 py-3">
+                                        <CardTitle className="text-lg font-semibold">Master Images</CardTitle>
+                                        {pg.description ? <CardDescription>{pg.description}</CardDescription> : null}
+                                    </CardHeader>
+                                    <CardContent className="p-6">
+                                        {allFlags.length ? (
+                                            <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                                                {allFlags.map((flag) => {
+                                                    const isEditing = editingId === flag.id
+                                                    const imgSrc = isEditing
+                                                        ? filePreview || buildImgSrc(flag.value)
+                                                        : buildImgSrc(flag.value)
+
+                                                    return (
+                                                        <div
+                                                            key={flag.id}
+                                                            className="flex flex-col items-center justify-between border border-border rounded-lg p-3 bg-background/50"
+                                                        >
+                                                            {/* Thumbnail */}
+                                                            <img
+                                                                src={imgSrc}
+                                                                alt={flag.displayName ?? flag.name ?? `Image ${flag.id}`}
+                                                                className="h-20 w-20 object-cover rounded-md border"
+                                                            />
+
+                                                            {/* Title */}
+                                                            <div className="mt-2 text-xs font-medium text-center">
+                                                                {flag.displayName || flag.name || `Flag ${flag.id}`}
+                                                            </div>
+
+                                                            {/* Edit / Upload */}
+                                                            {isEditing ? (
+                                                                <div className="mt-2 w-full space-y-2">
+                                                                    <Input type="file" accept="image/*" onChange={onFileChange} />
+                                                                    <div className="flex justify-between gap-2">
+                                                                        <Button size="sm" variant="outline" onClick={cancelEdit}>
+                                                                            Cancel
+                                                                        </Button>
+                                                                        <Button size="sm" onClick={() => saveEdit(flag.id)}>
+                                                                            Save
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="secondary"
+                                                                    className="mt-2 "
+                                                                    onClick={() => startEdit(flag)}
+                                                                >
+                                                                    Change
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+
+                                        ) : (
+                                            <EmptyState title="No images" description="Add images by editing flags in this group." />
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        )
+                    }
+
+                    // ---- DEFAULT rendering for non-masterimage groups: list + children cards ----
                     return (
                         <TabsContent key={pg.id} value={String(pg.id)} className="mt-6 space-y-6">
                             {generalFlags.length > 0 && (
-                                <Card className="bg-white shadow-sm rounded-xl">
-                                    <CardHeader>
+                                <Card className="bg-white dark:bg-slate-900 shadow-md border border-border rounded-xl">
+                                    <CardHeader className="bg-muted/40 dark:bg-slate-800/50 rounded-t-xl px-4 py-3">
                                         <CardTitle>General Settings</CardTitle>
                                         {pg.description ? <CardDescription>{pg.description}</CardDescription> : null}
                                     </CardHeader>
-                                    <CardContent className="space-y-6">
+                                    <CardContent className="space-y-6 p-6">
                                         {generalFlags.map((flag) => (
                                             <div key={flag.id} className="space-y-2">
                                                 <Label className="font-medium">
@@ -281,13 +389,15 @@ export default function SystemFlagsPage() {
                                                 </Label>
                                                 {renderInput(flag)}
                                                 {flag.description ? <p className="text-xs text-muted-foreground">{flag.description}</p> : null}
-                                                <div className="flex justify-end gap-2 pt-2 ">
+                                                <div className="flex justify-end gap-2 pt-2">
                                                     {editingId === flag.id ? (
                                                         <>
-                                                            <Button variant="outline" onClick={cancelEdit}>
+                                                            <Button variant="outline" onClick={cancelEdit} disabled={uploadBusy}>
                                                                 Cancel
                                                             </Button>
-                                                            <Button className="text-white" onClick={() => saveEdit(flag.id)}>Save</Button>
+                                                            <Button className="text-white" onClick={() => saveEdit(flag.id)} disabled={uploadBusy}>
+                                                                {uploadBusy ? "Uploading..." : "Save"}
+                                                            </Button>
                                                         </>
                                                     ) : (
                                                         <Button variant="secondary" onClick={() => startEdit(flag)}>
@@ -305,17 +415,15 @@ export default function SystemFlagsPage() {
                             {children.length ? (
                                 <div className="grid gap-6 md:grid-cols-2">
                                     {children.map((child) => (
-                                        <Card key={child.id}>
-                                            <CardHeader>
+                                        <Card key={child.id} className="bg-white dark:bg-slate-900 shadow-md border border-border rounded-xl">
+                                            <CardHeader className="bg-muted/40 dark:bg-slate-800/50 rounded-t-xl px-4 py-3">
                                                 <CardTitle>{child.flagGroupName || `Group ${child.id}`}</CardTitle>
                                                 {child.description ? <CardDescription>{child.description}</CardDescription> : null}
                                             </CardHeader>
-                                            <CardContent className="space-y-6">
+                                            <CardContent className="space-y-6 p-6">
                                                 {child.systemflags.map((flag) => (
                                                     <div key={flag.id} className="space-y-2">
-                                                        <Label className="font-medium">
-                                                            {flag.displayName || flag.name || `Flag ${flag.id}`}
-                                                        </Label>
+                                                        <Label className="font-medium">{flag.displayName || flag.name || `Flag ${flag.id}`}</Label>
                                                         {renderInput(flag)}
                                                         {flag.description ? (
                                                             <p className="text-xs text-muted-foreground">{flag.description}</p>
@@ -323,10 +431,12 @@ export default function SystemFlagsPage() {
                                                         <div className="flex justify-end gap-2 pt-2">
                                                             {editingId === flag.id ? (
                                                                 <>
-                                                                    <Button variant="outline" onClick={cancelEdit}>
+                                                                    <Button variant="outline" onClick={cancelEdit} disabled={uploadBusy}>
                                                                         Cancel
                                                                     </Button>
-                                                                    <Button onClick={() => saveEdit(flag.id)}>Save</Button>
+                                                                    <Button onClick={() => saveEdit(flag.id)} disabled={uploadBusy}>
+                                                                        {uploadBusy ? "Uploading..." : "Save"}
+                                                                    </Button>
                                                                 </>
                                                             ) : (
                                                                 <Button variant="secondary" onClick={() => startEdit(flag)}>
