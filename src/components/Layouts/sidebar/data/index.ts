@@ -143,35 +143,25 @@ export const NAV_DATA = [
         icon: Contact,
         items: [],
       },
-      // {
-      //   title: "Pages",
-      //   icon: BadgeInfo,
-      //   items: [
-      //     {
-      //       title: "Settings",
-      //       url: "/pages/settings",
-      //     },
-      //   ],
-      // },
     ],
   },
-  // {
-  //   label: "OTHERS",
-  //   items: [
-  //     {
-  //       title: "UI Elements",
-  //       icon: Square,
-  //       items: [
-  //         {
-  //           title: "Alerts",
-  //           url: "/ui-elements/alerts",
-  //         },
-  //         {
-  //           title: "Buttons",
-  //           url: "/ui-elements/buttons",
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    label: "Settings",
+    items: [
+      {
+        title: "General Settings",
+        icon: Square,
+        items: [
+          {
+            title: "Settings",
+            url: "/settings",
+          },
+          {
+            title: "Buttons",
+            url: "/ui-elements/buttons",
+          },
+        ],
+      },
+    ],
+  },
 ];

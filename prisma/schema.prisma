@@ -873,6 +873,8 @@ model flaggroup {
   updated_at        DateTime? @default(now()) @db.Timestamp(0)
   description       String    @db.LongText
   viewenable        Boolean?  @default(true)
+
+  systemflags systemflag[]
 }
 
 model fulltime_jobs {
@@ -1539,6 +1541,8 @@ model systemflag {
   description String    @db.LongText
   parent_id   Int       @default(0)
   viewenable  Boolean?  @default(true)
+
+  flagGroup flaggroup @relation(fields: [flagGroupId], references: [id])
 }
 
 model teammember {
