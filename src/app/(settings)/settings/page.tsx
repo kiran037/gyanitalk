@@ -383,7 +383,7 @@ export default function SystemFlagsPage() {
                                     </CardHeader>
                                     <CardContent className="space-y-6 p-6">
                                         {generalFlags.map((flag) => (
-                                            <div key={flag.id} className="space-y-2">
+                                            <div key={flag.id} className="space-y-2 bg-gray-100 p-4 rounded-lg">
                                                 <Label className="font-medium">
                                                     {flag.displayName || flag.name || `Flag ${flag.id}`}
                                                 </Label>
@@ -422,7 +422,7 @@ export default function SystemFlagsPage() {
                                             </CardHeader>
                                             <CardContent className="space-y-6 p-6">
                                                 {child.systemflags.map((flag) => (
-                                                    <div key={flag.id} className="space-y-2">
+                                                    <div key={flag.id} className="space-y-2 bg-gray-100 p-4 rounded-lg">
                                                         <Label className="font-medium">{flag.displayName || flag.name || `Flag ${flag.id}`}</Label>
                                                         {renderInput(flag)}
                                                         {flag.description ? (
