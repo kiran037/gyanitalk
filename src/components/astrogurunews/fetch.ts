@@ -9,6 +9,7 @@ export async function getAstroguruNews() {
       // skip: offset,
       // take: limit,
       orderBy: { id: "desc" },
+
     }),
   ]);
 
@@ -16,6 +17,7 @@ export async function getAstroguruNews() {
   const data = astrotalk_in_news.map((c: any) => ({
     ...c,
     created_at: c.created_at ? c.created_at.toISOString() : null,
+    newsDate: c.newsDate ? c.newsDate.toISOString() : null,
   }));
 
   return {

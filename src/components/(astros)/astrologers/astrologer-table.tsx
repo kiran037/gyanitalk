@@ -48,16 +48,16 @@ export async function AstrologerTable({
   });
 
   return (
-    <div className="rounded-2xl border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5 p-4 overflow-x-auto">
+    <div className="rounded-2xl border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5 p-4 overflow-x-auto w-[1150px] mx-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-[#F7F9FC] dark:bg-dark-2 [&>th]:py-4 [&>th]:text-base [&>th]:text-dark [&>th]:dark:text-white">
-            <TableHead className="min-w-[180px]">Name</TableHead>
-            <TableHead className="min-w-[140px]">Live Mode</TableHead>
-            <TableHead className="min-w-[140px]">Contact</TableHead>
-            <TableHead className="min-w-[130px]">Gender</TableHead>
-            <TableHead className="min-w-[110px]">Total Req.</TableHead>
-            <TableHead className="min-w-[110px]">Live</TableHead>
+            <TableHead >Name</TableHead>
+            <TableHead >Live Mode</TableHead>
+            <TableHead >Contact</TableHead>
+            <TableHead >Gender</TableHead>
+            <TableHead >Total Req.</TableHead>
+            <TableHead >Live</TableHead>
             <TableHead className="cursor-pointer">
               <a
                 href={`?page=${page}&search=${search}&sortBy=chatStatus&sortOrder=${sortBy === "chatStatus" && sortOrder === "asc" ? "desc" : "asc"
@@ -80,8 +80,8 @@ export async function AstrologerTable({
                 {sortBy === "callStatus" && (sortOrder === "asc" ? "▲" : "▼")}
               </a>
             </TableHead>
-            <TableHead className="min-w-[100px]">Status</TableHead>
-            <TableHead className="min-w-[100px]">Actions</TableHead>
+            <TableHead >Status</TableHead>
+            <TableHead >Actions</TableHead>
           </TableRow>
         </TableHeader>
 

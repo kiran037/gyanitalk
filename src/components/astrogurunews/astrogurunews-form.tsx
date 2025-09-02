@@ -36,12 +36,15 @@ export async function AstroguruNewsForm() {
             className="block font-medium text-base mt-5 text-blue-600 h-[60px]"
           >
             {item.link}
-          </a>
+          </a><br></br>
 
           {/* Title */}
           <div className="text-slate-600 dark:text-slate-500 mt-2">
             <p><span className="font-bold">Channel:</span> {item.channel}</p>
-            <p><span className="font-bold">News Date:</span>{item.newsDate}</p>
+            <p><span className="font-bold">News Date:</span>
+            {item.newsDate
+              ? dayjs(item.newsDate).format("DD MMM YYYY, hh:mm A")
+            : "-"}</p>
             {item.description}
           </div>
         </div>

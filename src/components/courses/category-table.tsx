@@ -94,17 +94,17 @@ export function CategoryTable() {
                             >
                                 <TableCell>
                                     <div className="flex items-center gap-3">
+                                        
                                         <Image
-                                            src={
-                                                isValidImageUrl(item?.image)
-                                                    ? `${process.env.NEXT_PUBLIC_BASEURL}${item?.image}`
-                                                    : "https://gyanitalk.com/build/assets/images/person.png"
-                                            }
-
-                                            className="object-cover rounded-md border border-gray-300 dark:border-dark-3"
-                                            width={42}
-                                            height={42}
-                                            alt={item?.name || "Course"}
+                                        src={
+                                            item?.image
+                                            ? `${process.env.NEXT_PUBLIC_BASEURL}${item.image}`
+                                            : "https://gyanitalk.com/build/assets/images/person.png"
+                                        }
+                                        className="object-cover rounded-md border border-gray-300 dark:border-dark-3"
+                                        width={42}
+                                        height={42}
+                                        alt={item?.name || "Course"}
                                         />
                                         <span className="text-dark dark:text-white font-medium line-clamp-1">
                                             {item?.name || "-"}

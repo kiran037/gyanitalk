@@ -109,7 +109,7 @@ export const NAV_DATA = [
       },
       {
         title: "Banner Management",
-        url: "/tickets",
+        url: "/banners",
         icon: Twitch,
         items: [],
       },
