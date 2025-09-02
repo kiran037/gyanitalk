@@ -32,8 +32,6 @@ export async function getCustomers({
   const isNumericSearch = /^\d+$/.test(search);
   const isAlphaSearch = /[a-zA-Z]/.test(search);
 
-
-
   const offset = (page - 1) * limit;
   const baseWhere = {
     isActive: true,
@@ -118,9 +116,36 @@ export async function getCustomers({
 
 
 export async function getUserDetails({ id }: { id?: any }) {
-  const userDetail = await prisma.users.findFirst({
+  const userDetailRaw = await prisma.users.findFirst({
     where: { id: Number(id) },
+    include: {
+      user_wallets: {
+        select: {
+          amount: true,
+        },
+      },
+    },
   });
+
+  const userDetail = userDetailRaw
+    ? {
+      ...userDetailRaw,
+      birthDate: userDetailRaw.birthDate
+        ? userDetailRaw.birthDate.toISOString()
+        : null,
+      created_at: userDetailRaw.created_at
+        ? userDetailRaw.created_at.toISOString()
+        : null,
+      updated_at: userDetailRaw.updated_at
+        ? userDetailRaw.updated_at.toISOString()
+        : null,
+      user_wallets: userDetailRaw.user_wallets.map((w: { amount: any; }) => ({
+        ...w,
+        amount: w.amount ? Number(w.amount) : 0,
+      })),
+    }
+    : null;
+
 
   const callHistory = await prisma.callrequest.findMany({
     where: {
@@ -299,7 +324,7 @@ type User = {
   user_wallets: {
     amount: number | string | null;
   }[];
-  created_at: Date; // ✅ Add this
+  created_at: Date;
 
 };
 

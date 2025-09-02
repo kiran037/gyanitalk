@@ -1,11 +1,5 @@
-import Image from "next/image";
-import { TrashIcon } from "@/assets/icons";
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow,} from "@/components/ui-elements/table";
-import { cn } from "@/lib/utils";
-import dayjs from "dayjs";
 import { getNotifications } from "./fetch";
-import moment from "moment";
-import { isValidImageUrl } from "../functions";
 
 export async function NotificationTable({}) {
   const { data} = await getNotifications();
@@ -26,7 +20,6 @@ export async function NotificationTable({}) {
           <TableRow
             key={index} className="hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors border-[#eee] dark:border-dark-3"
           >
-            {/* Name */}
             <TableCell>
               <div className="flex items-center gap-3">
                 <span className="text-dark dark:text-white font-medium truncate">
@@ -35,19 +28,15 @@ export async function NotificationTable({}) {
               </div>
             </TableCell>
 
-            {/* Email */}
             <TableCell>
               <span className="text-dark dark:text-white text-sm">
                 {item.description || "-"}
               </span>
             </TableCell>
 
-            {/* Created At */}
             <TableCell>
                 <div className="flex justify-center items-center">
-                  {/* Edit Button */}
                   <button
-                    //onClick={handleEdit}
                     className="flex items-center mr-3 text-blue-600 hover:text-blue-800"
                     style={{ cursor: "pointer" }}
                   >
@@ -55,48 +44,11 @@ export async function NotificationTable({}) {
                     Edit
                   </button>
 
-                  {/* Send Button */}
-                  <button
-                    //onClick={handleSend}
-                    className="flex items-center text-green-600 hover:text-green-800"
-                  >
+                  <button className="flex items-center text-green-600 hover:text-green-800">
                     <i className="w-4 h-4 mr-1">📤</i>
                     Send
                   </button>
                 </div>
-
-                {/* Example Edit Modal */}
-                {/* {showEditModal && (
-                  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded shadow-md w-96">
-                      <h2 className="text-lg font-bold mb-4">Edit Notification</h2>
-                      <p className="mb-2">Title: {title}</p>
-                      <p className="mb-2">Description: {description}</p>
-                      <button
-                        onClick={() => setShowEditModal(false)}
-                        className="mt-4 px-4 py-2 bg-gray-600 text-white rounded"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                )} */}
-
-                {/* Example Send Modal */}
-                {/* {showSendModal && (
-                  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded shadow-md w-96">
-                      <h2 className="text-lg font-bold mb-4">Send Notification</h2>
-                      <p>Do you want to send notification ID: {id}?</p>
-                      <button
-                        onClick={() => setShowSendModal(false)}
-                        className="mt-4 px-4 py-2 bg-gray-600 text-white rounded"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                )} */}
             </TableCell>
           </TableRow>
         ))}

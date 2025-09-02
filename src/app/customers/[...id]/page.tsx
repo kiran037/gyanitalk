@@ -3,14 +3,16 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
 import { getUserDetails } from "@/components/customers/fetch";
-import { AstrologerSkeleton } from "@/components/astrologers/astrologer-skeleton";
+import { AstrologerSkeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
 import { UserCallSessionList } from "@/components/details/callHistory";
 import { UserChatSessionList } from "@/components/details/chatHistory";
 import UserOrderDetails from "@/components/details/orderDetails";
 import WalletTransactionList from "@/components/details/walletHistory";
-import AstroFollowerList, { UserFollowerList } from "@/components/details/followersList";
+import { UserFollowerList } from "@/components/details/followersList";
 import NoitificationsList from "@/components/details/notification";
-import GiftList, { UserGiftList } from "@/components/details/giftList";
+import { UserGiftList } from "@/components/details/giftList";
+import dayjs from "dayjs";
+import AstroDetailsSkeleton from "@/components/(astros)/astrologers/astrologer-details-skeleton";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -45,8 +47,6 @@ export default function Page() {
                 try {
                     const result = await getUserDetails({ id });
                     setData(result);
-                    console.log(result);
-
                 } catch (error) {
                     console.error("Failed to fetch profile:", error);
                 }
@@ -92,7 +92,7 @@ export default function Page() {
     return (
         <>
             {!data ? (
-                <AstrologerSkeleton />
+                <AstroDetailsSkeleton />
             ) : (
                 <div className="mx-auto w-full">
                     <div className="overflow-hidden rounded-lg bg-white shadow-sm border dark:bg-gray-dark dark:border-gray-700">
@@ -144,6 +144,15 @@ export default function Page() {
                                             <span className="font-bold">Refer Code:</span>
                                             <span>{data?.userDetail?.refer_code || "-"}</span>
                                         </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold">Wallet Balance:</span>
+                                            <span>{data?.userDetail?.user_wallets?.length
+                                                ? data.userDetail.user_wallets.reduce(
+                                                    (acc: number, w: any) => acc + Number(w.amount || 0),
+                                                    0
+                                                )
+                                                : "-"}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -153,7 +162,9 @@ export default function Page() {
                                     <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                                         <div className="flex justify-between">
                                             <span>Birth Date</span>
-                                            <span className="text-blue-600 font-semibold">{data?.userDetail?.birthDate}</span>
+                                            <span className="text-blue-600 font-semibold">{data?.userDetail?.birthDate
+                                                ? dayjs(data?.userDetail?.birthDate).format("DD MMM YYYY")
+                                                : "-"}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span>Birth Time</span>
@@ -169,25 +180,6 @@ export default function Page() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
-                                        Astrologer Rates
-                                    </h3>
-                                    <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                                        <div className="flex justify-between">
-                                            <span>Chat/Call</span>
-                                            <span className="text-blue-600 font-semibold">{data?.userDetail?.charge}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Video Call</span>
-                                            <span className="text-pink-600 font-semibold">{data?.userDetail?.videoCallRate}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Report</span>
-                                            <span className="text-orange-600 font-semibold">{data?.userDetail?.reportRate}</span>
-                                        </div>
-                                    </div>
-                                </div> */}
                             </div>
                         </div>
 
@@ -222,7 +214,7 @@ export default function Page() {
                         {activeTab === "Wallet" && (
                             <WalletTransactionList transactions={data?.walletTransactions} isUser={true} />
                         )}
-                          {activeTab === "Following List" && (
+                        {activeTab === "Following List" && (
                             <UserFollowerList followers={data?.followersList} />
                         )}
                         {activeTab === "Notification List" && (

@@ -14,6 +14,7 @@ import { getCustomers } from "./fetch";
 import { DownloadIcon, PreviewIcon } from "./icons";
 import moment from "moment";
 import { isValidImageUrl } from "../functions";
+import Link from "next/link";
 
 export async function CustomerTable({
   page = 1,
@@ -119,10 +120,13 @@ export async function CustomerTable({
 
               <TableCell>
                 <div className="flex items-center justify-end gap-2">
-                  <button className="text-muted hover:text-primary transition-colors">
-                    <span className="sr-only">View</span>
+                  <Link
+                    href={`/customers/${item.id}`}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    title="Preview"
+                  >
                     <PreviewIcon />
-                  </button>
+                  </Link>
                   <button className="text-red-500 hover:text-red-600 transition-colors">
                     <span className="sr-only">Delete</span>
                     <TrashIcon />

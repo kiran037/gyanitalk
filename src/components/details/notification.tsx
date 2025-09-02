@@ -4,7 +4,7 @@ export default function NoitificationsList({ noitifications = [] }: { noitificat
   return (
     <div className="p-6">
       <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-         Notifications
+        Notifications
       </h2>
 
       <div className="w-full overflow-hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
