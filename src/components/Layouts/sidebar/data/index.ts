@@ -157,9 +157,17 @@ export const NAV_DATA = [
             url: "/settings",
           },
           {
-            title: "Buttons",
-            url: "/ui-elements/buttons",
+            title: "Customer Profile",
+            url: "/customer-profile",
           },
+          {
+            title: "HoroScope Signs",
+            url: "/horoscope-signs",
+          },
+          {
+            title: "Recharge Amounts",
+            url: "/recharge-amounts",
+          }
         ],
       },
     ],
