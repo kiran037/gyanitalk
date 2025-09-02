@@ -147,7 +147,11 @@ export async function getPaymentTransactions({
     }),
 
     prisma.payment.count({
-      where: baseWhere,
+      where: {
+        user: {
+          name:{ contains: search }, // search user name
+        },
+      },
     }),
   ]);
 

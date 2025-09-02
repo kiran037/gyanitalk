@@ -455,7 +455,7 @@ model astrotalk_in_news {
 model banner_types {
   id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   name       String    @db.VarChar(255)
-  appId      Int
+  appId      BigInt
   isActive   Boolean   @default(true)
   isDelete   Boolean   @default(false)
   created_at DateTime? @db.Timestamp(0)
