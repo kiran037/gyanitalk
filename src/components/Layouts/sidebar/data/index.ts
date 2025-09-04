@@ -119,7 +119,7 @@ export const NAV_DATA = [
         icon: PlayCircle,
         items: [],
       },
-           {
+      {
         title: "Notifications",
         url: "/notifications",
         icon: BellRing,
@@ -169,7 +169,7 @@ export const NAV_DATA = [
             url: "/recharge-amounts",
           }
         ],
-      },
+      }
     ],
   },
 ];
