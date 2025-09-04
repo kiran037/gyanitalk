@@ -2,22 +2,25 @@ import {
   Home,
   User,
   IndianRupee,
+  TicketPercent,
   Calendar,
-  BadgeInfo,
-  ListChecks,
-  Settings,
+  Users,
+  Brain,
   FileText,
-  Square,
+  Layers,
+  BookOpen,
+  BellRing,
+  FileSpreadsheet,
   Contact,
   PlayCircle,
   Smile,
   Video,
-  Airplay,
-  Edit,
-  Twitch,
+  Image as ImageIcon,
   Rss,
-  BellRing,
-  BookOpen,
+  Edit,
+  Settings,
+  Star,
+  CreditCard,
 } from "lucide-react";
 
 export const NAV_DATA = [
@@ -33,27 +36,29 @@ export const NAV_DATA = [
       {
         title: "Customers",
         url: "/customers",
-        icon: User,
+        icon: Users,
         items: [],
       },
       {
         title: "Transactions",
-        icon: IndianRupee,
+        icon: CreditCard,
         items: [
           {
             title: "Wallet Transactions",
             url: "/wallet",
+            icon: IndianRupee,
           },
           {
             title: "Payment Transactions",
             url: "/payments",
+            icon: CreditCard,
           },
         ],
       },
       {
         title: "Coupons",
         url: "/coupons",
-        icon: Calendar,
+        icon: TicketPercent,
         items: [],
       },
       {
@@ -63,61 +68,35 @@ export const NAV_DATA = [
           {
             title: "Astrologers",
             url: "/astrologers",
+            icon: Users,
           },
           {
             title: "AI Astrologers",
             url: "/ai-astrologers",
+            icon: Brain,
           },
         ],
       },
       {
         title: "Courses",
-        icon: FileText,
+        icon: BookOpen,
         items: [
-
           {
             title: "Category",
             url: "/category",
+            icon: Layers,
           },
           {
             title: "Courses",
             url: "/courses",
+            icon: FileText,
           },
           {
             title: "Chapter",
             url: "/chapter",
+            icon: FileSpreadsheet,
           },
         ],
-      },
-      {
-        title: "Blogs",
-        url: "/blogs",
-        icon: Edit,
-        items: [],
-      },
-      {
-        title: "Astroguru News",
-        url: "/astrogurunews",
-        icon: Rss,
-        items: [],
-      },
-      {
-        title: "Videos",
-        url: "/videos",
-        icon: Video,
-        items: [],
-      },
-      {
-        title: "Banner Management",
-        url: "/banners",
-        icon: Twitch,
-        items: [],
-      },
-      {
-        title: "Stories",
-        url: "/stories",
-        icon: PlayCircle,
-        items: [],
       },
       {
         title: "Notifications",
@@ -126,15 +105,9 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Feedback",
-        url: "/feedback",
-        icon: Smile,
-        items: [],
-      },
-      {
         title: "Page Management",
         url: "/pages",
-        icon: BookOpen,
+        icon: FileText,
         items: [],
       },
       {
@@ -150,26 +123,66 @@ export const NAV_DATA = [
     items: [
       {
         title: "General Settings",
-        icon: Square,
+        icon: Settings,
         items: [
           {
             title: "Settings",
             url: "/settings",
+            icon: Settings,
           },
           {
             title: "Customer Profile",
             url: "/customer-profile",
+            icon: User,
           },
           {
             title: "HoroScope Signs",
             url: "/horoscope-signs",
+            icon: Star,
           },
           {
             title: "Recharge Amounts",
             url: "/recharge-amounts",
-          }
+            icon: IndianRupee,
+          },
         ],
-      }
+      },
+      {
+        title: "Extras",
+        icon: Layers,
+        items: [
+          {
+            title: "Blogs",
+            url: "/blogs",
+            icon: Edit,
+          },
+          {
+            title: "Astroguru News",
+            url: "/astrogurunews",
+            icon: Rss,
+          },
+          {
+            title: "Videos",
+            url: "/videos",
+            icon: Video,
+          },
+          {
+            title: "Banner Management",
+            url: "/banners",
+            icon: ImageIcon,
+          },
+          {
+            title: "Stories",
+            url: "/stories",
+            icon: PlayCircle,
+          },
+          {
+            title: "Feedback",
+            url: "/feedback",
+            icon: Smile,
+          },
+        ],
+      },
     ],
   },
 ];
