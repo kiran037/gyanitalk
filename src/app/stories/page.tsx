@@ -9,7 +9,7 @@ export default async function StoriesPage({
 }: {
   searchParams: { page?: string; search?: string; startDate?: string; };
 }) {
-  const page = parseInt(searchParams?.page || "1", 10);
+  const page = Number(searchParams?.page || "1");
   const search = searchParams?.search || "";
   const startDate = searchParams?.startDate;
   return (

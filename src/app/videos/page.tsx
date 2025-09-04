@@ -1,5 +1,5 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { VideosForm } from "@/components/videos/videos-form";
+import VideosForm from "@/components/videos/videos-form";
 import { Suspense } from "react";
 
 

@@ -33,12 +33,12 @@ export async function uploadImage(
 
   await fs.promises.writeFile(finalPath, buffer);
 
-  // ✅ public path return karo jo frontend me use hoga
+  // ✅ public path
   const publicPath = `/uploads/${uploadPath}/${uniqueName}`;
 
   return {
     success: true,
     // path: finalPath,
-    path: publicPath, // ye URL me use hoga
+    path: publicPath, //local path
   };
 }

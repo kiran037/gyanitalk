@@ -2,73 +2,110 @@
 import { NextResponse } from "next/server";
 const prisma = require("../../prismaClient");
 
+// Get all videos
 export async function getVideos() {
+  const news = await prisma.astrology_videos.findMany({
+    where: {isDelete: false},
+    orderBy: { id: "desc" },
+  });
 
-  const [astrology_videos] = await Promise.all([
-    prisma.astrology_videos.findMany({
-      // skip: offset,
-      // take: limit,
-      orderBy: { id: "desc" },
-    }),
-  ]);
-
-  // ✅ Format Date objects into strings
-  const data = astrology_videos.map((c: any) => ({
-    ...c,
-    created_at: c.created_at ? c.created_at.toISOString() : null,
+  const data = news.map((n: any) => ({
+    ...n,
+    created_at: n.created_at ? n.created_at.toISOString() : null,
+    updated_at: n.updated_at ? n.updated_at.toISOString() : null,
   }));
 
-  return {
-    data,
-  };
+  return { data };
 }
 
-// GET all astrologer videos
-export async function GET() {
-  const pages = await prisma.astrology_videos.findMany({ orderBy: { id: "desc" } });
-  return NextResponse.json(pages);
+// Create new videos
+export async function createVideos(payload: {
+  youtubeLink: string;
+  coverImage: string;
+  videoTitle: string;
+  createdBy?: number;
+}) {
+  try {
+    const created = await prisma.astrology_videos.create({
+      data: {
+        youtubeLink: payload.youtubeLink,
+        coverImage: payload.coverImage,
+        videoTitle: payload.videoTitle,
+        isActive: true,
+        isDelete: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+        createdBy: payload.createdBy ?? 1, // 👈 adjust with session user
+        modifiedBy: payload.createdBy ?? 1,
+      },
+    });
+    return { success: true, data: created };
+  } catch (err: any) {
+    console.error("createAdsVideos error:", err);
+    return { success: false, message: "Failed to create ads videos" };
+  }
 }
 
-// ADD new astrologer video
-export async function POST(req: Request) {
-  const body = await req.json();
-  const { title, type, description } = body;
-
-  const page = await prisma.astrology_videos.create({
-    data: { title, type, description },
-  });
-
-  return NextResponse.json(page);
+// Update videos
+export async function updateVideos(
+  id: number,
+  payload: {
+    youtubeLink: string;
+    coverImage: string;
+    videoTitle: string;
+    modifiedBy?: number;
+  }
+) {
+  try {
+    const updated = await prisma.astrology_videos.update({
+      where: { id: BigInt(id) },
+      data: {
+        youtubeLink: payload.youtubeLink,
+        coverImage: payload.coverImage,
+        videoTitle: payload.videoTitle,
+        updated_at: new Date(),
+        modifiedBy: payload.modifiedBy ?? 1,
+      },
+    });
+    return { success: true, data: updated };
+  } catch (err: any) {
+    console.error("updateAdsVideos error:", err);
+    return { success: false, message: "Failed to update ads videos" };
+  }
 }
 
-// UPDATE astrologer video
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const body = await req.json();
-  const { title, type, description } = body;
-
-  const updated = await prisma.astrology_videos.update({
-    where: { id: Number(params.id) },
-    data: { title, type, description },
-  });
-
-  return NextResponse.json(updated);
+export async function deleteVideos(id: number) {
+  try {
+    const deleted = await prisma.astrology_videos.update({
+      where: { id: BigInt(id) },
+      data: {
+        isDelete: true,
+        updated_at: new Date(),
+      },
+    });
+    return { success: true, data: deleted };
+  } catch (err: any) {
+    console.error("deleteAdsVideos error:", err);
+    return { success: false, message: "Failed to delete ads videos" };
+  }
 }
 
-// DELETE astrologer video
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.astrology_videos.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({ success: true });
-}
-
-// TOGGLE Active astrologer video
-export async function PATCH(_: Request, { params }: { params: { id: string } }) {
-  const page = await prisma.astrology_videos.findUnique({ where: { id: Number(params.id) } });
-  if (!page) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const updated = await prisma.page.update({
-    where: { id: page.id },
-    data: { isActive: !page.isActive },
-  });
-
-  return NextResponse.json(updated);
+// Toggle Active/Inactive
+export async function updateVideosStatus(
+  id: number,
+  isActive: boolean
+) {
+  try {
+    const updated = await prisma.astrology_videos.update({
+      where: { id: BigInt(id) },
+      data: {
+        isActive,
+        updated_at: new Date(),
+      },
+    });
+    return { success: true, data: updated };
+  } catch (err: any) {
+    console.error("updateAdsVideos error:", err);
+    return { success: false, message: "Failed to update ads videos" };
+  }
 }
