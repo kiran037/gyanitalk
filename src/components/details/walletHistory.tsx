@@ -36,7 +36,7 @@ export default function WalletTransactionList({ transactions, isUser }: { transa
                   <div className="truncate">
                     {userName && type ? `${userName} -> ${type}` : userName || type || "-"}
                   </div>
-                  <div className={`${isCredit? "text-green-600" : "text-red-600" } dark:text-green-400 font-medium`}>₹ {amount}</div>
+                  <div className={`${isCredit ? "text-green-600" : "text-red-600"} dark:text-green-400 font-medium`}>₹ {amount}</div>
                   <div>{totalMin} min</div>
                   <div>{date}</div>
                 </div>

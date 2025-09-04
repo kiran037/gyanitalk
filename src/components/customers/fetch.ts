@@ -311,6 +311,33 @@ export async function getUserDetails({ id }: { id?: any }) {
   };
 }
 
+export async function updateUserDetails({ id, data }: { id: number; data: any }) {
+  try {
+    const updated = await prisma.users.update({
+      where: { id: Number(id) },
+      data: {
+        name: data.name || undefined,
+        contactNo: data.contactNo || undefined,
+        email: data.email || undefined,
+        birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+        birthTime: data.birthTime || undefined,
+        birthPlace: data.birthPlace || undefined,
+        addressLine1: data.addressLine1 || undefined,
+        location: data.location || undefined,
+        pincode: data.pincode ? Number(data.pincode) : undefined,
+        gender: data.gender || undefined,
+        profile: data.profile || undefined, // only if you already uploaded image and saved path
+        updated_at: new Date(),
+      },
+    });
+
+    return { status: true, message: "User updated successfully", data: updated };
+  } catch (error: any) {
+    console.error("updateUserDetails error:", error);
+    return { status: false, message: error.message };
+  }
+}
+
 
 
 

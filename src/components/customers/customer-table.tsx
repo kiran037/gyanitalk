@@ -58,6 +58,10 @@ export async function CustomerTable({
           {data.map((item: any, index: number) => (
             <TableRow key={index} className="hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors border-[#eee] dark:border-dark-3">
               <TableCell>
+                <Link
+                  href={`/customers/${item.id}`}
+                  className="flex items-center gap-4 hover:underline"
+                >
                 <div className="flex items-center gap-3">
                   <Image
                     src={
@@ -74,6 +78,8 @@ export async function CustomerTable({
                     {item.name || "-"}
                   </span>
                 </div>
+                </Link>
+
               </TableCell>
 
               <TableCell>
