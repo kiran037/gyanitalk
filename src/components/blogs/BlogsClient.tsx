@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Plus, X } from "lucide-react";
 import { BlogCard } from "./BlogCard";
@@ -263,7 +262,7 @@ useEffect(() => {
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded"
                   >
-                    Save Changes
+                    Create
                   </button>
                 </div>
               </form>

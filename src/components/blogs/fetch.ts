@@ -99,6 +99,15 @@ export async function getBlogsData(
   };
 }  
 
+export async function getBlogs() {
+  const data = await prisma.blogs.findMany({
+    orderBy: { id: "desc" },
+  });
+  return {
+    data,
+  };
+}
+
 // Create new news
 export async function createBlogs(payload: {
   title: string;

@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { MoreVertical, X } from "lucide-react";  // icon library (same as data-lucide)
-import { updateBlogs,deleteBlogs,} from "./fetch"; // ✅ use our new functions
+import { getBlogs, updateBlogs,deleteBlogs,} from "./fetch"; // ✅ use our new functions
 import { isValidImageUrl } from "../functions";
 import { uploadImage } from "@/upload";
 import { BlogsStatusToggle } from "./updateBlogsStatus";
@@ -46,6 +46,8 @@ export function BlogCard({item, currentPage, totalPages, search }: BlogCardProps
   const isActive = !!item.isActive;
   const maxLength = 550;
 
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   // add/edit modal
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -78,6 +80,17 @@ export function BlogCard({item, currentPage, totalPages, search }: BlogCardProps
     setShowModal(true);
   }
 
+  async function fetchBlogs() {
+      setLoading(true);
+      const res = await getBlogs();
+      setData(res.data || []);
+      setLoading(false);
+    }
+  
+    useEffect(() => {
+      fetchBlogs();
+    }, []);
+
   // ✅ Save (Create or Update)
   async function handleSave() {
     try {
@@ -105,6 +118,7 @@ export function BlogCard({item, currentPage, totalPages, search }: BlogCardProps
       }
 
       setShowModal(false);
+      fetchBlogs();
     } catch (err) {
       console.error(err);
       toast.error("Failed to save");
@@ -148,6 +162,7 @@ export function BlogCard({item, currentPage, totalPages, search }: BlogCardProps
     try {
       await deleteBlogs(deleteId);
       toast.success("Deleted successfully");
+      fetchBlogs();
     } catch {
       toast.error("Delete failed");
     } finally {
