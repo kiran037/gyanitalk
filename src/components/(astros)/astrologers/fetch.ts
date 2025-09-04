@@ -100,6 +100,40 @@ export async function updateVerifyStatus({ id, isVerified }: UpdateVerifiedStatu
 
 }
 
+export async function updateAstrologerDetails({ id, data }: { id: number; data: any }) {
+  try {
+    const updated = await prisma.astrologers.update({
+      where: { id: Number(id) },
+      data: {
+        name: data.name,
+        email: data.email,
+        contactNo: data.contactNo,
+        profileImage: data.profileImage,
+        is_featured: Number(data.is_featured) || 0,
+        gender: data.gender,
+        birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+
+        astrologerCategoryId: data.astrologerCategoryId,
+        primarySkill: data.primarySkill,
+        allSkill: data.allSkill,
+        languageKnown: data.languageKnown,
+        minimumEarning: data.minimumEarning ? Number(data.minimumEarning) : undefined,
+        charge: data.charge ? Number(data.charge) : undefined,
+        videoCallRate: data.videoCallRate ? Number(data.videoCallRate) : undefined,
+        reportRate: data.reportRate ? Number(data.reportRate) : undefined,
+        experienceInYears: data.experienceInYears ? Number(data.experienceInYears) : undefined,
+
+        updated_at: new Date(),
+      },
+    });
+    return { status: true, message: "Astrologer updated successfully", data: updated };
+  } catch (err: any) {
+    console.error("updateAstrologerDetails error:", err);
+    return { status: false, message: err.message };
+  }
+}
+
+
 
 export async function getProfileDetails({ id }: { id?: any }) {
   const astroDetail = await prisma.astrologers.findFirst({

@@ -11,8 +11,9 @@ import AstroFollowerList from "@/components/details/followersList";
 import NoitificationsList from "@/components/details/notification";
 import GiftList from "@/components/details/giftList";
 import GalleryList from "@/components/details/galleryList";
-import { getProfileDetails } from "@/components/(astros)/astrologers/fetch";
+import { getProfileDetails, updateAstrologerDetails } from "@/components/(astros)/astrologers/fetch";
 import AstroDetailsSkeleton from "@/components/(astros)/astrologers/astrologer-details-skeleton";
+import { uploadImage } from "@/upload";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
@@ -135,6 +136,100 @@ export default function Page() {
 
 
 
+    // inside your Page component
+    const [isEditing, setIsEditing] = useState(false);
+    const [form, setForm] = useState<any>({});
+    const [previewUrl, setPreviewUrl] = useState("");
+
+    const openEdit = () => {
+        const a = data?.astroDetail;
+        if (!a) return;
+
+        setForm({
+            // personal
+            name: a.name || "",
+            email: a.email || "",
+            contactNo: a.contactNo || "",
+            gender: a.gender || "",
+            birthDate: a.birthDate ? dayjs(a.birthDate).format("YYYY-MM-DD") : "",
+            is_featured: a.is_featured || 0,
+
+            // skills
+            astrologerCategoryId: a.astrologerCategoryId || "",
+            primarySkill: a.primarySkill || "",
+            allSkill: a.allSkill || "",
+            languageKnown: a.languageKnown || "",
+            minimumEarning: a.minimumEarning || "",
+            charge: a.charge || "",
+            videoCallRate: a.videoCallRate || "",
+            reportRate: a.reportRate || "",
+            experienceInYears: a.experienceInYears || "",
+
+            profileImage: null as File | null,
+        });
+
+        setPreviewUrl(
+            a?.profileImage
+                ? `${process.env.NEXT_PUBLIC_BASEURL}${a.profileImage}`
+                : "https://gyanitalk.com/build/assets/images/person.png"
+        );
+
+        setIsEditing(true);
+    };
+
+
+    const closeEdit = () => {
+        setIsEditing(false);
+        setPreviewUrl("");
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setForm((s: any) => ({ ...s, [name]: value }));
+    };
+
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        setForm((s: any) => ({ ...s, profileImage: f }));
+        setPreviewUrl(URL.createObjectURL(f));
+    };
+
+    const onSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            let profileUrl: string | undefined = form.profileImage;
+
+            if (form.profileImage instanceof File) {
+                const uploaded = await uploadImage(form.profileImage, "images");
+                profileUrl = uploaded.path;
+            }
+
+            const payload = {
+                ...form,
+                profileImage: profileUrl,
+            };
+
+            const res = await updateAstrologerDetails({ id: Number(id), data: payload });
+
+            if (res?.status) {
+                setData((prev: any) => ({
+                    ...prev,
+                    astroDetail: { ...prev.astroDetail, ...payload },
+                }));
+                closeEdit();
+            } else {
+                alert(res?.message || "Update failed");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong");
+        }
+    };
+
+
+
+
     return (
         <>
             {!data ? (
@@ -157,6 +252,13 @@ export default function Page() {
                                             className="rounded-full border-4 border-blue-500 object-cover shadow-md"
                                             alt="profile"
                                         />
+                                        <button
+                                            onClick={openEdit}
+                                            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700"
+                                            title="Edit profile"
+                                        >
+                                            <CameraIcon className="w-4 h-4" />
+                                        </button>
                                         <label
                                             htmlFor="profilePhoto"
                                             className="absolute bottom-0 right-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700"
@@ -166,7 +268,13 @@ export default function Page() {
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{data?.astroDetail?.name}</h2>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Astrologer</p>
+                                        <button
+                                            onClick={openEdit}
+                                            className="px-3 py-1.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                                        >
+                                            Edit
+                                        </button>
+
                                     </div>
                                 </div>
                                 <div>
@@ -233,6 +341,198 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
+
+                        {isEditing && (
+                            <div className="fixed inset-0 z-50">
+                                <div className="absolute inset-0 bg-black/40" onClick={closeEdit} />
+                                <div className="absolute right-0 top-0 h-full w-full sm:w-[640px] bg-white dark:bg-gray-900 shadow-xl p-6 overflow-y-auto">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-xl font-semibold">Edit Astrologer</h2>
+                                        <button
+                                            onClick={closeEdit}
+                                            className="rounded-md px-2 py-1 text-sm border hover:bg-gray-50 dark:hover:bg-gray-800"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={onSubmit} className="space-y-8">
+                                        {/* Profile Image */}
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Profile Image</label>
+                                            <div className="flex items-center gap-4">
+                                                <Image
+                                                    src={
+                                                        previewUrl ||
+                                                        "https://gyanitalk.com/build/assets/images/person.png"
+                                                    }
+                                                    alt="profile"
+                                                    width={80}
+                                                    height={80}
+                                                    className="rounded-full border object-cover shadow"
+                                                />
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleFile}
+                                                    className="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-blue-700 hover:file:bg-blue-100"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Section: Personal Details */}
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-3 border-b pb-1">Personal Details</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <input
+                                                    name="name"
+                                                    value={form.name || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Full Name"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    value={form.email || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Email"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    name="contactNo"
+                                                    value={form.contactNo || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Number"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <select
+                                                    name="gender"
+                                                    value={form.gender || ""}
+                                                    onChange={handleChange}
+                                                    className="rounded-md border px-3 py-2 bg-white"
+                                                >
+                                                    <option value="">- Select Gender -</option>
+                                                    <option>Male</option>
+                                                    <option>Female</option>
+                                                    <option>Other</option>
+                                                </select>
+                                                <input
+                                                    type="date"
+                                                    name="birthDate"
+                                                    value={form.birthDate || ""}
+                                                    onChange={handleChange}
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <select
+                                                    name="is_featured"
+                                                    value={form.is_featured || 0}
+                                                    onChange={handleChange}
+                                                    className="rounded-md border px-3 py-2 bg-white"
+                                                >
+                                                    <option value={0}>Not Featured</option>
+                                                    <option value={1}>Featured</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Section: Skill Details */}
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-3 border-b pb-1">Skill Details</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <input
+                                                    name="astrologerCategoryId"
+                                                    value={form.astrologerCategoryId || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Astrologer Category"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    name="primarySkill"
+                                                    value={form.primarySkill || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Primary Skill"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    name="allSkill"
+                                                    value={form.allSkill || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="All Skills"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    name="languageKnown"
+                                                    value={form.languageKnown || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Languages"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    name="minimumEarning"
+                                                    value={form.minimumEarning || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Actual Price"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    name="charge"
+                                                    value={form.charge || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Your Charges"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    name="videoCallRate"
+                                                    value={form.videoCallRate || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Video Charges"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    name="reportRate"
+                                                    value={form.reportRate || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Report Charges"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    name="experienceInYears"
+                                                    value={form.experienceInYears || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="Experience (years)"
+                                                    className="rounded-md border px-3 py-2"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex justify-end gap-3 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={closeEdit}
+                                                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                                            >
+                                                {"Save changes"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+
 
                         {/* Tab Navigation */}
                         <div className="border-b border-gray-200 dark:border-gray-700">
