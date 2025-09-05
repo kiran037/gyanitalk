@@ -1,5 +1,5 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { NotificationTable } from "@/components/notifications/notifications-table";
+import  NotificationTable  from "@/components/notifications/notifications-table";
 import { NotificationSkeleton } from "@/components/notifications/notifications-skeleton";
 import { Suspense } from "react";
 

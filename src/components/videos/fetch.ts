@@ -4,15 +4,15 @@ const prisma = require("../../prismaClient");
 
 // Get all videos
 export async function getVideos() {
-  const news = await prisma.astrology_videos.findMany({
+  const videos = await prisma.astrology_videos.findMany({
     where: {isDelete: false},
     orderBy: { id: "desc" },
   });
 
-  const data = news.map((n: any) => ({
-    ...n,
-    created_at: n.created_at ? n.created_at.toISOString() : null,
-    updated_at: n.updated_at ? n.updated_at.toISOString() : null,
+  const data = videos.map((v: any) => ({
+    ...v,
+    created_at: v.created_at ? v.created_at.toISOString() : null,
+    updated_at: v.updated_at ? v.updated_at.toISOString() : null,
   }));
 
   return { data };

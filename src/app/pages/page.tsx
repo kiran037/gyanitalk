@@ -1,5 +1,5 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { PagesForm } from "@/components/pages/pages-form";
+import PagesForm from "@/components/pages/pages-form"; // no curly braces ✅
 import { Suspense } from "react";
 
 
@@ -17,7 +17,7 @@ export default async function PagessPage({
 
       <Breadcrumb pageName="Pages" />
       
-      <Suspense>
+      <Suspense fallback={<p className="text-gray-500">Loading pages...</p>}>
         <PagesForm />
       </Suspense>
     </div>
