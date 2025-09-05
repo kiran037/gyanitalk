@@ -1,5 +1,5 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { BannersForm } from "@/components/banners/banners-form";
+import BannersForm from "@/components/banners/banners-form";
 import { Suspense } from "react";
 
 
