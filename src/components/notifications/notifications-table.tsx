@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui-elements/table";
-import { getNotifications, createNotifications, updateNotifications } from "./fetch";
+import { getNotifications, createNotifications, updateNotifications, 
+  // sendNotification 
+ } from "./fetch";
 import toast from "react-hot-toast";
 
 export default  function NotificationTable() {
@@ -16,6 +18,14 @@ export default  function NotificationTable() {
   const [formData, setFormData] = useState<any>({
     title: "",
     description: "",
+  });
+
+  // send modal
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<any>(null);
+  const [sendForm, setSendForm] = useState<any>({
+    role: "all",
+    users: ["all"],
   });
 
   async function fetchNotifications() {
@@ -45,6 +55,12 @@ export default  function NotificationTable() {
     setShowModal(true);
   }
 
+  function openSendModal(item: any) {
+    setSelectedNotification(item);
+    setSendForm({ role: "all", users: ["all"] });
+    setShowSendModal(true);
+  }
+
   async function handleSave() {
     try {
       let payload = { ...formData };
@@ -62,6 +78,22 @@ export default  function NotificationTable() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to save");
+    }
+  }
+
+  async function handleSend() {
+    try {
+      await //sendNotification
+      ({
+        notificationId: selectedNotification.id,
+        role: sendForm.role,
+        users: sendForm.users,
+      });
+      toast.success("Notification sent successfully!");
+      setShowSendModal(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to send notification");
     }
   }
 
@@ -119,7 +151,7 @@ export default  function NotificationTable() {
                         ✏️ Edit
                       </button>
 
-                      <button className="flex items-center text-green-600 hover:text-green-800">
+                      <button  onClick={() => openSendModal(item)} className="flex items-center text-green-600 hover:text-green-800">
                         📤 Send
                       </button>
                     </div>
@@ -188,6 +220,81 @@ export default  function NotificationTable() {
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
                   {editingItem ? "Save Changes" : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+{/* Send Modal */}
+      {showSendModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-xl p-6">
+            <div className="flex justify-between mb-4">
+              <h2 className="text-lg font-semibold">📤 Send Notification</h2>
+              <button onClick={() => setShowSendModal(false)}>
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend();
+              }}
+              className="grid gap-4"
+            >
+              <label className="flex flex-col">
+                <span className="mb-1 text-sm">Select Role</span>
+                <select
+                  value={sendForm.role}
+                  onChange={(e) =>
+                    setSendForm({ ...sendForm, role: e.target.value })
+                  }
+                  className="border rounded px-3 py-2"
+                >
+                  <option value="all">All</option>
+                  <option value="user">User</option>
+                  <option value="astrologer">Astrologer</option>
+                  <option value="never_recharged">User Never Recharged</option>
+                  <option value="not_used_free">User Not Used Free Chat/Call</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col">
+                <span className="mb-1 text-sm">Select Users</span>
+                <select
+                  multiple
+                  value={sendForm.users}
+                  onChange={(e) =>
+                    setSendForm({
+                      ...sendForm,
+                      users: Array.from(
+                        e.target.selectedOptions,
+                        (opt) => opt.value
+                      ),
+                    })
+                  }
+                  className="border rounded px-3 py-2"
+                >
+                  <option value="all">All Users</option>
+                </select>
+              </label>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSendModal(false)}
+                  className="px-4 py-2 bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                  Send
                 </button>
               </div>
             </form>

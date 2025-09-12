@@ -421,8 +421,11 @@ model astromall_products {
   name              String    @db.VarChar(255)
   features          String    @db.Text
   productImage      String    @db.VarChar(255)
+  gallery           String?    // ✅ nullable
   productCategoryId BigInt    @db.UnsignedBigInt
   amount            Float
+  is_feature        Boolean   @default(false)
+  bestseller        Boolean   @default(false)
   description       String?   @db.VarChar(255)
   isActive          Boolean   @default(true)
   isDelete          Boolean   @default(false)
@@ -433,6 +436,8 @@ model astromall_products {
 
   product_category  product_categories @relation(fields: [productCategoryId], references: [id])
   order_requests order_request[]
+// Relations
+  product_details product_details[]   // ✅ one-to-many relation
 
   @@index([productCategoryId], map: "astromall_products_productcategoryid_foreign")
 }
@@ -1428,6 +1433,8 @@ model product_details {
   created_at         DateTime? @db.Timestamp(0)
   updated_at         DateTime? @db.Timestamp(0)
 
+ // Relation back to product
+  product astromall_products @relation(fields: [astromallProductId], references: [id])
   @@index([astromallProductId], map: "product_details_astromallproductid_foreign")
 }
 

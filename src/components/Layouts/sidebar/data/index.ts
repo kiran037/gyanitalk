@@ -21,6 +21,18 @@ import {
   Settings,
   Star,
   CreditCard,
+  Folder,
+  PocketKnife,
+  Gift,
+  X,
+  Bot,
+  Ticket,
+  List,
+  Check,
+  Activity,
+  History,
+  ShoppingBagIcon,
+  PackageSearch,
 } from "lucide-react";
 
 export const NAV_DATA = [
@@ -75,6 +87,36 @@ export const NAV_DATA = [
             url: "/ai-astrologers",
             icon: Brain,
           },
+          {
+            title: "Block Astrologer",
+            url: "/block-astrologer",
+            icon: X,
+          },
+          {
+            title: "Reviews",
+            url: "/reviews-astrologers",
+            icon: Star,
+          },
+          { 
+            title: "Gifts",
+            url: "/gifts-astrologers",
+            icon: Gift,
+          },
+          {
+            title: "Skills",
+            url: "/skills-astrologers",
+            icon: PocketKnife,
+          },
+          {
+            title: "Categories",
+            url: "/categories",
+            icon: Folder,
+          },
+          {
+            title: "Commissionn rate for calls/chats",
+            url: "/commission_rate",
+            icon: IndianRupee,
+          },
         ],
       },
       {
@@ -99,10 +141,70 @@ export const NAV_DATA = [
         ],
       },
       {
+        title: "Astroshop",
+        icon: ShoppingBagIcon,
+        items: [
+          {
+            title: "Product Categories",
+            url: "/productCategories",
+            icon: Folder,
+          },
+          {
+            title: "Products",
+            url: "/products",
+            icon: PackageSearch,
+          },
+          {
+            title: "Orders",
+            url: "/orders",
+            icon: IndianRupee,
+          },
+        ],
+      },
+      {
         title: "Notifications",
         url: "/notifications",
         icon: BellRing,
         items: [],
+      },
+      {
+        title: "Support Management",
+        url: "/support_management",
+        icon: Bot,
+        items: [
+          {
+            title: "Tickets",
+            url: "/tickets",
+            icon: Ticket,
+          },
+          {
+            title: "FAQs",
+            url: "/faqs",
+            icon: List,
+          },
+        ],
+      },
+      {
+        title: "Earning",
+        url: "/earning",
+        icon: IndianRupee,
+        items: [
+          {
+            title: "Withdrawal Requests",
+            url: "/withdrawal_requests",
+            icon: Check,
+          },
+          {
+            title: "Withdrawal Methods",
+            url: "/withdrawal_methods",
+            icon: Activity,
+          },
+          {
+            title: "Wallet History",
+            url: "/wallet_history",
+            icon: History,
+          },
+        ],
       },
       {
         title: "Page Management",
