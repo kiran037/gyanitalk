@@ -1418,7 +1418,7 @@ model product_categories {
   createdBy     Int
   modifiedBy    Int
 
-  products      astromall_products[] // back relation
+  product      astromall_products[] // back relation
   order_requests order_request[]
 }
 

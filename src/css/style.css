@@ -483,3 +483,49 @@ input[type="search"]::-webkit-search-cancel-button {
 .custom-gradient-1 {
   background-image: linear-gradient(145deg, #eef 0%, #fff8fc 100%);
 }
+
+@media print {
+  
+  @page {
+    margin: 20mm;
+    /* ✅ sirf page number show kare */
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+    }
+    @top-center {
+      content: none; /* header empty */
+    }
+    @top-left {
+      content: none;
+    }
+    @top-right {
+      content: none;
+    }
+  }
+
+  /* Hide sidebar, header, footer etc */
+  .sidebar,
+  .header,
+  .footer {
+    display: none !important;
+  }
+
+  /* Ensure only invoice area is visible */
+  body * {
+    visibility: hidden;
+     margin: 0;
+  }
+
+  .invoice-print-area,
+  .invoice-print-area * {
+    visibility: visible;
+  }
+
+  /* Position invoice at top-left */
+  .invoice-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}

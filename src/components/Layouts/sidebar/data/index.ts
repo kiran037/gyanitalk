@@ -31,7 +31,7 @@ import {
   Check,
   Activity,
   History,
-  ShoppingBagIcon,
+  ShoppingBag,
   PackageSearch,
 } from "lucide-react";
 
@@ -142,7 +142,7 @@ export const NAV_DATA = [
       },
       {
         title: "Astroshop",
-        icon: ShoppingBagIcon,
+        icon:   ShoppingBag,
         items: [
           {
             title: "Product Categories",
