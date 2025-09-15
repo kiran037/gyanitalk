@@ -1578,10 +1578,13 @@ model ticketreview {
   id         Int      @id @default(autoincrement())
   review     String?  @db.LongText
   rating     Float?   @db.Float
-  ticketId   Int
+  ticketId   BigInt
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
   userId     Int
+
+  ticket   tickets  @relation("TicketReviews", fields: [ticketId], references: [id])
+
   @@unique([userId, ticketId])
 }
 
@@ -1602,6 +1605,7 @@ model tickets {
   ticketStatus  String?   @db.VarChar(45)
   user     users? @relation(fields: [userId], references: [id]) // ✅ Optional
   help_support  help_supports? @relation(fields: [helpSupportId], references: [id])
+  ticketreview  ticketreview[]  @relation("TicketReviews") // ✅ relation name same as above
 
   @@index([helpSupportId], map: "tickets_helpsupportId_idx")
   @@index([userId], map: "tickets_userid_foreign")
