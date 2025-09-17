@@ -179,7 +179,7 @@ export const NAV_DATA = [
           },
           {
             title: "FAQs",
-            url: "/faqs",
+            url: "/helpSupport",
             icon: List,
           },
         ],

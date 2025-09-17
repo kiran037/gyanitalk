@@ -919,6 +919,7 @@ model help_support_quation_answers {
   isChatWithus         Int?      @db.TinyInt
   description          String?   @db.LongText
 
+  question help_support_quations @relation(fields: [helpSupportQuationId], references: [id])
   @@index([helpSupportId], map: "help_support_quation_answers_helpsupportid_foreign")
   @@index([helpSupportQuationId], map: "help_support_quation_answers_helpsupportquationid_foreign")
 }
@@ -936,6 +937,8 @@ model help_support_quations {
   modifiedBy    Int
   isChatWithus  Int?      @db.TinyInt
 
+  help_support_quation_answers help_support_quation_answers[]
+  support help_supports @relation(fields: [helpSupportId], references: [id])
   @@index([helpSupportId], map: "help_support_quations_helpsupportid_foreign")
 }
 
@@ -949,6 +952,7 @@ model help_supports {
   createdBy  Int
   modifiedBy Int
   tickets tickets[]
+  subCategory help_support_quations[]
 
 }
 
