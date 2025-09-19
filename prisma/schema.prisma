@@ -368,6 +368,7 @@ model astrologers {
   chatrequests    chatrequest[]      @relation("AstrologerChatRequests")
   callrequests callrequest[] @relation("AstrologerToCallRequests")
   walletTransactions wallettransaction[]
+  withdraws     withdrawrequest[]
   assistantchat assistantchat[]
   order_requests order_request[]
   followers     astrologer_followers[] 
@@ -1948,6 +1949,8 @@ model withdrawmethods {
   isActive    Boolean?
   created_at  DateTime? @default(now()) @db.Timestamp(0)
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  withdraws   withdrawrequest[]
 }
 
 model withdrawrequest {
@@ -1961,11 +1964,14 @@ model withdrawrequest {
   updated_at        DateTime? @default(now()) @db.Timestamp(0)
   createdBy         Int?
   modifiedBy        Int?
-  paymentMethod     String?   @db.VarChar(45)
+  paymentMethod     Int?   
   upiId             String?   @db.VarChar(45)
   accountNumber     String?   @db.VarChar(45)
   ifscCode          String?   @db.VarChar(45)
   accountHolderName String?   @db.VarChar(100)
+
+  astrologer    astrologers?    @relation(fields: [astrologerId], references: [id])
+  withdrawmethod withdrawmethods? @relation(fields: [paymentMethod], references: [id])
 
   @@index([astrologerId], map: "withdrawrequest_astrologer_idx")
 }
