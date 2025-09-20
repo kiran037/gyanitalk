@@ -376,6 +376,7 @@ model astrologers {
   assignGroups   astrologer_assign_group[]
   liveastro      liveastro[]   
   stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
+  blocks        blockastrologer[]
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -501,11 +502,14 @@ model blockassistant {
 
 model blockastrologer {
   id           Int      @id @default(autoincrement())
-  astrologerId Int
-  userId       Int
+  astrologerId BigInt?   @db.UnsignedBigInt
+  userId       BigInt?   @db.UnsignedBigInt
   reason       String   @db.LongText
   created_at   DateTime @default(now()) @db.Timestamp(0)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
+
+  user          users?        @relation(fields: [userId], references: [id])
+  astrologer    astrologers?  @relation(fields: [astrologerId], references: [id])
 }
 
 model blockuserreview {
@@ -1889,6 +1893,7 @@ model users {
   liveuser    liveuser[]    
   payments payment[]
   order_request order_request[]
+  blocks    blockastrologer[]
   followedAstrologers astrologer_followers[] @relation("UserFollowers")
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
   user_wallets user_wallets[]  

@@ -89,7 +89,7 @@ export const NAV_DATA = [
           },
           {
             title: "Block Astrologer",
-            url: "/block-astrologer",
+            url: "/block_astrologer",
             icon: X,
           },
           {
