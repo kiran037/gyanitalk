@@ -94,12 +94,12 @@ export const NAV_DATA = [
           },
           {
             title: "Reviews",
-            url: "/reviews-astrologers",
+            url: "/review_astrologers",
             icon: Star,
           },
           { 
             title: "Gifts",
-            url: "/gifts-astrologers",
+            url: "/gifts_astrologer",
             icon: Gift,
           },
           {

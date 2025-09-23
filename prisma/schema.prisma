@@ -377,6 +377,7 @@ model astrologers {
   liveastro      liveastro[]   
   stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
   blocks        blockastrologer[]
+  reviews      user_reviews[]
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -1820,6 +1821,7 @@ model user_reviews {
   modifiedBy         Int
 
   user users? @relation(fields: [userId], references: [id])
+  astrologer   astrologers? @relation(fields: [astrologerId], references: [id])
 
   @@index([astromallProductId], map: "test")
   @@index([astrologerId], map: "user_reviews_astrologerid_foreign")

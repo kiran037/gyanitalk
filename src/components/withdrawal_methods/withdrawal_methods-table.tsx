@@ -81,7 +81,7 @@ export default function WithdrawalMethodsTable({ methods }: Props) {
             <TableRow key={item.id}>
               
               {/* Method Name */}
-              <TableCell className="text-center">{item.method_name}</TableCell>
+              <TableCell className="text-center font-bold">{item.method_name}</TableCell>
 
               {/* Status Toggle */}
               <TableCell className="text-center">

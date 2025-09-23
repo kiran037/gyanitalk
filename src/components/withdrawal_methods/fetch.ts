@@ -5,7 +5,7 @@ const prisma = require("../../prismaClient");
 export async function getWithdrawalMethods() {
 
   const methods = await prisma.withdrawmethods.findMany({
-    orderBy: { id: "desc" },
+    orderBy: { id: "asc" },
   });
   
 return {
