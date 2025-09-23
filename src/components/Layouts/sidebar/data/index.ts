@@ -104,7 +104,7 @@ export const NAV_DATA = [
           },
           {
             title: "Skills",
-            url: "/skills-astrologers",
+            url: "/skills_astrologer",
             icon: PocketKnife,
           },
           {
