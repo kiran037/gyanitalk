@@ -8,6 +8,7 @@ import { Search, X, Edit3, ChevronLeft, ChevronRight, ChevronDown } from "lucide
 import { createPortal } from "react-dom";
 
 import { Suspense } from "react";
+import { uploadImage } from "@/upload";
 import { getAiAstro, getAiProfileDetails, updateAiProfile } from "@/components/(astros)/ai-astrologer/fetch";
 
 /* -----------------------------------
