@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/Toast/ToastProvider";
-import { updateLiveStatus, updateVerifyStatus } from "@/app/(astrologers)/astrologers/fetch";
+import { updateLiveStatus, updateVerifyStatus, updateCallStatus, updateChatStatus } from "@/app/(astrologers)/astrologers/fetch";
 import CircleAvatar from "@/components/CircleAvatar";
 
 /* ---------- helpers (match Customers) ---------- */
@@ -64,24 +64,61 @@ const StatusPill = ({ on, label }: { on: boolean; label: string }) => (
     </span>
 );
 
-/* ---------- tiny toggles (glass, optimistic, useToast) ---------- */
-function LiveStatusToggle({ id, isOn }: { id: number; isOn: boolean }) {
+function LiveStatusButton({ id, isOn }: { id: number; isOn: boolean }) {
+  const toast = useToast();
+  const [on, setOn] = useState(isOn);
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async () => {
+    if (busy) return;
+    const next = !on;
+    setOn(next);
+    setBusy(true);
+    try {
+      // API expects 0 = live/on, 1 = off
+      await updateLiveStatus({ id, isLiveOff: next ? 0 : 1 });
+      toast("success", "Live Status", next ? "Now LIVE" : "Set to OFFLINE");
+    } catch {
+      setOn(!next);
+      toast("error", "Error", "Failed to update live status.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={busy}
+      className={cn(
+        "px-2 py-0.5 rounded-full text-[11px] font-medium border transition",
+        on
+          ? "bg-emerald-100/70 border-emerald-300/60 text-emerald-700"
+          : "bg-rose-100/70 border-rose-300/60 text-rose-700"
+      )}
+    >
+      {on ? "Live On" : "Live Off"}
+    </button>
+  );
+}
+
+
+function ChatStatusToggle({ id, isOn }: { id: number; isOn: boolean }) {
     const toast = useToast();
-    const [on, setOn] = useState(!!isOn);
+    const [on, setOn] = useState(isOn);
     const [busy, setBusy] = useState(false);
 
     const toggle = async () => {
         if (busy) return;
         const next = !on;
-        setOn(next); // optimistic
+        setOn(next);
         setBusy(true);
         try {
-            // API expects isLiveOff: 0 (on) | 1 (off)
-            await updateLiveStatus({ id, isLiveOff: next ? 0 : 1 });
-            toast("warning", "Live Status", next ? "Now LIVE" : "Set to OFFLINE");
+            await updateChatStatus({ id, on: next });
+            toast("success", "Chat Status", next ? "Chat Online" : "Chat Offline");
         } catch {
             setOn(!next);
-            toast("error", "Error", "Failed to update live status.");
+            toast("error", "Error", "Failed to update chat status.");
         } finally {
             setBusy(false);
         }
@@ -89,32 +126,57 @@ function LiveStatusToggle({ id, isOn }: { id: number; isOn: boolean }) {
 
     return (
         <button
-            type="button"
-            aria-pressed={on}
-            title="Toggle Live"
-            disabled={busy}
             onClick={toggle}
+            disabled={busy}
             className={cn(
-                "relative h-7 w-12 rounded-full border border-white/30 dark:border-white/10 bg-white/70 dark:bg-white/[0.06] backdrop-blur-xl shadow-inner transition",
-                busy ? "opacity-70 cursor-wait" : "hover:bg-white/80 dark:hover:bg-white/[0.12]",
-                on ? "ring-1 ring-emerald-400/40" : "ring-0"
+                "px-2 py-0.5 rounded-full text-[11px] font-medium border transition",
+                on
+                    ? "bg-emerald-100/70 border-emerald-300/60 text-emerald-700"
+                    : "bg-rose-100/70 border-rose-300/60 text-rose-700"
             )}
         >
-            <span
-                className={cn(
-                    "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform will-change-transform",
-                    on ? "translate-x-5" : "translate-x-0"
-                )}
-            />
-            <span
-                className={cn(
-                    "absolute right-1 top-1.5 h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]",
-                    on ? "bg-emerald-500/80" : "bg-rose-500/80"
-                )}
-            />
+            {on ? "Chat On" : "Chat Off"}
         </button>
     );
 }
+
+function CallStatusToggle({ id, isOn }: { id: number; isOn: boolean }) {
+    const toast = useToast();
+    const [on, setOn] = useState(isOn);
+    const [busy, setBusy] = useState(false);
+
+    const toggle = async () => {
+        if (busy) return;
+        const next = !on;
+        setOn(next);
+        setBusy(true);
+        try {
+            await updateCallStatus({ id, on: next });
+            toast("success", "Call Status", next ? "Call Online" : "Call Offline");
+        } catch {
+            setOn(!next);
+            toast("error", "Error", "Failed to update call status.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <button
+            onClick={toggle}
+            disabled={busy}
+            className={cn(
+                "px-2 py-0.5 rounded-full text-[11px] font-medium border transition",
+                on
+                    ? "bg-emerald-100/70 border-emerald-300/60 text-emerald-700"
+                    : "bg-rose-100/70 border-rose-300/60 text-rose-700"
+            )}
+        >
+            {on ? "Call On" : "Call Off"}
+        </button>
+    );
+}
+
 
 function VerifiedToggle({ id, isVerified }: { id: number; isVerified: boolean }) {
     const toast = useToast();
@@ -154,7 +216,7 @@ function VerifiedToggle({ id, isVerified }: { id: number; isVerified: boolean })
             </button>
 
             {open && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !busy && setOpen(false)} />
                     <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-white/20 bg-white/70 dark:bg-white/[0.08] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
                         <div className="flex items-center justify-between border-b border-white/20 bg-white/60 dark:bg-white/[0.06] px-4 py-3">
@@ -441,9 +503,11 @@ export default function AstrologersClient({
                                                         Status
                                                     </p>
                                                     <div className="flex items-center gap-1.5">
-                                                        <StatusPill on={liveOn} label="Live" />
-                                                        <StatusPill on={chatOn} label="Chat" />
-                                                        <StatusPill on={callOn} label="Call" />
+                                                        <LiveStatusButton id={a.id} isOn={liveOn} />
+
+                                                        <ChatStatusToggle id={a.id} isOn={chatOn} />
+                                                        <CallStatusToggle id={a.id} isOn={callOn} />
+
                                                     </div>
                                                 </div>
 
@@ -465,7 +529,7 @@ export default function AstrologersClient({
                                                     <Eye className="h-3.5 w-3.5" />
                                                     View
                                                 </Link>
-                                                <LiveStatusToggle id={a.id} isOn={liveOn} />
+
                                             </div>
                                         </div>
 

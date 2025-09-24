@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -14,9 +15,17 @@ export function Header() {
   const { toggleSidebar } = useSidebarContext();
   const router = useRouter();
 
-  // Shortcuts: m = toggle menu, r = refresh
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
+      const isTyping =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        target?.isContentEditable;
+
+      if (isTyping) return;
+
       if (!e.metaKey && !e.ctrlKey) {
         const k = e.key.toLowerCase();
         if (k === "m") {
@@ -28,6 +37,7 @@ export function Header() {
         }
       }
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [router, toggleSidebar]);
@@ -66,7 +76,7 @@ export function Header() {
             <Link
               href="/"
               aria-label="Go to dashboard"
-              className="group flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/50 dark:hover:bg-white/[0.07] "
+              className="group flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/50 dark:hover:bg-white/[0.07]"
             >
               <span className="relative inline-block">
                 <Image
@@ -91,11 +101,7 @@ export function Header() {
 
           {/* Right: actions */}
           <div className="flex items-center gap-2">
-            <div
-              
-            >
-              <ThemeToggleSwitch />
-            </div>
+            <ThemeToggleSwitch />
             <button
               type="button"
               onClick={() => router.refresh()}
