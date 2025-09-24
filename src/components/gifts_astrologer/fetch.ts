@@ -18,7 +18,6 @@ export async function getGifts({
   const offset = (page - 1) * limit;
   // 👇 where condition properly build karo
   const where: any = {
-    isActive: true,
     isDelete: false,
   };
 

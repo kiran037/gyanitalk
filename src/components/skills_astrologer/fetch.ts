@@ -20,7 +20,6 @@ export async function getSkills({
 
   // base condition
   const where: any = {
-    isActive: true,
     isDelete: false,
   };
 

@@ -21,7 +21,6 @@ export async function getReviews({
   // base condition
   const where: any = {
     astrologerId: { not: null },
-    isActive: true,
     isDelete: false,
   };
 

@@ -109,7 +109,7 @@ export const NAV_DATA = [
           },
           {
             title: "Categories",
-            url: "/categories",
+            url: "/astrologerCategories",
             icon: Folder,
           },
           {
