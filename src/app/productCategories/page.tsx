@@ -564,7 +564,7 @@ export default function ProductCategoriesPage({
   const search = params?.search || "";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 px-5 py-5">
       <form method="get" className="flex gap-2">
         <GlassInput name="search" defaultValue={search} placeholder="Search categories…" className="min-w-[260px]" />
         <GlassButton type="submit">Search</GlassButton>
