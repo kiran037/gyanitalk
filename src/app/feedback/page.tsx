@@ -233,11 +233,9 @@ function FeedbackTable({
               return null;
             }
 
-            const href = `?page=${pageNum}${
-              search ? `&search=${encodeURIComponent(search)}` : ""
-            }${startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""}${
-              endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
-            }`;
+            const href = `?page=${pageNum}${search ? `&search=${encodeURIComponent(search)}` : ""
+              }${startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""}${endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
+              }`;
 
             return (
               <a
