@@ -114,7 +114,7 @@ export const NAV_DATA = [
           },
           {
             title: "Commissionn rate for calls/chats",
-            url: "/commission_rate",
+            url: "/commissions",
             icon: IndianRupee,
           },
         ],

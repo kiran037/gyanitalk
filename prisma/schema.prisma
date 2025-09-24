@@ -378,6 +378,7 @@ model astrologers {
   stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
   blocks        blockastrologer[]
   reviews      user_reviews[]
+  commissions commissions[] @relation(name: "astrologersTocommissions")
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -706,6 +707,7 @@ model commission_types {
   createdBy             Int
   modifiedBy            Int
   admin_get_commissions admin_get_commissions[]
+  commissions commissions[]
 }
 
 model commissions {
@@ -720,6 +722,8 @@ model commissions {
   modifiedBy            Int
   astrologerId          BigInt?                 @db.UnsignedBigInt
   admin_get_commissions admin_get_commissions[]
+  astrologer      astrologers?     @relation(name: "astrologersTocommissions", fields: [astrologerId], references: [id])
+  commissionType  commission_types @relation(fields: [commissionTypeId], references: [id])
 
   @@index([astrologerId], map: "commissions_astrologers_idx")
   @@index([commissionTypeId], map: "commissions_commissiontypeid_foreign")
