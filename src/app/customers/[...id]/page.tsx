@@ -3,14 +3,14 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation";
 import { getUserDetails } from "@/components/customers/fetch";
-import { AstrologerSkeleton } from "@/components/astrologers/astrologer-skeleton";
 import { UserCallSessionList } from "@/components/details/callHistory";
 import { UserChatSessionList } from "@/components/details/chatHistory";
 import UserOrderDetails from "@/components/details/orderDetails";
 import WalletTransactionList from "@/components/details/walletHistory";
-import AstroFollowerList, { UserFollowerList } from "@/components/details/followersList";
+import { UserFollowerList } from "@/components/details/followersList";
 import NoitificationsList from "@/components/details/notification";
-import GiftList, { UserGiftList } from "@/components/details/giftList";
+import { UserGiftList } from "@/components/details/giftList";
+import { AstrologerSkeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
 
 type PropsType = React.SVGProps<SVGSVGElement>;
 function CameraIcon(props: PropsType) {
