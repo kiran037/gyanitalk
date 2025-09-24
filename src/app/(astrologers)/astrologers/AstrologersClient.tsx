@@ -3,8 +3,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { createPortal } from "react-dom";
+
 import {
     Search,
     Eye,
@@ -179,88 +180,109 @@ function CallStatusToggle({ id, isOn }: { id: number; isOn: boolean }) {
 
 
 function VerifiedToggle({ id, isVerified }: { id: number; isVerified: boolean }) {
-    const toast = useToast();
-    const [verified, setVerified] = useState(!!isVerified);
-    const [open, setOpen] = useState(false);
-    const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const [verified, setVerified] = useState(!!isVerified);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-    const confirm = async () => {
-        if (busy) return;
-        setBusy(true);
-        const next = !verified;
-        try {
-            await updateVerifyStatus({ id, isVerified: next });
-            setVerified(next);
-            toast("warning", "Verification", next ? "Astrologer verified" : "Astrologer unverified");
-            setOpen(false);
-        } catch {
-            toast("error", "Error", "Failed to update verification.");
-        } finally {
-            setBusy(false);
-        }
-    };
+  // --- critical: ensure portal renders only on client after mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-    return (
-        <>
-            <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                    "bg-white/70 dark:bg-white/[0.06] border-white/30 dark:border-white/10",
-                    verified ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"
-                )}
-            >
-                {verified ? <CheckCircle2 className="h-3.5 w-3.5" /> : <CircleOff className="h-3.5 w-3.5" />}
-                {verified ? "Verified" : "Unverified"}
-            </button>
+  // Optional: lock body scroll when modal open
+  useEffect(() => {
+    if (!mounted) return;
+    if (open) document.body.classList.add("overflow-hidden");
+    else document.body.classList.remove("overflow-hidden");
+    return () => document.body.classList.remove("overflow-hidden");
+  }, [open, mounted]);
 
-            {open && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !busy && setOpen(false)} />
-                    <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-white/20 bg-white/70 dark:bg-white/[0.08] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
-                        <div className="flex items-center justify-between border-b border-white/20 bg-white/60 dark:bg-white/[0.06] px-4 py-3">
-                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                {verified ? "Unverify Astrologer?" : "Verify Astrologer?"}
-                            </h3>
-                            <button
-                                className="rounded-lg p-1 text-slate-500 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/[0.08]"
-                                onClick={() => !busy && setOpen(false)}
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
+  const confirm = async () => {
+    if (busy) return;
+    setBusy(true);
+    const next = !verified;
+    try {
+      await updateVerifyStatus({ id, isVerified: next });
+      setVerified(next);
+      toast("warning", "Verification", next ? "Astrologer verified" : "Astrologer unverified");
+      setOpen(false);
+    } catch {
+      toast("error", "Error", "Failed to update verification.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
-                        <div className="px-4 py-4 text-sm text-slate-700 dark:text-slate-200">
-                            Are you sure you want to {verified ? "unverify" : "verify"} this astrologer?
-                        </div>
+  return (
+    <>
+      {/* same pill button, unchanged */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+          "bg-white/70 dark:bg-white/[0.06] border-white/30 dark:border-white/10",
+          verified ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"
+        )}
+      >
+        {verified ? <CheckCircle2 className="h-3.5 w-3.5" /> : <CircleOff className="h-3.5 w-3.5" />}
+        {verified ? "Verified" : "Unverified"}
+      </button>
 
-                        <div className="flex items-center justify-end gap-2 border-t border-white/20 bg-white/50 dark:bg-white/[0.05] px-4 py-3">
-                            <button
-                                onClick={() => !busy && setOpen(false)}
-                                className="inline-flex items-center justify-center rounded-lg border border-white/30 dark:border-white/10 bg-white/70 dark:bg-white/[0.06] px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white/90 dark:hover:bg-white/[0.12] transition disabled:opacity-50"
-                                disabled={busy}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirm}
-                                disabled={busy}
-                                className={cn(
-                                    "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition disabled:opacity-50",
-                                    verified
-                                        ? "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700"
-                                        : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                                )}
-                            >
-                                {busy ? "Updating…" : verified ? "Unverify" : "Verify"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
+      {/* portal modal */}
+      {mounted && open &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+            {/* full-page blurred backdrop */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => !busy && setOpen(false)}
+            />
+            {/* floating card */}
+            <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-white/20 bg-white/70 dark:bg-white/[0.08] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+              <div className="flex items-center justify-between border-b border-white/20 bg-white/60 dark:bg-white/[0.06] px-4 py-3">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {verified ? "Unverify Astrologer?" : "Verify Astrologer?"}
+                </h3>
+                <button
+                  className="rounded-lg p-1 text-slate-500 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/[0.08]"
+                  onClick={() => !busy && setOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="px-4 py-4 text-sm text-slate-700 dark:text-slate-200">
+                Are you sure you want to {verified ? "unverify" : "verify"} this astrologer?
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-white/20 bg-white/50 dark:bg-white/[0.05] px-4 py-3">
+                <button
+                  onClick={() => !busy && setOpen(false)}
+                  className="inline-flex items-center justify-center rounded-lg border border-white/30 dark:border-white/10 bg-white/70 dark:bg-white/[0.06] px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white/90 dark:hover:bg-white/[0.12] transition disabled:opacity-50"
+                  disabled={busy}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirm}
+                  disabled={busy}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition disabled:opacity-50",
+                    verified
+                      ? "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                  )}
+                >
+                  {busy ? "Updating…" : verified ? "Unverify" : "Verify"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
 }
 
 /* ---------- main client ---------- */
