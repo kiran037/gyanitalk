@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckSquare, Trash2, Plus, Eye, X, XCircle } from "lucide-react";
+import { CheckSquare, Trash2, Plus, Eye, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { addSubCategoryAction, editSubCategoryAction, deleteSubCategoryAction } from "@/app/helpSupport/actions";
 
@@ -117,6 +117,7 @@ export default function HelpSupportAccordion({ categories }: { categories: HelpS
       }
     }
     closeDeleteModal();
+    window.location.reload();
   }
 
   // ---- Save ----
@@ -145,6 +146,7 @@ export default function HelpSupportAccordion({ categories }: { categories: HelpS
     if (res.success) {
       toast.success(`${modalMode === "add" ? "Added" : "Updated"} successfully!`);
       setIsModalOpen(false);
+      // window.location.reload();
     } else {
       toast.error("Failed to save.");
     }
@@ -317,14 +319,13 @@ export default function HelpSupportAccordion({ categories }: { categories: HelpS
           <div className="bg-white p-6 rounded-lg w-96">
             <div className="flex justify-between items-start mb-4">
               <div className="p-5 text-center w-full">
-                <XCircle className="w-10 h-10 text-red-500 mx-auto" />
                 <div className="text-2xl mt-4 font-semibold">Are you sure?</div>
-                <p className="text-slate-500 mt-2">
-                  Do you want to delete this record?
-                </p>
-                <h4 className="text-sm text-slate-400">
-                  It will also delete subcategories.
-                </h4>
+                  <p className="text-slate-500 mt-2">
+                    Do you want to delete this record?
+                  </p>
+                  <h4 className="text-sm text-slate-400">
+                    It will also delete subcategories.
+                  </h4>
               </div>
               <button onClick={closeDeleteModal}>
                 <X className="w-5 h-5" />

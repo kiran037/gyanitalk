@@ -4,24 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckSquare, Edit, Trash2, Plus, Eye, X, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import { addSubCategoryAction, editSubCategoryAction, deleteSubCategoryAction } from "@/app/helpSupport/actions";
+import { editSubSubCategoryAction, deleteSubSubCategoryAction } from "@/app/helpSupport/actions";
 
 // ---- DB Category Type ----
-interface SubCategory {
+type SubCategory = {
   id: number;
-  helpSupportId: number;
-  helpSupportQuationId: number;
   title: string;
   description: string;
   isChatWithus: number;
-}
-
-interface Props {
-  subsubCategories: SubCategory[];
-}
+  helpSupportId: number;
+  helpSupportQuationId: number;
+};
 
 // ---- Component ----
-export default function HelpSupportSubSubCategory({ subsubCategories }: Props) {
+export default function HelpSupportSubSubCategory({ subsubCategories }: { subsubCategories: SubCategory[]}) {
+  const [openId, setOpenId] = useState<number | null>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
@@ -40,44 +37,87 @@ export default function HelpSupportSubSubCategory({ subsubCategories }: Props) {
   };
 
   // Close modals
-  const closeEditModal = () => setEditModalOpen(false);
-  const closeDeleteModal = () => setDeleteModalOpen(false);
+  const closeEditModal = () => {
+    setSelectedSubCategory(null);
+    setEditModalOpen(false);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteId(null);
+    setDeleteModalOpen(false);
+  };
+
+
+  const toggleAccordion = (id: number) => {
+    setOpenId(openId === id ? null : id);
+  };
+
+    // ---- Submit Edit ----
+  const saveEdit = async () => {
+    if (!selectedSubCategory) return;
+
+    await editSubSubCategoryAction({
+      id: selectedSubCategory.id,
+      supportId: selectedSubCategory.helpSupportId,
+      helpSupportQuationId: selectedSubCategory.helpSupportQuationId,
+      title: selectedSubCategory.title,
+      description: selectedSubCategory.description,
+      isChatWithus: selectedSubCategory.isChatWithus,
+    });
+
+    closeEditModal();
+    window.location.reload();
+  };
+
+  // ---- Confirm Delete ----
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+
+    await deleteSubSubCategoryAction(deleteId);
+    
+    closeDeleteModal();
+    window.location.reload();
+  };
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-md p-6 space-y-6 w-full">
-        <div className="grid grid-cols-12 gap-6 mt-5">
-            <div className="intro-y col-span-12 flex flex-wrap sm:flex-nowrap items-center mt-2">
-                <div className="intro-y box mt-5 w-full">
-                <div id="boxed-accordion" className="p-5">
-                    <div className="preview">
-                    {subsubCategories.map((subCategory) => (
-                    <div key={subCategory.id} className="card border p-2 mt-5">
-                        <div style={{ display: "inline-block" }}>
-                            <b>{subCategory.title}</b>
-                            <div
-                            dangerouslySetInnerHTML={{ __html: subCategory.description }}
-                            />
-                        </div>
-                        <div style={{ float: "right" }}>
-                            <button
-                            className="items-center mr-3 text-primary actionbtn"
+        <div className="space-y-4">
+            {subsubCategories.map((subCategory) => (
+            <div key={subCategory.id} className="border rounded-lg">
+                 {/* Header */}
+                <div
+                className="flex justify-between items-center p-4 cursor-pointer bg-gray-100 rounded-t-lg"
+                onClick={() => toggleAccordion(subCategory.id)}
+                >
+                    <span className="font-semibold">{subCategory.title}</span>
+
+                    <div className="flex gap-3">
+
+                        {/* ✅ Edit */}
+                        <button
+                            className="flex items-center text-blue-500"
                             onClick={() => handleEdit(subCategory)}
                             >
                             <Edit className="w-4 h-4 mr-1 inline" /> Edit
-                            </button>
-                            <button
-                            className="items-center mr-3 text-danger actionbtn"
+                        </button>
+
+                        {/* ✅ Delete */}
+                        <button
+                            className="flex items-center text-red-600"
                             onClick={() => handleDelete(subCategory.id)}
                             >
                             <Trash2 className="w-4 h-4 mr-1 inline" /> Delete
-                            </button>
-                        </div>
-                    </div>
-                    ))}
+                        </button>
                     </div>
                 </div>
+                {/* Body */}
+                {openId === subCategory.id && (
+                <div className="p-4 text-gray-600">
+                    <div dangerouslySetInnerHTML={{ __html: subCategory.description ?? "" }} />
                 </div>
+                )}
             </div>
+            ))}
         </div>
 
       {/* Edit Modal */}
@@ -88,11 +128,17 @@ export default function HelpSupportSubSubCategory({ subsubCategories }: Props) {
             <input
               type="text"
               className="w-full border p-2 rounded mb-3"
-              defaultValue={selectedSubCategory.title}
+              value={selectedSubCategory.title}
+              onChange={(e) =>
+                setSelectedSubCategory({ ...selectedSubCategory, title: e.target.value })
+              }
             />
             <textarea
               className="w-full border p-2 rounded mb-3"
-              defaultValue={selectedSubCategory.description}
+              value={selectedSubCategory.description ?? ""}
+              onChange={(e) =>
+                setSelectedSubCategory({ ...selectedSubCategory, description: e.target.value })
+              }
             />
             <div className="flex justify-end space-x-2">
               <button
@@ -101,7 +147,7 @@ export default function HelpSupportSubSubCategory({ subsubCategories }: Props) {
               >
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded">
+              <button onClick={saveEdit} className="px-4 py-2 bg-blue-600 text-white rounded">
                 Save
               </button>
             </div>
@@ -122,7 +168,7 @@ export default function HelpSupportSubSubCategory({ subsubCategories }: Props) {
               >
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded">
+              <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded">
                 Delete
               </button>
             </div>

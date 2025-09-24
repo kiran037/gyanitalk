@@ -1,5 +1,4 @@
 "use server"
-import { NextResponse } from "next/server";
 const prisma = require("../../prismaClient");
 import { HelpSupportCategory } from "./HelpSupportAccordion";
 
@@ -33,7 +32,7 @@ export async function addHelpSupport(payload: {
         isDelete: false,
         created_at: new Date(),
         updated_at: new Date(),
-        createdBy: payload.createdBy ?? 1, // 👈 adjust with session user
+        createdBy: payload.createdBy ?? 1,
         modifiedBy: payload.createdBy ?? 1,
       },
     });
@@ -148,7 +147,7 @@ export async function addHelpSupportSubCategory(payload: {
         isDelete: false,
         created_at: new Date(),
         updated_at: new Date(),
-        createdBy: payload.createdBy ?? 1, // 👈 adjust with session user
+        createdBy: payload.createdBy ?? 1,
         modifiedBy: payload.createdBy ?? 1,
       },
     });
@@ -230,9 +229,14 @@ export async function deleteHelpSupportSubCategory(id: number) {
 // Get Help Support Sub SubCategory
 export async function getHelpSupportSubSubCategories(supportId?: number) {
   try {
-    const whereClause: any = {};
-    if (supportId) whereClause.helpSupportQuationId = supportId;
+    const whereClause: any = {
+      isDelete: false, // 👈 Soft delete filter
+    };
 
+    if (supportId) {
+      whereClause.helpSupportQuationId = supportId;
+    }
+    
     const subsubCategories = await prisma.help_support_quation_answers.findMany({
       where: whereClause,
       orderBy: { id: "desc" },
@@ -284,5 +288,55 @@ export async function addHelpSupportSubSubCategory(payload: {
   }
 }
 
+// Edit Help Support Sub SubCategory
+export async function updateHelpSupportSubSubCategory(payload: {
+  id: number;
+  helpSupportId: number;
+  helpSupportQuationId: number;
+  title: string;
+  description?: string;
+  isChatWithus?: number;
+  createdBy?: number;
+}) {
+  try {
+    const subsubCategoryUpdated = await prisma.help_support_quation_answers.update({
+      where: { id: payload.id },
+      data: {
+        helpSupportId: payload.helpSupportId,
+        helpSupportQuationId: payload.helpSupportQuationId,
+        title: payload.title,
+        description: payload.description ?? "",
+        isChatWithus: payload.isChatWithus ? 1 : 0,
+        updated_at: new Date(),
+        modifiedBy: 1,
+      },
+    });
 
+    return { success: true, data: subsubCategoryUpdated };
+  } catch (error) {
+    console.error("Update Sub SubCategory Error:", error);
+    return { success: false, message: "Failed to update sub subcategory" };
+  }
+}
 
+// Delete Help Support Sub SubCategory
+export async function deleteHelpSupportSubSubCategory(id: number) {
+  try {
+    if (!id) {
+      return { success: false, message: "Missing id" };
+    }
+
+    await prisma.help_support_quation_answers.update({
+      where: { id },
+      data: {
+        isDelete: true,
+        updated_at: new Date(),
+      },
+    });
+
+    return { success: true, message: "Deleted successfully" };
+  } catch (error: any) {
+    console.error("Delete Sub SubCategory Error:", error);
+    return { success: false, message: "Failed to delete sub subcategory" };
+  }
+}
