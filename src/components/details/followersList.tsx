@@ -1,8 +1,54 @@
+
+"use client";
+
 import Image from "next/image";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
-import { unFollow } from "../(astros)/astrologers/fetch";
+import { unFollow } from "../../app/(astrologers)/astrologers/fetch";
 
+/* ---------- helpers ---------- */
+const ensureAbs = (p?: string) =>
+  p ? `${process.env.NEXT_PUBLIC_BASEURL}${p.startsWith("/") ? "" : "/"}${p}` : "";
+const avatar = (p?: string) =>
+  ensureAbs(p) || "https://gyanitalk.com/build/assets/images/person.png";
+
+function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={[
+        "relative rounded-2xl overflow-hidden",
+        "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
+        "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+        className,
+      ].join(" ")}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+function TableHeader() {
+  return (
+    <div className="grid grid-cols-3 gap-3 border-b border-white/60 dark:border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <div>Name</div>
+      <div>Contact</div>
+      <div className="text-right">Action</div>
+    </div>
+  );
+}
+
+function Row({ left, middle, right }: { left: React.ReactNode; middle: React.ReactNode; right: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-3 items-center gap-3 px-4 py-3 text-sm text-slate-800 dark:text-slate-200">
+      <div className="flex items-center gap-3">{left}</div>
+      <div>{middle}</div>
+      <div className="text-right">{right}</div>
+    </div>
+  );
+}
+
+/* ---------- ASTRO’s followers (with Unfollow) ---------- */
 export default function AstroFollowerList({ followers }: { followers: any[] }) {
   const [isPending, startTransition] = useTransition();
 
@@ -11,8 +57,8 @@ export default function AstroFollowerList({ followers }: { followers: any[] }) {
       try {
         await unFollow({ id });
         toast.success("Unfollowed successfully!");
-        location.reload(); // optional, but could be optimized
-      } catch (error) {
+        location.reload(); // keep existing behavior
+      } catch {
         toast.error("Something went wrong while unfollowing.");
       }
     });
@@ -20,139 +66,98 @@ export default function AstroFollowerList({ followers }: { followers: any[] }) {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-        Follower List
-      </h2>
-
-      <div className="w-full overflow-hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-        {/* Table Header */}
-        <div className="grid grid-cols-4 bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 px-4 py-3">
-          <div>Name</div>
-          <div>Contact</div>
-          <div>Action</div>
+      <GlassCard>
+        <div className="px-4 pt-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Follower List</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Manage your followers</p>
         </div>
 
-        {/* Follower Rows */}
-        <div className="divide-y divide-gray-100 dark:divide-gray-700">
-          {followers.length > 0 ? (
-            followers.map((follower: any) => {
-              const user = follower.user;
-              const profileImg = user?.profile
-                ? `${process.env.NEXT_PUBLIC_BASEURL}/${user.profile}`
-                : "https://gyanitalk.com/build/assets/images/person.png";
-
-              return (
-                <div
-                  key={follower.id}
-                  className="grid grid-cols-4 items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200"
-                >
-                  {/* Name + Image */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300">
-                      <Image
-                        src={profileImg}
-                        alt="Profile"
-                        width={40}
-                        height={40}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="font-medium truncate">{user?.name || "Unknown"}</div>
-                  </div>
-
-                  {/* Contact */}
-                  <div>{user?.contactNo || "-"}</div>
-
-                  {/* Unfollow Button */}
-                  <div>
-                    <button
-                      onClick={() => handleUnfollow(follower.id)}
-                      disabled={isPending}
-                      className={`px-3 py-1 text-sm rounded-md transition font-medium ${isPending
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-red-500 hover:bg-red-600 text-white"
-                        }`}
-                    >
-                      {isPending ? "Removing..." : "Unfollow"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-6">
-              No followers found.
-            </div>
-          )}
+        <div className="mt-3">
+          <TableHeader />
+          <div className="divide-y divide-white/60 dark:divide-white/10">
+            {followers?.length ? (
+              followers.map((f: any) => {
+                const user = f.user;
+                const img = avatar(user?.profile);
+                return (
+                  <Row
+                    key={f.id}
+                    left={
+                      <>
+                        <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                          <Image src={img} alt="Profile" width={40} height={40} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="truncate font-medium">{user?.name || "Unknown"}</div>
+                      </>
+                    }
+                    middle={<span className="text-slate-700 dark:text-slate-300">{user?.contactNo || "-"}</span>}
+                    right={
+                      <button
+                        onClick={() => handleUnfollow(f.id)}
+                        disabled={isPending}
+                        className={[
+                          "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium",
+                          isPending
+                            ? "bg-slate-400 text-white"
+                            : "bg-gradient-to-r from-rose-500 to-pink-600 text-white hover:from-rose-600 hover:to-pink-700 shadow-sm",
+                        ].join(" ")}
+                      >
+                        {isPending ? "Removing..." : "Unfollow"}
+                      </button>
+                    }
+                  />
+                );
+              })
+            ) : (
+              <div className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">No followers found.</div>
+            )}
+          </div>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }
 
+/* ---------- USER’s followed list (read-only) ---------- */
 export function UserFollowerList({ followers }: { followers: any[] }) {
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-        Follower List
-      </h2>
-
-      <div className="w-full overflow-hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-        {/* Table Header */}
-        <div className="grid grid-cols-4 bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 px-4 py-3">
-          <div>Name</div>
-          <div>Contact</div>
-          <div>Action</div>
+      <GlassCard>
+        <div className="px-4 pt-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Follower List</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Accounts you follow</p>
         </div>
 
-        {/* Follower Rows */}
-        <div className="divide-y divide-gray-100 dark:divide-gray-700">
-          {followers.length > 0 ? (
-            followers.map((follower: any) => {
-              const user = follower.astrologer ?? follower.aiAstrologer;
-
-              const profilePath =
-                follower.astrologer?.profileImage ||
-                follower.aiAstrologer?.image;
-
-              const profileImg = profilePath
-                ? `${process.env.NEXT_PUBLIC_BASEURL}/${profilePath}`
-                : "https://gyanitalk.com/build/assets/images/person.png";
-
-              return (
-                <div
-                  key={follower.id}
-                  className="grid grid-cols-4 items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200"
-                >
-                  {/* Name + Image */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300">
-                      <Image
-                        src={profileImg}
-                        alt="Profile"
-                        width={40}
-                        height={40}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="font-medium truncate">{user?.name || "Unknown"}</div>
-                  </div>
-
-                  {/* Contact */}
-                  <div>{user?.contactNo || "-"}</div>
-
-                  {/* Action Placeholder */}
-                  <div>-</div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-6">
-              No followers found.
-            </div>
-          )}
+        <div className="mt-3">
+          <TableHeader />
+          <div className="divide-y divide-white/60 dark:divide-white/10">
+            {followers?.length ? (
+              followers.map((f: any) => {
+                const who = f.astrologer ?? f.aiAstrologer;
+                const profilePath = f.astrologer?.profileImage || f.aiAstrologer?.image;
+                const img = avatar(profilePath);
+                return (
+                  <Row
+                    key={f.id}
+                    left={
+                      <>
+                        <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                          <Image src={img} alt="Profile" width={40} height={40} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="truncate font-medium">{who?.name || "Unknown"}</div>
+                      </>
+                    }
+                    middle={<span className="text-slate-700 dark:text-slate-300">{who?.contactNo || "-"}</span>}
+                    right={<span className="text-slate-400 dark:text-slate-500">—</span>}
+                  />
+                );
+              })
+            ) : (
+              <div className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">No followers found.</div>
+            )}
+          </div>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

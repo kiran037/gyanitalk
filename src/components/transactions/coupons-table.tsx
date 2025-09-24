@@ -10,7 +10,7 @@ import {
 } from "@/components/ui-elements/table";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
-import { getWalletTransactions } from "./fetch";
+import { getWalletTransactions } from "../../app/(transactions)/fetch";
 import moment from "moment";
 import { isValidImageUrl } from "../functions";
 

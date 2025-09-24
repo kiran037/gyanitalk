@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/transactions/transaction-skeleton.tsx
 import { Skeleton } from "@/components/ui-elements/skeleton";
 import {
   Table,

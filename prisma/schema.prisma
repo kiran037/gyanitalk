@@ -262,11 +262,15 @@ model astrologer_request {
 
 model astrologer_stories {
   id           Int       @id @default(autoincrement())
-  astrologerId Int?
+  astrologerId BigInt?
   mediaType    String?   @db.Text
   media        String?   @db.Text
   created_at   DateTime? @default(now()) @db.Timestamp(0)
   updated_at   DateTime? @default(now()) @db.Timestamp(0)
+  astrologer   astrologers? @relation("AstrologerStoriesRelation", fields: [astrologerId], references: [id])
+  story_view_count story_view_counts[] @relation("StoryViewCounts")
+
+  @@index([astrologerId], map: "astrologer_product_astrologer_idx")
 }
 
 model astrologer_wait_lists {
@@ -370,6 +374,7 @@ model astrologers {
   astrologerGifts   astrologer_gifts[]  @relation("AstrologerGiftsRelation")
   assignGroups   astrologer_assign_group[]
   liveastro      liveastro[]   
+  stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -416,8 +421,11 @@ model astromall_products {
   name              String    @db.VarChar(255)
   features          String    @db.Text
   productImage      String    @db.VarChar(255)
+  gallery           String?    // ✅ nullable
   productCategoryId BigInt    @db.UnsignedBigInt
   amount            Float
+  is_feature        Boolean   @default(false)
+  bestseller        Boolean   @default(false)
   description       String?   @db.VarChar(255)
   isActive          Boolean   @default(true)
   isDelete          Boolean   @default(false)
@@ -428,6 +436,8 @@ model astromall_products {
 
   product_category  product_categories @relation(fields: [productCategoryId], references: [id])
   order_requests order_request[]
+// Relations
+  product_details product_details[]   // ✅ one-to-many relation
 
   @@index([productCategoryId], map: "astromall_products_productcategoryid_foreign")
 }
@@ -450,7 +460,7 @@ model astrotalk_in_news {
 model banner_types {
   id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   name       String    @db.VarChar(255)
-  appId      Int
+  appId      BigInt
   isActive   Boolean   @default(true)
   isDelete   Boolean   @default(false)
   created_at DateTime? @db.Timestamp(0)
@@ -710,12 +720,12 @@ model commissions {
 }
 
 model contact_us {
-  id              Int       @id @default(autoincrement())
-  contact_email   String    @db.VarChar(100)
-  contact_name    String    @db.VarChar(100)
-  contact_message String    @db.VarChar(255)
-  created_at      DateTime? @db.Timestamp(0)
-  updated_at      DateTime? @db.Timestamp(0)
+  id              Int      @id @default(autoincrement())
+  contact_email   String    @db.VarChar(225)
+  contact_name    String    @db.VarChar(225)
+  contact_message String    @db.VarChar(225)
+  created_at      DateTime?   @db.Timestamp(0)
+  updated_at      DateTime?   @db.Timestamp(0)
 }
 
 model coupon_user_usages {
@@ -868,6 +878,8 @@ model flaggroup {
   updated_at        DateTime? @default(now()) @db.Timestamp(0)
   description       String    @db.LongText
   viewenable        Boolean?  @default(true)
+
+  systemflags systemflag[]
 }
 
 model fulltime_jobs {
@@ -907,6 +919,7 @@ model help_support_quation_answers {
   isChatWithus         Int?      @db.TinyInt
   description          String?   @db.LongText
 
+  question help_support_quations @relation(fields: [helpSupportQuationId], references: [id])
   @@index([helpSupportId], map: "help_support_quation_answers_helpsupportid_foreign")
   @@index([helpSupportQuationId], map: "help_support_quation_answers_helpsupportquationid_foreign")
 }
@@ -924,6 +937,8 @@ model help_support_quations {
   modifiedBy    Int
   isChatWithus  Int?      @db.TinyInt
 
+  help_support_quation_answers help_support_quation_answers[]
+  support help_supports @relation(fields: [helpSupportId], references: [id])
   @@index([helpSupportId], map: "help_support_quations_helpsupportid_foreign")
 }
 
@@ -937,6 +952,7 @@ model help_supports {
   createdBy  Int
   modifiedBy Int
   tickets tickets[]
+  subCategory help_support_quations[]
 
 }
 
@@ -1406,7 +1422,7 @@ model product_categories {
   createdBy     Int
   modifiedBy    Int
 
-  products      astromall_products[] // back relation
+  product      astromall_products[] // back relation
   order_requests order_request[]
 }
 
@@ -1421,6 +1437,8 @@ model product_details {
   created_at         DateTime? @db.Timestamp(0)
   updated_at         DateTime? @db.Timestamp(0)
 
+ // Relation back to product
+  product astromall_products @relation(fields: [astromallProductId], references: [id])
   @@index([astromallProductId], map: "product_details_astromallproductid_foreign")
 }
 
@@ -1504,9 +1522,11 @@ model skills {
 model story_view_counts {
   id         Int       @id @default(autoincrement())
   userId     Int
-  storyId    Int?
+  storyId    Int
   created_at DateTime? @default(now()) @db.Timestamp(0)
   updated_at DateTime? @default(now()) @db.Timestamp(0)
+  story astrologer_stories @relation("StoryViewCounts", fields: [storyId], references: [id])
+  @@index([storyId], map: "story_view_counts_storyId_foreign")
 }
 
 model sub_category {
@@ -1532,6 +1552,8 @@ model systemflag {
   description String    @db.LongText
   parent_id   Int       @default(0)
   viewenable  Boolean?  @default(true)
+
+  flagGroup flaggroup @relation(fields: [flagGroupId], references: [id])
 }
 
 model teammember {
@@ -1560,10 +1582,13 @@ model ticketreview {
   id         Int      @id @default(autoincrement())
   review     String?  @db.LongText
   rating     Float?   @db.Float
-  ticketId   Int
+  ticketId   BigInt
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
   userId     Int
+
+  ticket   tickets  @relation("TicketReviews", fields: [ticketId], references: [id])
+
   @@unique([userId, ticketId])
 }
 
@@ -1584,6 +1609,7 @@ model tickets {
   ticketStatus  String?   @db.VarChar(45)
   user     users? @relation(fields: [userId], references: [id]) // ✅ Optional
   help_support  help_supports? @relation(fields: [helpSupportId], references: [id])
+  ticketreview  ticketreview[]  @relation("TicketReviews") // ✅ relation name same as above
 
   @@index([helpSupportId], map: "tickets_helpsupportId_idx")
   @@index([userId], map: "tickets_userid_foreign")

@@ -8,6 +8,7 @@ const nextConfig = {
   },
 
   images: {
+    domains: ["localhost", "gyanitalk.com"],
     remotePatterns: [
       {
         protocol: "https",

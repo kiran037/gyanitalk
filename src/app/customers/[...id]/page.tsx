@@ -1,239 +1,510 @@
-"use client"
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation";
-import { getUserDetails } from "@/components/customers/fetch";
-import { UserCallSessionList } from "@/components/details/callHistory";
-import { UserChatSessionList } from "@/components/details/chatHistory";
-import UserOrderDetails from "@/components/details/orderDetails";
-import WalletTransactionList from "@/components/details/walletHistory";
-import { UserFollowerList } from "@/components/details/followersList";
-import NoitificationsList from "@/components/details/notification";
-import { UserGiftList } from "@/components/details/giftList";
-import { AstrologerSkeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
 
-type PropsType = React.SVGProps<SVGSVGElement>;
-function CameraIcon(props: PropsType) {
-    return (
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="currentColor"
-            {...props}
-        >
-            <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.69882 3.365C5.89894 2.38259 6.77316 1.6875 7.77475 1.6875H10.2252C11.2268 1.6875 12.1011 2.38259 12.3012 3.36499C12.3474 3.59178 12.5528 3.75814 12.7665 3.75814H12.7788L12.7911 3.75868C13.8437 3.80471 14.6521 3.93387 15.3271 4.37668C15.7524 4.65568 16.1182 5.01463 16.4033 5.43348C16.7579 5.9546 16.9143 6.55271 16.9893 7.27609C17.0625 7.98284 17.0625 8.86875 17.0625 9.99079V10.0547C17.0625 11.1767 17.0625 12.0626 16.9893 12.7694C16.9143 13.4927 16.7579 14.0909 16.4033 14.612C16.1182 15.0308 15.7524 15.3898 15.3271 15.6688C14.7995 16.0149 14.1947 16.1675 13.461 16.2408C12.7428 16.3125 11.8418 16.3125 10.6976 16.3125H7.30242C6.15824 16.3125 5.25725 16.3125 4.53897 16.2408C3.80534 16.1675 3.20049 16.0149 2.67289 15.6688C2.24761 15.3898 1.88179 15.0308 1.59674 14.612C1.24209 14.0909 1.08567 13.4927 1.01072 12.7694C0.937488 12.0626 0.937494 11.1767 0.9375 10.0547V9.9908C0.937494 8.86875 0.937488 7.98284 1.01072 7.27609C1.08567 6.55271 1.24209 5.9546 1.59674 5.43348C1.88179 5.01463 2.24761 4.65568 2.67289 4.37668C3.34787 3.93387 4.15635 3.80471 5.20892 3.75868L5.2212 3.75814H5.2335C5.44716 3.75814 5.65262 3.59179 5.69882 3.365ZM7.77475 2.8125C7.29392 2.8125 6.89179 3.14475 6.80118 3.58955C6.65443 4.30994 6.01575 4.8764 5.24725 4.88308C4.23579 4.92802 3.69402 5.05227 3.28998 5.31733C2.98732 5.51589 2.72814 5.77058 2.52679 6.06643C2.31968 6.37076 2.19522 6.75994 2.12973 7.39203C2.06321 8.03405 2.0625 8.8617 2.0625 10.0227C2.0625 11.1838 2.06321 12.0114 2.12973 12.6534C2.19522 13.2855 2.31968 13.6747 2.5268 13.979C2.72814 14.2749 2.98732 14.5296 3.28998 14.7281C3.60313 14.9336 4.00383 15.0567 4.65078 15.1213C5.30662 15.1868 6.15145 15.1875 7.33333 15.1875H10.6667C11.8486 15.1875 12.6934 15.1868 13.3492 15.1213C13.9962 15.0567 14.3969 14.9336 14.71 14.7281C15.0127 14.5296 15.2719 14.2749 15.4732 13.979C15.6803 13.6747 15.8048 13.2855 15.8703 12.6534C15.9368 12.0114 15.9375 11.1838 15.9375 10.0227C15.9375 8.8617 15.9368 8.03405 15.8703 7.39203C15.8048 6.75994 15.6803 6.37076 15.4732 6.06643C15.2719 5.77058 15.0127 5.51589 14.71 5.31733C14.306 5.05227 13.7642 4.92802 12.7528 4.88308C11.9843 4.8764 11.3456 4.30994 11.1988 3.58955C11.1082 3.14475 10.7061 2.8125 10.2252 2.8125H7.77475ZM9 8.0625C8.06802 8.0625 7.3125 8.81802 7.3125 9.75C7.3125 10.682 8.06802 11.4375 9 11.4375C9.93198 11.4375 10.6875 10.682 10.6875 9.75C10.6875 8.81802 9.93198 8.0625 9 8.0625ZM6.1875 9.75C6.1875 8.1967 7.4467 6.9375 9 6.9375C10.5533 6.9375 11.8125 8.1967 11.8125 9.75C11.8125 11.3033 10.5533 12.5625 9 12.5625C7.4467 12.5625 6.1875 11.3033 6.1875 9.75ZM12.9375 7.5C12.9375 7.18934 13.1893 6.9375 13.5 6.9375H14.25C14.5607 6.9375 14.8125 7.18934 14.8125 7.5C14.8125 7.81066 14.5607 8.0625 14.25 8.0625H13.5C13.1893 8.0625 12.9375 7.81066 12.9375 7.5Z"
-            />
-        </svg>
-    );
+"use client";
+
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import dayjs from "dayjs";
+import {
+  getUserSummary,
+  getUserChatHistoryOnly,
+  getUserCallHistoryOnly,
+  getUserOrdersOnly,
+  getUserWalletTransactionsOnly,
+  getUserFollowersOnly,
+  getUserNotificationsOnly,
+  getUserGiftsOnly,
+  updateUserDetails,
+} from "@/app/customers/fetch";
+import { AstrologerSkeleton as Skeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
+import { uploadImage } from "@/upload";
+import {
+  Camera, Edit3, Phone, MapPin, Calendar, Clock, Gift, Bell, Users,
+  ShoppingBag, Wallet, X, Save, User as UserIcon, Heart,
+} from "lucide-react";
+import { useToast } from "@/components/Toast/ToastProvider";
+
+/** Dynamic-import heavy tab components (client-only render) */
+const ChatTab = dynamic(() =>
+  import("@/components/details/chatHistory").then(m => ({ default: m.UserChatSessionList })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const CallTab = dynamic(() =>
+  import("@/components/details/callHistory").then(m => ({ default: m.UserCallSessionList })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const OrdersTab = dynamic(() =>
+  import("@/components/details/orderDetails").then(m => ({ default: m.default })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const WalletTab = dynamic(() =>
+  import("@/components/details/walletHistory").then(m => ({ default: m.default })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const FollowersTab = dynamic(() =>
+  import("@/components/details/followersList").then(m => ({ default: m.UserFollowerList })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const NotificationsTab = dynamic(() =>
+  import("@/components/details/notification").then(m => ({ default: m.default })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+const GiftsTab = dynamic(() =>
+  import("@/components/details/giftList").then(m => ({ default: m.UserGiftList })), {
+    ssr: false, loading: () => <TabLoader />,
+  }
+);
+
+/* ---------- glass primitives (same look) ---------- */
+function GlassCard({ children, className = "", hover = false }: any) {
+  return (
+    <div
+      className={[
+        "relative rounded-3xl overflow-hidden",            // ← add overflow-hidden
+        "bg-white/55 dark:bg-white/[0.06] border border-white/50 dark:border-white/10",
+        "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+        hover ? "transition-transform hover:-translate-y-0.5 hover:shadow-xl" : "",
+        className,
+      ].join(" ")}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.02] dark:to-transparent" />
+      <div className="relative">{children}</div>
+    </div>
+  );
 }
 
+function GlassButton({ children, onClick, type = "button", icon: Icon, variant = "primary", disabled, className = "" }: any) {
+  const variants: Record<string, string> = {
+    primary: "text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-[0_8px_20px_rgba(59,130,246,0.25)]",
+    secondary: "text-slate-900 dark:text-white bg-white/70 dark:bg-white/[0.08] border border-white/60 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/[0.12]",
+    ghost: "text-slate-700 dark:text-slate-300 bg-transparent hover:bg-white/50 dark:hover:bg-white/[0.08] border border-transparent",
+    danger: "text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-[0_8px_20px_rgba(239,68,68,0.25)]",
+  };
+  return (
+    <button type={type} onClick={onClick} disabled={disabled}
+      className={["inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+        "disabled:opacity-60 disabled:cursor-not-allowed", variants[variant], className].join(" ")}>
+      {Icon ? <Icon className="h-4 w-4" /> : null}{children}
+    </button>
+  );
+}
+
+/* ---------- page ---------- */
+type Tone = "blue" | "green" | "purple" | "emerald" | "pink" | "orange" | "red";
+const tone = {
+  blue: { icon: "text-blue-600 dark:text-blue-400", tab: "border-blue-500 text-blue-600 bg-blue-50/60 dark:bg-blue-500/10" },
+  green: { icon: "text-green-600 dark:text-green-400", tab: "border-green-500 text-green-600 bg-green-50/60 dark:bg-green-500/10" },
+  purple:{ icon: "text-purple-600 dark:text-purple-400", tab:"border-purple-500 text-purple-600 bg-purple-50/60 dark:bg-purple-500/10" },
+  emerald:{ icon:"text-emerald-600 dark:text-emerald-400", tab:"border-emerald-500 text-emerald-600 bg-emerald-50/60 dark:bg-emerald-500/10" },
+  pink: { icon:"text-pink-600 dark:text-pink-400", tab:"border-pink-500 text-pink-600 bg-pink-50/60 dark:bg-pink-500/10" },
+  orange:{ icon:"text-orange-600 dark:text-orange-400", tab:"border-orange-500 text-orange-600 bg-orange-50/60 dark:bg-orange-500/10" },
+  red:  { icon:"text-red-600 dark:text-red-400", tab:"border-red-500 text-red-600 bg-red-50/60 dark:bg-red-500/10" },
+} as const;
 
 export default function Page() {
-    const params = useParams();
-    const id = params?.id;
+  const params = useParams();
+  const id = Number((params as any)?.id);
+  const toast = useToast();
 
-    const [data, setData] = useState<any>(null);
+  // summary (fast)
+  const [summary, setSummary] = useState<any>(null);
 
+  // tab state caches
+  const [chat, setChat] = useState<any[] | null>(null);
+  const [call, setCall] = useState<any[] | null>(null);
+  const [orders, setOrders] = useState<any[] | null>(null);
+  const [walletTx, setWalletTx] = useState<any[] | null>(null);
+  const [followers, setFollowers] = useState<any[] | null>(null);
+  const [notifications, setNotifications] = useState<any[] | null>(null);
+  const [gifts, setGifts] = useState<any[] | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            const fetchData = async () => {
-                try {
-                    const result = await getUserDetails({ id });
-                    setData(result);
-                    console.log(result);
+  const [activeTab, setActiveTab] = useState<string>("Chat History");
+  const [loadingTab, setLoadingTab] = useState<string | null>(null);
 
-                } catch (error) {
-                    console.error("Failed to fetch profile:", error);
-                }
-            };
-            fetchData();
+  // edit state
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<any>({});
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  // initial: summary only
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const s = await getUserSummary({ id });
+        setSummary(s);
+      } catch (e) {
+        console.error(e);
+        toast("error", "Error", "Failed to load user.");
+      }
+    })();
+  }, [id, toast]);
+
+  // lazy-load when a tab is first activated
+  useEffect(() => {
+    if (!id) return;
+    const load = async (tab: string) => {
+      try {
+        setLoadingTab(tab);
+        if (tab === "Chat History" && chat === null) {
+          const rows = await getUserChatHistoryOnly({ id });
+          setChat(rows);
+        } else if (tab === "Call History" && call === null) {
+          const rows = await getUserCallHistoryOnly({ id });
+          setCall(rows);
+        } else if (tab === "Mall Orders" && orders === null) {
+          const rows = await getUserOrdersOnly({ id });
+          setOrders(rows);
+        } else if (tab === "Wallet" && walletTx === null) {
+          const rows = await getUserWalletTransactionsOnly({ id });
+          setWalletTx(rows);
+        } else if (tab === "Following List" && followers === null) {
+          const rows = await getUserFollowersOnly({ id });
+          setFollowers(rows);
+        } else if (tab === "Notification List" && notifications === null) {
+          const rows = await getUserNotificationsOnly({ id });
+          setNotifications(rows);
+        } else if (tab === "Gift List" && gifts === null) {
+          const rows = await getUserGiftsOnly({ id });
+          setGifts(rows);
         }
-    }, [id]);
-
-
-
-
-    useEffect(() => {
-        return () => {
-            localStorage.removeItem("activeAstroTab");
-        };
-    }, []);
-
-
-    const [activeTab, setActiveTab] = useState(() => {
-        if (typeof window !== "undefined") {
-            return localStorage.getItem("activeAstroTab") || "Chat History";
-        }
-        return "Chat History";
-    });
-
-    const handleTabChange = (tab: string) => {
-        setActiveTab(tab);
-        localStorage.setItem("activeAstroTab", tab);
+      } catch (e: any) {
+        console.error(e);
+        toast("error", "Error", `Failed to load ${tab.toLowerCase()}.`);
+      } finally {
+        setLoadingTab(null);
+      }
     };
+    void load(activeTab);
+  }, [activeTab, id, chat, call, orders, walletTx, followers, notifications, gifts, toast]);
 
+  const walletBalance = useMemo(() => {
+    const w = summary?.user_wallets || [];
+    return w.reduce((acc: number, it: any) => acc + Number(it?.amount || 0), 0);
+  }, [summary]);
 
-    const tabs = [
-        "Chat History",
-        "Call History",
-        "Mall Orders",
-        "Wallet",
-        "Following List",
-        "Notification List",
-        "Gift List",
-    ]
+  const tabs: Array<{ name: string; icon: React.ElementType; t: Tone }> = [
+    { name: "Chat History", icon: Clock, t: "blue" },
+    { name: "Call History", icon: Phone, t: "green" },
+    { name: "Mall Orders", icon: ShoppingBag, t: "purple" },
+    { name: "Wallet", icon: Wallet, t: "emerald" },
+    { name: "Following List", icon: Users, t: "pink" },
+    { name: "Notification List", icon: Bell, t: "orange" },
+    { name: "Gift List", icon: Gift, t: "red" },
+  ];
 
-
-    return (
-        <>
-            {!data ? (
-                <AstrologerSkeleton />
-            ) : (
-                <div className="mx-auto w-full">
-                    <div className="overflow-hidden rounded-lg bg-white shadow-sm border dark:bg-gray-dark dark:border-gray-700">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                <div className="flex items-center space-x-5">
-                                    <div className="relative">
-                                        <Image
-                                            src={
-                                                data?.userDetail?.profile
-                                                    ? `${process.env.NEXT_PUBLIC_BASEURL}${data.userDetail.profile}`
-                                                    : "https://gyanitalk.com/build/assets/images/person.png"
-                                            }
-                                            width={90}
-                                            height={90}
-                                            className="rounded-full border-4 border-blue-500 object-cover shadow-md"
-                                            alt="profile"
-                                        />
-                                        <label
-                                            htmlFor="profilePhoto"
-                                            className="absolute bottom-0 right-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700"
-                                        >
-                                            <CameraIcon className="w-4 h-4" />
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{data?.userDetail?.name}</h2>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
-                                        Contact Details
-                                    </h3>
-                                    <div className="space-y-3 text-gray-700 dark:text-gray-300 text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                            </svg>
-                                            <span>{data?.userDetail?.email || "-"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M3 5.75C3 4.784 3.784 4 4.75 4h2.5c.966 0 1.75.784 1.75 1.75v1c0 .966-.784 1.75-1.75 1.75H6.91c.265.516.607 1.01 1.02 1.474 2.095 2.354 4.542 4.183 7.35 5.488a1.75 1.75 0 001.72-.205l1.287-.964c.7-.524 1.678-.466 2.303.137l1.763 1.705c.674.651.71 1.722.08 2.426a3.25 3.25 0 01-3.46.812c-3.968-1.485-7.646-3.97-11.032-7.41C4.017 9.757 2.42 6.882 2.04 4.25A3.25 3.25 0 013 5.75z" />
-                                            </svg>
-                                            <span>{data?.userDetail?.contactNo || "-"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold">Refer Code:</span>
-                                            <span>{data?.userDetail?.refer_code || "-"}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
-                                        Details
-                                    </h3>
-                                    <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                                        <div className="flex justify-between">
-                                            <span>Birth Date</span>
-                                            <span className="text-blue-600 font-semibold">{data?.userDetail?.birthDate}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Birth Time</span>
-                                            <span className="text-pink-600 font-semibold">{data?.userDetail?.birthTime}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Location</span>
-                                            <span className="text-orange-600 font-semibold">{data?.userDetail?.birthPlace}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Call Minutes</span>
-                                            <span className="text-orange-600 font-semibold">{data?.totalCallMinutes} Min</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b pb-2 border-dashed border-gray-300 dark:border-gray-600">
-                                        Astrologer Rates
-                                    </h3>
-                                    <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                                        <div className="flex justify-between">
-                                            <span>Chat/Call</span>
-                                            <span className="text-blue-600 font-semibold">{data?.userDetail?.charge}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Video Call</span>
-                                            <span className="text-pink-600 font-semibold">{data?.userDetail?.videoCallRate}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Report</span>
-                                            <span className="text-orange-600 font-semibold">{data?.userDetail?.reportRate}</span>
-                                        </div>
-                                    </div>
-                                </div> */}
-                            </div>
-                        </div>
-
-                        {/* Tab Navigation */}
-                        <div className="border-b border-gray-200 dark:border-gray-700">
-                            <nav className="flex space-x-8 px-6">
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => handleTabChange(tab)}
-                                        className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab
-                                            ? "border-blue-500 text-blue-600"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                            }`}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-
-
-                        {activeTab === "Chat History" && (
-                            <UserChatSessionList sessions={data?.chatHistory} />
-                        )}
-                        {activeTab === "Call History" && (
-                            <UserCallSessionList sessions={data?.callHistory} />
-                        )}
-                        {activeTab === "Mall Orders" && (
-                            <UserOrderDetails details={data?.orderDetails} />
-                        )}
-                        {activeTab === "Wallet" && (
-                            <WalletTransactionList transactions={data?.walletTransactions} isUser={true} />
-                        )}
-                          {activeTab === "Following List" && (
-                            <UserFollowerList followers={data?.followersList} />
-                        )}
-                        {activeTab === "Notification List" && (
-                            <NoitificationsList noitifications={data?.notification} />
-                        )}
-                        {activeTab === "Gift List" && (
-                            <UserGiftList gifts={data?.gifts} />
-                        )}
-                    </div>
-                </div>
-            )}
-        </>
+  // edit modal handlers (same as before, just using summary)
+  const openEdit = () => {
+    const u = summary;
+    if (!u) return;
+    setForm({
+      name: u.name ?? "",
+      contactNo: u.contactNo ?? "",
+      email: u.email ?? "",
+      birthDate: u.birthDate ? dayjs(u.birthDate).format("YYYY-MM-DD") : "",
+      birthTime: u.birthTime ?? "",
+      birthPlace: u.birthPlace ?? "",
+      addressLine1: u.addressLine1 ?? "",
+      city: u.location ?? "",
+      pincode: u.pincode ?? "",
+      gender: u.gender ?? "",
+      profile: null as File | null,
+    });
+    setPreviewUrl(
+      u?.profile
+        ? `${process.env.NEXT_PUBLIC_BASEURL}${u.profile}`
+        : "https://gyanitalk.com/build/assets/images/person.png"
     );
+    setIsEditing(true);
+  };
+  const closeEdit = () => { setIsEditing(false); setSaving(false); setPreviewUrl(""); };
+  const handleChange = (e: any) => setForm((s: any) => ({ ...s, [e.target.name]: e.target.value }));
+  const handleFile = (e: any) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    setForm((s: any) => ({ ...s, profile: f })); setPreviewUrl(URL.createObjectURL(f));
+  };
+
+  const onSubmit = async (e: any) => {
+    e.preventDefault(); if (!id) return;
+    try {
+      setSaving(true);
+      let uploadedPath: string | undefined;
+      if (form.profile instanceof File) {
+        const up = await uploadImage(form.profile, "images");
+        uploadedPath = up?.path;
+      }
+      const payload = {
+        name: form.name,
+        contactNo: form.contactNo,
+        email: form.email,
+        birthDate: form.birthDate,
+        birthTime: form.birthTime,
+        birthPlace: form.birthPlace,
+        addressLine1: form.addressLine1,
+        location: form.city,
+        pincode: form.pincode,
+        gender: form.gender,
+        profile: uploadedPath || undefined,
+      };
+      const res = await updateUserDetails({ id, data: payload });
+      if (res?.status) {
+        setSummary((prev: any) => ({ ...prev, ...payload, profile: uploadedPath || prev?.profile }));
+        toast("warning", "Saved", "Profile updated successfully.");
+        closeEdit();
+      } else {
+        toast("error", "Error", res?.message || "Failed to update user.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast("error", "Error", err?.message || "Something went wrong while saving.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!summary) return <Skeleton />;
+
+  const joinedAt = summary?.created_at || summary?.birthDate || null;
+  const profileSrc = summary?.profile
+    ? `${process.env.NEXT_PUBLIC_BASEURL}${summary.profile}`
+    : "https://gyanitalk.com/build/assets/images/person.png";
+
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-950 dark:via-blue-950/20 dark:to-purple-950/10">
+      {/* ambient blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -right-40 w-[26rem] h-[26rem] rounded-full bg-gradient-to-br from-blue-400/15 to-purple-400/10 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-[28rem] h-[28rem] rounded-full bg-gradient-to-tr from-purple-400/10 to-pink-400/10 blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[48rem] h-[18rem] rounded-[40px] bg-gradient-to-r from-blue-300/10 via-purple-300/5 to-pink-300/10 blur-3xl animate-pulse delay-700" />
+      </div>
+
+      <div className="relative w-full mx-auto p-6 md:p-8 space-y-6">
+        {/* Identity */}
+        <GlassCard className="p-6">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
+              <div className="flex items-center gap-6 flex-1">
+                <div className="relative">
+                  <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white/70 dark:ring-white/10 shadow">
+                    <Image src={profileSrc} alt="profile" width={112} height={112} className="h-full w-full object-cover" />
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 block w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{summary?.name || "Unknown User"}</h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Member since {joinedAt ? dayjs(joinedAt).format("MMMM YYYY") : "—"}
+                  </p>
+                  <div className="mt-3">
+                    <GlassButton icon={Edit3} onClick={openEdit}>Edit Profile</GlassButton>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 lg:ml-auto">
+                <StatChip icon={Wallet} label="Wallet" value={`₹${walletBalance.toFixed(2)}`} />
+                <StatChip icon={Clock} label="Minutes" value={`${summary?.totalCallMinutes || 0}m`} />
+                <StatChip icon={UserIcon} label="Refer" value={summary?.refer_code || "N/A"} />
+                <StatChip icon={Heart} label="Active" value={summary?.birthDate ? dayjs(summary.birthDate).format("MMM YY") : "—"} />
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="pt-6 border-t border-white/60 dark:border-white/10">
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Contact Information</h3>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <InfoRow
+                  icon={Phone}
+                  label="Phone"
+                  value={summary?.contactNo || "—"}
+                  onValueClick={() => {
+                    const v = summary?.contactNo;
+                    if (!v) return;
+                    navigator.clipboard.writeText(v)
+                      .then(() => toast("warning", "Copied", "Phone number copied to clipboard."))
+                      .catch(() => toast("error", "Error", "Could not copy to clipboard."));
+                  }}
+                />
+                <InfoRow icon={MapPin} label="Location" value={summary?.birthPlace || "—"} />
+                <InfoRow icon={Calendar} label="Birth Date" value={summary?.birthDate ? dayjs(summary.birthDate).format("DD MMM YYYY") : "—"} />
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Tabs */}
+        <GlassCard>
+            <div className="rounded-t-3xl overflow-hidden">
+          <div className="border-b border-white/60 dark:border-white/10">
+            <div className="flex overflow-x-auto">
+              {tabs.map((t) => {
+                const isActive = activeTab === t.name;
+                return (
+                  <button
+                    key={t.name}
+                    onClick={() => setActiveTab(t.name)}
+                    className={[
+                      "flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition border-b-2",
+                      isActive ? tone[t.t].tab : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300",
+                    ].join(" ")}
+                  >
+                    <t.icon className={`h-4 w-4 ${tone[t.t].icon}`} />
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          </div>
+
+          <div className="p-4 md:p-6 min-h-[360px]">
+            {loadingTab ? <TabLoader /> : (
+              <>
+                {activeTab === "Chat History" && <ChatTab sessions={chat || []} />}
+                {activeTab === "Call History" && <CallTab sessions={call || []} />}
+                {activeTab === "Mall Orders" && <OrdersTab details={orders || []} />}
+                {activeTab === "Wallet" && <WalletTab transactions={walletTx || []} isUser />}
+                {activeTab === "Following List" && <FollowersTab followers={followers || []} />}
+                {activeTab === "Notification List" && <NotificationsTab noitifications={notifications || []} />}
+                {activeTab === "Gift List" && <GiftsTab gifts={gifts || []} />}
+              </>
+            )}
+          </div>
+        </GlassCard>
+
+        {/* Edit Modal */}
+        {isEditing && (
+          <div className="fixed inset-0 z-50 grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeEdit} />
+            <GlassCard className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-white/60 dark:border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10">
+                    <Edit3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white">Edit Profile</h2>
+                </div>
+                <GlassButton variant="ghost" onClick={closeEdit} icon={X}>Close</GlassButton>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                <form onSubmit={onSubmit} className="space-y-6">
+                  <div className="flex items-center gap-6 p-4 rounded-2xl bg-white/60 dark:bg-white/[0.06] border border-white/60 dark:border-white/10">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white/70 dark:ring-white/10 shadow">
+                        <Image src={previewUrl || profileSrc} alt="preview" width={96} height={96} className="h-full w-full object-cover" />
+                      </div>
+                      <label className="absolute -bottom-2 -right-2 inline-flex items-center justify-center h-9 w-9 rounded-xl cursor-pointer text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-[0_8px_20px_rgba(59,130,246,0.25)] hover:scale-105 transition">
+                        <Camera className="w-4 h-4" />
+                        <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
+                      </label>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">Profile Picture</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Click the camera icon to upload a new photo.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Field label="Full Name" name="name" value={form.name || ""} onChange={handleChange} required />
+                    <Field label="Contact Number" name="contactNo" value={form.contactNo || ""} onChange={handleChange} inputMode="tel" />
+                    <Field label="Email Address" name="email" type="email" value={form.email || ""} onChange={handleChange} />
+                    <SelectField label="Gender" name="gender" value={form.gender || ""} onChange={handleChange}
+                      options={[{label:"Select Gender",value:""},{label:"Male",value:"Male"},{label:"Female",value:"Female"},{label:"Other",value:"Other"}]} />
+                    <Field label="Birth Date" name="birthDate" type="date" value={form.birthDate || ""} onChange={handleChange} />
+                    <Field label="Birth Time" name="birthTime" type="time" value={form.birthTime || ""} onChange={handleChange} />
+                    <Field label="Birth Place" name="birthPlace" value={form.birthPlace || ""} onChange={handleChange} placeholder="Enter your birth place" />
+                    <Field label="City" name="city" value={form.city || ""} onChange={handleChange} placeholder="Enter your city" />
+                    <Field label="Pin Code" name="pincode" value={form.pincode || ""} onChange={handleChange} inputMode="numeric" pattern="\\d{4,8}" placeholder="Enter your pin code" />
+                    <TextArea className="md:col-span-2" label="Address" name="addressLine1" value={form.addressLine1 || ""} onChange={handleChange} rows={3} placeholder="Enter your complete address" />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/60 dark:border-white/10">
+                    <GlassButton variant="secondary" onClick={closeEdit} disabled={saving}>Cancel</GlassButton>
+                    <GlassButton type="submit" icon={Save} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</GlassButton>
+                  </div>
+                </form>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* --- tiny helpers --- */
+function StatChip({ icon: Icon, label, value }: any) {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 rounded-2xl bg-white/70 dark:bg-white/[0.08] border border-white/60 dark:border-white/10 backdrop-blur-xl shadow-sm">
+      <Icon className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+      <div>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+        <p className="font-semibold text-slate-900 dark:text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
+function InfoRow({ icon: Icon, label, value, onValueClick }: any) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-slate-100 to-white dark:from-white/[0.06] dark:to-white/[0.02] border border-white/60 dark:border-white/10">
+        <Icon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+      </div>
+      <div>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+        <p className={onValueClick ? "font-medium text-slate-900 dark:text-white cursor-pointer hover:underline" : "font-medium text-slate-900 dark:text-white"}
+           onClick={onValueClick} title={onValueClick ? "Click to copy" : undefined}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+function Field(props: any) {
+  const { label, className, ...rest } = props;
+  return (
+    <div className={className}>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <input {...rest}
+        className="w-full px-4 py-3 rounded-xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.08] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent transition" />
+    </div>
+  );
+}
+function SelectField({ label, options, ...rest }: any) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <select {...rest}
+        className="w-full px-4 py-3 rounded-xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.08] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent transition">
+        {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
+function TextArea({ label, className, ...rest }: any) {
+  return (
+    <div className={className}>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+      <textarea {...rest}
+        className="w-full px-4 py-3 rounded-xl border border-white/60 dark:border-white/10 bg-white/70 dark:bg-white/[0.08] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent transition resize-none" />
+    </div>
+  );
+}
+function TabLoader() {
+  return (
+    <div className="grid gap-3">
+      <div className="h-16 rounded-2xl bg-white/60 dark:bg-white/[0.08] border border-white/60 dark:border-white/10 animate-pulse" />
+      <div className="h-16 rounded-2xl bg-white/60 dark:bg-white/[0.08] border border-white/60 dark:border-white/10 animate-pulse" />
+      <div className="h-16 rounded-2xl bg-white/60 dark:bg-white/[0.08] border border-white/60 dark:border-white/10 animate-pulse" />
+    </div>
+  );
 }

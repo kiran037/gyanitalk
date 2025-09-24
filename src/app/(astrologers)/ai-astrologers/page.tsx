@@ -1,15 +1,15 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X, Edit3, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
 
-import { Suspense } from "react";
+
+import { getAiAstro, getAiProfileDetails, updateAiProfile } from "@/app/(astrologers)/ai-astrologers/fetch";
 import { uploadImage } from "@/upload";
-import { getAiAstro, getAiProfileDetails, updateAiProfile } from "@/components/(astros)/ai-astrologer/fetch";
 
 /* -----------------------------------
    tiny utils
@@ -822,4 +822,3 @@ function AiAstrologersPage() {
     </div>
   );
 }
-
