@@ -1,14 +1,12 @@
-"use client"
+
+"use client";
 
 import "@/css/satoshi.css";
 import "@/css/style.css";
-
-import { Sidebar } from "@/components/Layouts/sidebar";
-
 import "flatpickr/dist/flatpickr.min.css";
 import "jsvectormap/dist/jsvectormap.css";
 
-
+import { Sidebar } from "@/components/Layouts/sidebar";
 import { Header } from "@/components/Layouts/header";
 import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
@@ -21,30 +19,36 @@ export default function RootLayout({ children }: PropsWithChildren) {
   const isAuthPage = pathname === "/sign-in" || pathname === "/login";
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning className="h-full">
+      {/* clip horizontal overflow globally to avoid side scroll */}
+      <body className="min-h-screen overflow-x-clip">
         <Providers>
           <NextTopLoader color="#5750F1" showSpinner={false} />
 
           {isAuthPage ? (
-            <div className="flex min-h-screen">
-
-              <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
-                <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
+            // Auth layout (no sidebar/header)
+            <div className="flex min-h-screen w-full">
+              <div className="flex-1 min-w-0 bg-gray-2 dark:bg-[#020d1a]">
+                {/* Full-bleed main: no max-width / no big gutters */}
+                <main className="w-full min-w-0 overflow-x-clip px-4 md:px-6 py-4">
                   {children}
                 </main>
               </div>
             </div>
           ) : (
-            <div className="flex min-h-screen">
+            // App layout with sidebar + header
+            <div className="flex min-h-screen w-full">
               <Sidebar />
 
-              <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
+              <div className="flex-1 min-w-0 bg-gray-2 dark:bg-[#020d1a]">
                 <Header />
-                <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
+
+                {/* Full-bleed main: no max-width / no big gutters */}
+                <main className="w-full min-w-0 overflow-x-clip px-4 md:px-6 py-4">
                   {children}
-                  <Toaster position="top-right" />
-                  </main>
+                </main>
+
+                <Toaster position="top-right" />
               </div>
             </div>
           )}
@@ -52,5 +56,4 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </body>
     </html>
   );
-
 }

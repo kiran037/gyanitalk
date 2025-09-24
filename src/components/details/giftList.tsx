@@ -1,14 +1,32 @@
+
+"use client";
+
 import { format } from "date-fns";
 import Image from "next/image";
 
+const abs = (p?: string) => (p ? `${process.env.NEXT_PUBLIC_BASEURL}${p.startsWith("/") ? "" : "/"}${p}` : "");
+const avatar = (p?: string) => abs(p) || "https://gyanitalk.com/build/assets/images/person.png";
+
+/* Admin / Astro side */
 export default function GiftList({ gifts = [] }: { gifts?: any[] }) {
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4"> Gift History</h2>
+      <div
+        className={[
+          "relative rounded-2xl overflow-hidden",
+          "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
+          "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+        ].join(" ")}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
 
-      <div className="w-full overflow-hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-        {/* Table Header */}
-        <div className="grid grid-cols-5 bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 px-4 py-3">
+        <div className="relative px-4 pt-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Gift History</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">All gifts received</p>
+        </div>
+
+        {/* header */}
+        <div className="relative grid grid-cols-[1.2fr_0.8fr_1fr_0.8fr_1fr] gap-4 border-t border-white/60 dark:border-white/10 px-4 py-2.5 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           <div>Name</div>
           <div>Gift Icon</div>
           <div>Gift Name</div>
@@ -16,49 +34,31 @@ export default function GiftList({ gifts = [] }: { gifts?: any[] }) {
           <div>Date</div>
         </div>
 
-        {/* Table Body */}
-        <div className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-          {gifts.length > 0 ? (
-            gifts.map((txn, i) => {
-              const userName = txn?.user?.name || "Unknown";
-              const amount = txn?.giftAmount || 0;
-              const icon = txn?.gift?.image || "";
-              const giftName = txn?.gift?.name || "Unknown";
-              const date = txn?.created_at
-                ? format(new Date(txn.created_at), "dd MMM yyyy, hh:mm a")
-                : "N/A";
+        <div className="relative divide-y divide-white/60 dark:divide-white/10 text-sm">
+          {gifts.length ? (
+            gifts.map((g) => {
+              const userName = g?.user?.name || "Unknown";
+              const amount = g?.giftAmount || 0;
+              const icon = g?.gift?.image;
+              const giftName = g?.gift?.name || "Unknown";
+              const date = g?.created_at ? format(new Date(g.created_at), "dd MMM yyyy, hh:mm a") : "N/A";
 
               return (
-                <div
-                  key={txn.id}
-                  className="grid grid-cols-5 items-center px-4 py-3 text-gray-700 dark:text-gray-200"
-                >
-                  <div className="truncate">{userName}</div>
-
-                  <div className="flex justify-center">
-                    <Image
-                      src={
-                        icon
-                          ? `${process.env.NEXT_PUBLIC_BASEURL}${icon}`
-                          : "https://gyanitalk.com/build/assets/images/person.png"
-                      }
-                      alt={`${giftName} Icon`}
-                      width={40}
-                      height={40}
-                      className="rounded-full border object-cover"
-                    />
+                <div key={g.id} className="grid grid-cols-[1.2fr_0.8fr_1fr_0.8fr_1fr] items-center gap-4 px-4 py-3">
+                  <div className="truncate font-medium text-slate-900 dark:text-white">{userName}</div>
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                      <Image src={avatar(icon)} alt={`${giftName} Icon`} width={40} height={40} className="h-full w-full object-cover" />
+                    </div>
                   </div>
-
-                  <div className="truncate">{giftName}</div>
-                  <div className="text-green-600 dark:text-green-400 font-medium">₹ {amount}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{date}</div>
+                  <div className="truncate text-slate-700 dark:text-slate-300">{giftName}</div>
+                  <div className="text-emerald-600 dark:text-emerald-400 font-semibold tabular-nums">₹ {amount}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{date}</div>
                 </div>
               );
             })
           ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-6">
-              No gifts found.
-            </div>
+            <div className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">No gifts found.</div>
           )}
         </div>
       </div>
@@ -66,60 +66,43 @@ export default function GiftList({ gifts = [] }: { gifts?: any[] }) {
   );
 }
 
-
+/* User side */
 export function UserGiftList({ gifts = [] }: { gifts?: any[] }) {
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-        Gift History
-      </h2>
-
-      {gifts.length > 0 ? (
+      {gifts.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {gifts.map((txn) => {
-            const astrologerName = txn?.astrologer?.name || "Unknown";
-            const giftName = txn?.gift?.name || "Unknown";
-            const giftImage = txn?.gift?.image
-              ? `${process.env.NEXT_PUBLIC_BASEURL}${txn?.gift?.image}`
-              : "https://gyanitalk.com/build/assets/images/person.png";
-            const giftAmount = txn?.giftAmount || 0;
-            const date = txn?.created_at
-              ? format(new Date(txn.created_at), "dd MMM yyyy, hh:mm a")
-              : "N/A";
+          {gifts.map((g) => {
+            const astrologerName = g?.astrologer?.name || "Unknown";
+            const giftName = g?.gift?.name || "Unknown";
+            const giftImage = g?.gift?.image;
+            const giftAmount = g?.giftAmount || 0;
+            const date = g?.created_at ? format(new Date(g.created_at), "dd MMM yyyy, hh:mm a") : "N/A";
 
             return (
               <div
-                key={txn.id}
-                className="flex flex-col gap-3 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                key={g.id}
+                className={[
+                  "relative rounded-2xl overflow-hidden p-4",
+                  "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
+                  "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition",
+                ].join(" ")}
               >
-                {/* Gift Image + Name */}
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full overflow-hidden border">
-                    <Image
-                      src={giftImage}
-                      alt={`${giftName} Icon`}
-                      width={56}
-                      height={56}
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800 dark:text-white">
-                      {giftName}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
+                <div className="relative">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="h-14 w-14 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                      <Image src={avatar(giftImage)} alt={`${giftName} Icon`} width={56} height={56} className="h-full w-full object-cover" />
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Sent to: {astrologerName}
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white">{giftName}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Sent to: {astrologerName}</div>
                     </div>
                   </div>
-                </div>
 
-                {/* Amount + Date */}
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                    ₹ {giftAmount}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {date}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">₹ {giftAmount}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{date}</div>
                   </div>
                 </div>
               </div>
@@ -127,8 +110,15 @@ export function UserGiftList({ gifts = [] }: { gifts?: any[] }) {
           })}
         </div>
       ) : (
-        <div className="text-center text-gray-500 dark:text-gray-400 py-6">
-          No gifts found.
+        <div
+          className={[
+            "relative rounded-2xl overflow-hidden p-6 text-center",
+            "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
+            "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+          ].join(" ")}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
+          <div className="relative text-slate-500 dark:text-slate-400">No gifts found.</div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 // app/orders/invoice_order/[id]/page.tsx
-import { downloadInvoice } from "@/components/orders/fetch";
+import { downloadInvoice } from "@/app/orders/fetch";
 import { InvoicePrint } from "@/components/orders/invoice_print";
 
 export default async function InvoiceOrderPage({

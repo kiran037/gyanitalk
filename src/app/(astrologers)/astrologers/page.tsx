@@ -1,62 +1,73 @@
-import { AstrologerSkeleton } from "@/components/(astros)/astrologers/astrologer-skeleton";
-import { AstrologerTable } from "@/components/(astros)/astrologers/astrologer-table";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { Suspense } from "react";
+
+// app/(astrologers)/astrologers/page.tsx
+import { getAstrologers } from "@/app/(astrologers)/astrologers/fetch";
+import AstrologersClient from "./AstrologersClient";
+
+// — deep serializer (match Customers page style) —
+function toPlain(val: any): any {
+  if (val === null || val === undefined) return val;
+  if (typeof val === "bigint") return val.toString();
+  if (typeof val !== "object") return val;
+
+  const ctorName = val?.constructor?.name;
+  if (
+    ctorName === "Decimal" ||
+    (typeof val?.toNumber === "function" && typeof val?.toString === "function")
+  ) {
+    try {
+      return val.toNumber();
+    } catch {
+      return Number(val.toString());
+    }
+  }
+
+  if (val instanceof Date) return val.toISOString();
+  if (Array.isArray(val)) return val.map(toPlain);
+
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(val)) out[k] = toPlain(v);
+  return out;
+}
 
 export default async function AstrologersPage({
   searchParams,
 }: {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     search?: string;
+    isVerified?: string;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
-    isVerified?: string;
-  };
+  }>;
 }) {
-  const page = parseInt(searchParams?.page || "1", 10);
-  const search = searchParams?.search || "";
-  const sortBy = searchParams?.sortBy || "";
-  const sortOrder = searchParams?.sortOrder || "asc";
-  const isVerified = searchParams?.isVerified;
+  const params = await searchParams;
+
+  const page = Number.parseInt(params.page ?? "1", 10);
+  const search = params.search ?? "";
+  const isVerified = params.isVerified;
+
+  const sortBy = params.sortBy ?? "";
+  const sortOrder = (params.sortOrder as "asc" | "desc") ?? "asc";
+
+  const { astrologers, totalPages, currentPage } = await getAstrologers({
+    page,
+    limit: 15,
+    search,
+    sortBy,
+    // keep old behavior: ignore sortOrder when sorting by "isVerified"
+    sortOrder: sortBy === "isVerified" ? "" : sortOrder,
+    isVerifiedKey: isVerified,
+  });
 
   return (
-    <div className="space-y-10">
-        <Breadcrumb pageName="Astrologers" />
-
-        <form method="get" className="flex gap-2">
-          <input
-            name="search"
-            defaultValue={search}
-            placeholder="Search by name or contact"
-            className="min-w-[250px]  rounded border px-4 py-2 text-sm dark:bg-dark dark:text-white"
-          />
-
-          <select
-            name="isVerified"
-            defaultValue={isVerified}
-            className="rounded border px-4 py-2 text-sm dark:bg-dark dark:text-white"
-          >
-            <option value="">All</option>
-            <option value="true">Verified</option>
-            <option value="false">Unverified</option>
-          </select>
-
-
-          <button type="submit" className="bg-primary px-4 py-2 text-white rounded">
-            Search
-          </button>
-        </form>
-
-        <Suspense fallback={<AstrologerSkeleton />}>
-          <AstrologerTable
-            page={page}
-            search={search}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            isVerifiedKey={isVerified}
-          />
-        </Suspense>
-    </div>
+    <AstrologersClient
+      data={toPlain(astrologers)}
+      totalPages={toPlain(totalPages)}
+      currentPage={toPlain(currentPage)}
+      search={toPlain(search)}
+      isVerified={toPlain(isVerified)}
+      sortBy={toPlain(sortBy)}
+      sortOrder={toPlain(sortOrder)}
+    />
   );
 }

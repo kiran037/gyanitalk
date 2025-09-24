@@ -1,267 +1,212 @@
+
+"use client";
+
 import Image from "next/image";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-export default function AstroChatSessionList({ sessions }: { sessions: any }) {
+/* ---------- helpers ---------- */
+const ensureAbs = (p?: string) =>
+  p ? `${process.env.NEXT_PUBLIC_BASEURL}${p.startsWith("/") ? "" : "/"}${p}` : "";
+const avatar = (p?: string) =>
+  ensureAbs(p) || "https://gyanitalk.com/build/assets/images/person.png";
 
-    const [selectedStatus, setSelectedStatus] = useState("All");
+const STATUSES = ["All", "Completed", "Rejected", "Accepted", "Pending"] as const;
 
-    const filteredSessions =
-        selectedStatus === "All"
-            ? sessions
-            : sessions.filter((s: any) => s.chatStatus === selectedStatus);
+const statusClasses: Record<string, string> = {
+  Completed: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  Rejected: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  Accepted: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  Pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  Default: "bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20",
+};
 
-    const statusOptions = ["All", "Completed", "Rejected", "Accepted", "Pending"];
-
-
-    return (
-
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-                {/* Count */}
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Showing{" "}
-                    <span className="font-semibold text-teal-600">{filteredSessions.length}</span>{" "}
-                    {selectedStatus === "All" ? "records" : `"${selectedStatus}" chats`}
-                </div>
-
-                {/* Dropdown */}
-                <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 focus:outline-none"
-                >
-                    {statusOptions.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-                {filteredSessions.map((session: any) => {
-                    const user = session.user;
-                    const name = user?.name || "Unknown";
-                    const contactNo = user?.contactNo || "-";
-                    const photo = user?.profile
-                        ? `${process.env.NEXT_PUBLIC_BASEURL}/${user.profile}`
-                        : "https://gyanitalk.com/build/assets/images/person.png";
-                    const chatId = session.chatId || "N/A";
-                    const status = session.chatStatus;
-                    const durationInSec = parseInt(session.chat_duration || "0", 10);
-                    const totalMin = session.totalMin || "-";
-                    const deduction = session.deduction !== null ? `${session.deduction} Coins` : "-";
-                    const createdAt = format(new Date(session.created_at), "dd MMM yyyy, hh:mm a");
-
-                    return (
-                        <div
-                            key={session.id}
-                            className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-5 flex flex-col gap-4 border border-gray-200 dark:border-gray-700"
-                        >
-                            {/* Top: Avatar + Name */}
-                            <div className="flex items-center gap-4">
-                                <div className="w-[50px] h-[50px] rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
-                                    <Image
-                                        src={photo}
-                                        alt="User"
-                                        width={50}
-                                        height={50}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{name}</h3>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{createdAt}</p>
-                                </div>
-                            </div>
-
-                            {/* Info Section */}
-                            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                                <div className="flex justify-between">
-                                    <span>Status:</span>
-                                    <span
-                                        className={`font-medium ${status === "Completed"
-                                            ? "text-green-600"
-                                            : status === "Rejected"
-                                                ? "text-red-500"
-                                                : "text-yellow-500"
-                                            }`}
-                                    >
-                                        {status}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between">
-                                    <span>Contact No:</span>
-                                    <span className="text-gray-900 dark:text-white">{contactNo}</span>
-                                </div>
-
-
-                                {status === "Completed" && (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span>Chat Duration:</span>
-                                            <span className="text-gray-900 dark:text-white">
-                                                {durationInSec >= 60
-                                                    ? `${Math.floor(durationInSec / 60)} min ${durationInSec % 60} sec`
-                                                    : `${durationInSec} sec`} {`(${totalMin} Min)`}
-                                            </span>
-                                        </div>
-
-
-                                        <div className="flex justify-between">
-                                            <span>Deduction:</span>
-                                            <span className="text-blue-600 font-medium">{deduction}</span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span><b>View Chat History</b></span>
-                                            <span className="text-gray-900 dark:text-white">{chatId}</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-        </div>
-
-
-    );
+function StatusBadge({ s }: { s: string }) {
+  const cls = statusClasses[s] || statusClasses.Default;
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cls}`}>{s}</span>;
 }
 
+function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={[
+        "relative rounded-2xl overflow-hidden",
+        "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
+        "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+        className,
+      ].join(" ")}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
 
-export function UserChatSessionList({ sessions }: { sessions: any }) {
+function SegmentedFilter({
+  value,
+  onChange,
+  options = STATUSES,
+}: {
+  value: string;
+  onChange: (s: string) => void;
+  options?: readonly string[];
+}) {
+  return (
+    <div className="inline-flex items-center gap-1 rounded-xl p-1 bg-white/60 dark:bg-white/[0.06] border border-white/50 dark:border-white/10 backdrop-blur-xl">
+      {options.map((opt) => {
+        const active = value === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={[
+              "px-3 py-1.5 text-xs font-medium rounded-lg transition",
+              active
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                : "text-slate-700 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-white/[0.08]",
+            ].join(" ")}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-    const [selectedStatus, setSelectedStatus] = useState("All");
+function RowInfo({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) {
+  return (
+    <>
+      <div className="text-slate-500 dark:text-slate-400">{label}</div>
+      <div className={strong ? "text-right font-semibold text-slate-900 dark:text-white" : "text-right font-medium text-slate-800 dark:text-slate-200"}>
+        {value}
+      </div>
+    </>
+  );
+}
 
-    const filteredSessions =
-        selectedStatus === "All"
-            ? sessions
-            : sessions.filter((s: any) => s.chatStatus === selectedStatus);
+function Duration({ seconds, totalMin }: { seconds: number; totalMin?: number }) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const str = seconds >= 60 ? `${mins} min ${secs} sec` : `${seconds} sec`;
+  return (
+    <>
+      {str} {totalMin ? <span className="text-slate-400 dark:text-slate-500">({totalMin} Min)</span> : null}
+    </>
+  );
+}
 
-    const statusOptions = ["All", "Completed", "Rejected", "Accepted", "Pending"];
+/* ---------- ASTRO view (users chatting with astrologer) ---------- */
+export default function AstroChatSessionList({ sessions }: { sessions: any[] }) {
+  const [filter, setFilter] = useState<string>("All");
+  const list = useMemo(() => (filter === "All" ? sessions : sessions.filter((s) => s.chatStatus === filter)), [sessions, filter]);
 
-
-    return (
-
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-                {/* Count */}
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Showing{" "}
-                    <span className="font-semibold text-teal-600">{filteredSessions.length}</span>{" "}
-                    {selectedStatus === "All" ? "records" : `"${selectedStatus}" chats`}
-                </div>
-
-                {/* Dropdown */}
-                <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 focus:outline-none"
-                >
-                    {statusOptions.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-                {filteredSessions.map((session: any) => {
-                    const astrologer = session.astrologer;
-                    const name = astrologer?.name || "Unknown";
-                    const contactNo = astrologer?.contactNo || "-";
-                    const photo = astrologer?.profileImage
-                        ? `${process.env.NEXT_PUBLIC_BASEURL}/${astrologer.profileImage}`
-                        : "https://gyanitalk.com/build/assets/images/person.png";
-                    const status = session.chatStatus;
-                    const durationInSec = parseInt(session.chat_duration || "0", 10);
-                    const totalMin = session.totalMin || "-";
-                    const deduction = session.deduction !== null ? `${session.deduction} Coins` : "-";
-                    const createdAt = format(new Date(session.created_at), "dd MMM yyyy, hh:mm a");
-                    const chatId = session.chatId || "N/A";
-
-                    return (
-                        <div
-                            key={session.id}
-                            className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-5 flex flex-col gap-4 border border-gray-200 dark:border-gray-700"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-[50px] h-[50px] rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
-                                    <Image
-                                        src={photo}
-                                        alt="User"
-                                        width={50}
-                                        height={50}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{name}</h3>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{createdAt}</p>
-                                </div>
-                            </div>
-
-                            {/* Info Section */}
-                            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                                <div className="flex justify-between">
-                                    <span>Status:</span>
-                                    <span
-                                        className={`font-medium ${status === "Completed"
-                                            ? "text-green-600"
-                                            : status === "Rejected"
-                                                ? "text-red-500"
-                                                : "text-yellow-500"
-                                            }`}
-                                    >
-                                        {status}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between">
-                                    <span>Contact No:</span>
-                                    <span className="text-gray-900 dark:text-white">{contactNo}</span>
-                                </div>
-
-
-                                {status === "Completed" && (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span>Chat Duration:</span>
-                                            <span className="text-gray-900 dark:text-white">
-                                                {durationInSec >= 60
-                                                    ? `${Math.floor(durationInSec / 60)} min ${durationInSec % 60} sec`
-                                                    : `${durationInSec} sec`} {`(${totalMin} Min)`}
-                                            </span>
-                                        </div>
-
-
-                                        <div className="flex justify-between">
-                                            <span>Deduction:</span>
-                                            <span className="text-blue-600 font-medium">{deduction}</span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span><b>View Chat History</b></span>
-                                            <span className="text-gray-900 dark:text-white">{chatId}</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
+  return (
+    <div className="p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-slate-600 dark:text-slate-400">
+          Filter: <span className="font-semibold text-blue-600 dark:text-blue-400">{filter}</span> •{" "}
+          <span className="font-medium text-slate-900 dark:text-slate-100">{list.length}</span> records
         </div>
+        <SegmentedFilter value={filter} onChange={setFilter} />
+      </div>
 
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((session) => {
+          const u = session.user || {};
+          const createdAt = session.created_at ? format(new Date(session.created_at), "dd MMM yyyy, hh:mm a") : "-";
+          const sec = parseInt(session.chat_duration || "0", 10);
+          return (
+            <GlassCard key={session.id} className="hover:-translate-y-0.5 transition">
+              <div className="flex items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-11 w-11 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                    <Image src={avatar(u.profile)} alt="User" width={44} height={44} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">{u.name || "Unknown"}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{createdAt}</div>
+                  </div>
+                </div>
+                <StatusBadge s={session.chatStatus} />
+              </div>
 
-    );
+              <div className="grid grid-cols-2 gap-3 border-t border-white/60 dark:border-white/10 p-4 text-sm">
+                <RowInfo label="Contact" value={u.contactNo || "-"} />
+                {session.chatStatus === "Completed" && (
+                  <>
+                    <RowInfo label="Duration" value={<Duration seconds={isNaN(sec) ? 0 : sec} totalMin={session.totalMin} />} />
+                    <RowInfo
+                      label="Deduction"
+                      strong
+                      value={session.deduction != null ? <span className="text-indigo-600 dark:text-indigo-400">{session.deduction} Coins</span> : "-"}
+                    />
+                    <RowInfo label="Chat ID" value={session.chatId || "N/A"} />
+                  </>
+                )}
+              </div>
+            </GlassCard>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- USER view (user chatting with astrologer/AI) ---------- */
+export function UserChatSessionList({ sessions }: { sessions: any[] }) {
+  const [filter, setFilter] = useState<string>("All");
+  const list = useMemo(() => (filter === "All" ? sessions : sessions.filter((s) => s.chatStatus === filter)), [sessions, filter]);
+
+  return (
+    <div className="p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-slate-600 dark:text-slate-400">
+          Filter: <span className="font-semibold text-blue-600 dark:text-blue-400">{filter}</span> •{" "}
+          <span className="font-medium text-slate-900 dark:text-slate-100">{list.length}</span> records
+        </div>
+        <SegmentedFilter value={filter} onChange={setFilter} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((session) => {
+          const a = session.astrologer || session.aiAstrologer || {};
+          const profile = a.profileImage || a.image;
+          const createdAt = session.created_at ? format(new Date(session.created_at), "dd MMM yyyy, hh:mm a") : "-";
+          const sec = parseInt(session.chat_duration || "0", 10);
+          return (
+            <GlassCard key={session.id} className="hover:-translate-y-0.5 transition">
+              <div className="flex items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-11 w-11 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                    <Image src={avatar(profile)} alt="Astrologer" width={44} height={44} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">{a.name || "Unknown"}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{createdAt}</div>
+                  </div>
+                </div>
+                <StatusBadge s={session.chatStatus} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 border-t border-white/60 dark:border-white/10 p-4 text-sm">
+                <RowInfo label="Contact" value={a.contactNo || "-"} />
+                {session.chatStatus === "Completed" && (
+                  <>
+                    <RowInfo label="Duration" value={<Duration seconds={isNaN(sec) ? 0 : sec} totalMin={session.totalMin} />} />
+                    <RowInfo
+                      label="Deduction"
+                      strong
+                      value={session.deduction != null ? <span className="text-indigo-600 dark:text-indigo-400">{session.deduction} Coins</span> : "-"}
+                    />
+                    <RowInfo label="Chat ID" value={session.chatId || "N/A"} />
+                  </>
+                )}
+              </div>
+            </GlassCard>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
