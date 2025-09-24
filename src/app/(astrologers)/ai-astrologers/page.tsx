@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X, Edit3, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
@@ -720,10 +720,22 @@ function PickerSection({
   );
 }
 
+
+
+
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AiAstrologersPage />
+    </Suspense>
+  );
+}
+
 /* -----------------------------------
    PAGE — same container + ambient blobs
 ------------------------------------ */
-export default function Page() {
+function AiAstrologersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

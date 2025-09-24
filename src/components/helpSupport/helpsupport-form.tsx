@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Eye, CheckSquare, Trash2, X, XCircle } from "lucide-react";
+import { Plus, Eye, CheckSquare, Trash2, X } from "lucide-react";
 import { getHelpSupport, addHelpSupport, getHelpSupportSubCategories, 
   addHelpSupportSubCategory, editHelpSupport, deleteHelpSupport } from "./fetch";
 import toast from "react-hot-toast";
@@ -73,12 +73,12 @@ export default function HelpSupportForm({ data }: Props) {
 
       if (res?.success) {
         toast.success("Help Support Updated ✅");
-        await loadData();
       } else {
         toast.error(res.message ?? "Failed to update ❌");
       }
     }
     closeModals();
+    window.location.reload();
   };
 
   // ----------------- Delete Handlers -----------------
@@ -90,7 +90,6 @@ export default function HelpSupportForm({ data }: Props) {
 
         if (res?.success) {
           toast.success("Deleted successfully ✅");
-          await loadData(); // 👈 list refresh
         } else {
           toast.error("Failed to delete ❌");
         }
@@ -100,6 +99,7 @@ export default function HelpSupportForm({ data }: Props) {
       } 
     }
     closeModals();
+    window.location.reload();
   };
 
   // ---------------- API Submit ----------------
@@ -131,8 +131,8 @@ export default function HelpSupportForm({ data }: Props) {
         setIsChatWithUs(false);
 
         toast.success("SubCategory Added ✅");
-        await loadData(); // 👈 list refresh
         closeModals();
+        window.location.reload();
       } else {
         toast.error("Error adding SubCategory ❌");
       }
@@ -153,7 +153,7 @@ export default function HelpSupportForm({ data }: Props) {
         setSupports(fresh.data);
 
         toast.success("Help Support Added ✅");
-        await loadData(); // 👈 list refresh
+        window.location.reload();
         setIsOpen(false);
         setFormData({ name: "", isActive: true }); // reset form
       } else {
@@ -164,18 +164,6 @@ export default function HelpSupportForm({ data }: Props) {
       toast.error("Something went wrong!");
     }
   }  
-
-  async function loadData() {
-    const res = await getHelpSupport();
-    if (res?.success) {
-      setSupports(res.data);
-    }
-  }
-
-  // Initial Load
-  useEffect(() => {
-    loadData();
-  }, []);
 
   return (
     <div>
@@ -443,14 +431,12 @@ export default function HelpSupportForm({ data }: Props) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg w-96">
             <div className="flex justify-between items-center mb-4">
-              <div className="p-5 text-center">
-                <XCircle className="w-10 h-10 text-red-500 mx-auto" />
-                <div className="text-3xl mt-5">Are you sure?</div>
-                <div className="text-slate-500 mt-2">Do you want to delete these records? 
-                  <h4 className="text">It also delete subcategory</h4>
-                </div>
+              <div className="p-5 text-center w-full">
+                <div className="text-2xl mt-4 font-semibold">Are you sure?</div>
+                  <p className="text-slate-500 mt-2">Do you want to delete these records? </p>
+                  <h4 className="text-sm text-slate-400">It also delete subcategory</h4>
               </div>  
-              <button onClick={closeModals}><X /></button>
+                <button onClick={closeModals}><X className="w-5 h-5" /></button>
             </div>
             <div className="flex justify-end space-x-2">
               <button

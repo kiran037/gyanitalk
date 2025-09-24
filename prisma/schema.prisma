@@ -368,6 +368,7 @@ model astrologers {
   chatrequests    chatrequest[]      @relation("AstrologerChatRequests")
   callrequests callrequest[] @relation("AstrologerToCallRequests")
   walletTransactions wallettransaction[]
+  withdraws     withdrawrequest[]
   assistantchat assistantchat[]
   order_requests order_request[]
   followers     astrologer_followers[] 
@@ -375,6 +376,9 @@ model astrologers {
   assignGroups   astrologer_assign_group[]
   liveastro      liveastro[]   
   stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
+  blocks        blockastrologer[]
+  reviews      user_reviews[]
+  commissions commissions[] @relation(name: "astrologersTocommissions")
   @@index([userId], map: "astrologers_userid_foreign")
 }
 
@@ -500,11 +504,14 @@ model blockassistant {
 
 model blockastrologer {
   id           Int      @id @default(autoincrement())
-  astrologerId Int
-  userId       Int
+  astrologerId BigInt?   @db.UnsignedBigInt
+  userId       BigInt?   @db.UnsignedBigInt
   reason       String   @db.LongText
   created_at   DateTime @default(now()) @db.Timestamp(0)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
+
+  user          users?        @relation(fields: [userId], references: [id])
+  astrologer    astrologers?  @relation(fields: [astrologerId], references: [id])
 }
 
 model blockuserreview {
@@ -700,6 +707,7 @@ model commission_types {
   createdBy             Int
   modifiedBy            Int
   admin_get_commissions admin_get_commissions[]
+  commissions commissions[]
 }
 
 model commissions {
@@ -714,6 +722,8 @@ model commissions {
   modifiedBy            Int
   astrologerId          BigInt?                 @db.UnsignedBigInt
   admin_get_commissions admin_get_commissions[]
+  astrologer      astrologers?     @relation(name: "astrologersTocommissions", fields: [astrologerId], references: [id])
+  commissionType  commission_types @relation(fields: [commissionTypeId], references: [id])
 
   @@index([astrologerId], map: "commissions_astrologers_idx")
   @@index([commissionTypeId], map: "commissions_commissiontypeid_foreign")
@@ -1815,6 +1825,7 @@ model user_reviews {
   modifiedBy         Int
 
   user users? @relation(fields: [userId], references: [id])
+  astrologer   astrologers? @relation(fields: [astrologerId], references: [id])
 
   @@index([astromallProductId], map: "test")
   @@index([astrologerId], map: "user_reviews_astrologerid_foreign")
@@ -1888,6 +1899,7 @@ model users {
   liveuser    liveuser[]    
   payments payment[]
   order_request order_request[]
+  blocks    blockastrologer[]
   followedAstrologers astrologer_followers[] @relation("UserFollowers")
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
   user_wallets user_wallets[]  
@@ -1948,6 +1960,8 @@ model withdrawmethods {
   isActive    Boolean?
   created_at  DateTime? @default(now()) @db.Timestamp(0)
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  withdraws   withdrawrequest[]
 }
 
 model withdrawrequest {
@@ -1961,11 +1975,14 @@ model withdrawrequest {
   updated_at        DateTime? @default(now()) @db.Timestamp(0)
   createdBy         Int?
   modifiedBy        Int?
-  paymentMethod     String?   @db.VarChar(45)
+  paymentMethod     Int?   
   upiId             String?   @db.VarChar(45)
   accountNumber     String?   @db.VarChar(45)
   ifscCode          String?   @db.VarChar(45)
   accountHolderName String?   @db.VarChar(100)
+
+  astrologer    astrologers?    @relation(fields: [astrologerId], references: [id])
+  withdrawmethod withdrawmethods? @relation(fields: [paymentMethod], references: [id])
 
   @@index([astrologerId], map: "withdrawrequest_astrologer_idx")
 }

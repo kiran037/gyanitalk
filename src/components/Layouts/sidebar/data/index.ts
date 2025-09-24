@@ -89,32 +89,32 @@ export const NAV_DATA = [
           },
           {
             title: "Block Astrologer",
-            url: "/block-astrologer",
+            url: "/block_astrologer",
             icon: X,
           },
           {
             title: "Reviews",
-            url: "/reviews-astrologers",
+            url: "/review_astrologers",
             icon: Star,
           },
           { 
             title: "Gifts",
-            url: "/gifts-astrologers",
+            url: "/gifts_astrologer",
             icon: Gift,
           },
           {
             title: "Skills",
-            url: "/skills-astrologers",
+            url: "/skills_astrologer",
             icon: PocketKnife,
           },
           {
             title: "Categories",
-            url: "/categories",
+            url: "/astrologerCategories",
             icon: Folder,
           },
           {
             title: "Commissionn rate for calls/chats",
-            url: "/commission_rate",
+            url: "/commissions",
             icon: IndianRupee,
           },
         ],

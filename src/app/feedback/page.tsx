@@ -233,11 +233,9 @@ function FeedbackTable({
               return null;
             }
 
-            const href = `?page=${pageNum}${
-              search ? `&search=${encodeURIComponent(search)}` : ""
-            }${startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""}${
-              endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
-            }`;
+            const href = `?page=${pageNum}${search ? `&search=${encodeURIComponent(search)}` : ""
+              }${startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""}${endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
+              }`;
 
             return (
               <a
@@ -260,10 +258,18 @@ function FeedbackTable({
   );
 }
 
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeedbackPage />
+    </Suspense>
+  );
+}
 /* =================================================================================
    Page (client; reads query via hook)
 ================================================================================= */
-export default function FeedbackPage() {
+function FeedbackPage() {
   const sp = useSearchParams();
   const page = useMemo(() => parseInt(sp.get("page") || "1", 10), [sp]);
   const search = useMemo(() => sp.get("search") || "", [sp]);

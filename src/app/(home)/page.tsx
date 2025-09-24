@@ -1,4 +1,5 @@
 
+export const dynamic = "force-dynamic"; 
 
 // src/app/(home)/page.tsx
 import { unstable_cache } from "next/cache";

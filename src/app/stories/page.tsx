@@ -194,18 +194,18 @@ function StoriesTable({
       <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
-              <GlassCard hover={false} key={i} className="p-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-1/2 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-                    <div className="h-3 w-2/3 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-                  </div>
+            <GlassCard hover={false} key={i} className="p-5">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/2 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
+                  <div className="h-3 w-2/3 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
                 </div>
-              </GlassCard>
-            ))
+              </div>
+            </GlassCard>
+          ))
           : Object.keys(grouped).length
-          ? Object.keys(grouped).map((astroId) => {
+            ? Object.keys(grouped).map((astroId) => {
               const astro = astrologers.find((a: any) => Number(a.id) === Number(astroId));
               const stories = grouped[astroId];
               const cover = buildImg(astro?.profileImage);
@@ -234,11 +234,11 @@ function StoriesTable({
                 </button>
               );
             })
-          : (
-            <GlassCard hover={false} className="p-10 text-center">
-              <p className="text-sm text-slate-600 dark:text-slate-400">No stories found</p>
-            </GlassCard>
-          )}
+            : (
+              <GlassCard hover={false} className="p-10 text-center">
+                <p className="text-sm text-slate-600 dark:text-slate-400">No stories found</p>
+              </GlassCard>
+            )}
       </div>
 
       {/* Modal */}
@@ -343,10 +343,19 @@ function StoriesTable({
   );
 }
 
+
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StoriesPage />
+    </Suspense>
+  );
+}
 /* =================================================================================
    Page (client-safe search params)
 ================================================================================= */
-export default function StoriesPage() {
+function StoriesPage() {
   const sp = useSearchParams();
   const page = useMemo(() => Number(sp.get("page") || "1"), [sp]);
   const search = useMemo(() => sp.get("search") || "", [sp]);
