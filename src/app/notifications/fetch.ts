@@ -1,6 +1,7 @@
 "use server"
 import { NextResponse } from "next/server";
 const prisma = require("../../prismaClient");
+import { sendNotification } from "@/services/fcm.js"; // custom FCM service (same logic as Laravel)
 
 // Get all notifications
 export async function getNotifications() {
@@ -75,3 +76,4 @@ export async function updateNotifications(
     return { success: false, message: "Failed to update notification" };
   }
 }
+
