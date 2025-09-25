@@ -1187,6 +1187,8 @@ model notifications {
   updated_at  DateTime? @db.Timestamp(0)
   createdBy   Int
   modifiedBy  Int
+
+  userNotifications user_notifications[]
 }
 
 model oauth_access_tokens {
@@ -1507,6 +1509,8 @@ model roles {
   isDelete   Boolean   @default(false)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
+
+  userRoles user_roles[]
 }
 
 model sessiontoken {
@@ -1751,6 +1755,8 @@ model user_notifications {
   createdBy         Int
   modifiedBy        Int
 
+  user         users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification notifications? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   @@index([notificationId], map: "user_notifications_notificationid_foreign")
   @@index([userId], map: "user_notifications_userid_foreign")
 }
@@ -1842,6 +1848,7 @@ model user_roles {
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   user   users   @relation(fields: [userId], references: [id])
+  role roles @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@index([roleId], map: "user_roles_roleid_foreign")
   @@index([userId], map: "user_roles_userid_foreign")
@@ -1900,6 +1907,7 @@ model users {
   payments payment[]
   order_request order_request[]
   blocks    blockastrologer[]
+  userNotifications  user_notifications[]
   followedAstrologers astrologer_followers[] @relation("UserFollowers")
   wallettransactions wallettransaction[] @relation("UserWalletRelation")
   user_wallets user_wallets[]  

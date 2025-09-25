@@ -65,6 +65,11 @@ export const NAV_DATA = [
             url: "/payments",
             icon: CreditCard,
           },
+          {
+            title: "Manual Transactions",
+            url: "/manual",
+            icon: CreditCard,
+          },
         ],
       },
       {
