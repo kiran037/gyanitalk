@@ -5,7 +5,6 @@ import "@/css/satoshi.css";
 import "@/css/style.css";
 import "flatpickr/dist/flatpickr.min.css";
 import "jsvectormap/dist/jsvectormap.css";
-
 import { Sidebar } from "@/components/Layouts/sidebar";
 import { Header } from "@/components/Layouts/header";
 import NextTopLoader from "nextjs-toploader";
@@ -30,7 +29,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
             <div className="flex min-h-screen w-full">
               <div className="flex-1 min-w-0 bg-gray-2 dark:bg-[#020d1a]">
                 {/* Full-bleed main: no max-width / no big gutters */}
-                <main className="w-full min-w-0 overflow-x-clip px-4 md:px-6 py-4">
+                <main className="w-full min-w-0 overflow-x-clip">
                   {children}
                 </main>
               </div>
@@ -44,7 +43,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
                 <Header />
 
                 {/* Full-bleed main: no max-width / no big gutters */}
-                <main className="w-full min-w-0 overflow-x-clip px-4 md:px-6 py-4">
+                <main className="w-full min-w-0 overflow-x-clip ">
                   {children}
                 </main>
 

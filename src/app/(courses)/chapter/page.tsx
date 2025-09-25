@@ -643,7 +643,7 @@ export default function Page() {
   };
 
   return (
-    <div className="relative w-full min-w-0 space-y-8 overflow-x-hidden">
+    <div className="relative px-5 py-5 w-full min-w-0 space-y-8 overflow-x-hidden">
       {/* Enhanced Ambient Background */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-32 -right-48 w-[36rem] h-[36rem] rounded-full bg-gradient-to-br from-sky-400/8 via-blue-400/6 to-indigo-400/8 blur-3xl animate-pulse" />

@@ -367,7 +367,7 @@ export default function Page() {
   };
 
   return (
-    <div className="relative w-full min-w-0 space-y-6 overflow-x-hidden">
+    <div className="relative px-5 py-5 w-full min-w-0 space-y-6 overflow-x-hidden">
       {/* ambient blobs */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-20 -right-32 w-[26rem] h-[26rem] rounded-full bg-gradient-to-br from-blue-400/15 to-purple-400/10 blur-3xl" />

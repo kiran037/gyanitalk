@@ -968,7 +968,7 @@ export default function ProductsPage({
   const refreshList = () => setRefreshKey((k) => k + 1);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 px-5 py-5">
 
       {/* Search form (glass) */}
       <GlassCard className="p-4">

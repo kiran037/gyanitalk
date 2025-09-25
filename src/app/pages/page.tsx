@@ -439,7 +439,7 @@ export default function PagesPage({
   void _params;
 
   return (
-    <div className="space-y-8 relative">
+    <div className="space-y-8 px-5 py-5 relative">
       {/* Ambient OS-26 blobs */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-blue-400/20 blur-3xl" />

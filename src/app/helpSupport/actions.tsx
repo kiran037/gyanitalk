@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/app/helpSupport/actions.tsx
 "use server";
 
 import { addHelpSupportSubSubCategory,
@@ -5,7 +6,7 @@ import { addHelpSupportSubSubCategory,
     deleteHelpSupportSubSubCategory,
     updateHelpSupportSubCategory,
     deleteHelpSupportSubCategory,
- } from "@/components/helpSupport/fetch";
+ } from "@/app/helpSupport/fetch";
 
 // ---- Add Sub Sub category ----
 export async function addSubCategoryAction(payload: {

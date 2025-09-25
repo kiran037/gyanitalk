@@ -255,7 +255,7 @@ export default function TicketPage({
   }
 
   return (
-    <div className="space-y-8 relative">
+    <div className="space-y-8 px-5 py-5 relative">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-20 -right-32 w-[26rem] h-[26rem] rounded-full bg-blue-400/20 blur-3xl" />
