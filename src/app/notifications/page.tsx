@@ -196,14 +196,14 @@ function NotificationItem({
         </p>
       </div>
       <div className="shrink-0 flex gap-2">
-        <GlassButton
+        {/* <GlassButton
           variant="secondary"
           onClick={() => onEdit(item)}
           aria-label="Edit"
         >
           <Edit3 className="h-4 w-4" />
           <span className="hidden sm:inline">Edit</span>
-        </GlassButton>
+        </GlassButton> */}
         <GlassButton
           variant="primary"
           onClick={() => onSend(item)}
