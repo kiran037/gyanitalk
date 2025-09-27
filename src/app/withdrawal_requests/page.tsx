@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import moment from "moment";
@@ -146,8 +146,8 @@ function RequestCard({
     item.status === "Pending"
       ? "bg-yellow-100 text-yellow-700"
       : item.status === "Released"
-      ? "bg-green-100 text-green-700"
-      : "bg-red-100 text-red-700";
+        ? "bg-green-100 text-green-700"
+        : "bg-red-100 text-red-700";
 
   return (
     <div
@@ -235,7 +235,14 @@ function RequestCard({
 /* =============================================================================
    Page
 ============================================================================= */
-export default function WithdrawalRequestsPage() {
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <WithdrawalRequestsPage />
+    </Suspense>
+  );
+}
+function WithdrawalRequestsPage() {
   const toast = useToast();
   const router = useRouter();
   const sp = useSearchParams();

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useTransition } from "react";
+import React, { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { Trash2, Plus, Pencil, X } from "lucide-react";
 import {
@@ -529,8 +529,15 @@ function SkillsTable({
     </>
   );
 }
-
 export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SkillsPage />
+    </Suspense>
+  );
+}
+
+function SkillsPage() {
   const sp = useSearchParams();
   const page = useMemo(() => parseInt(sp.get("page") || "1", 10), [sp]);
   const search = useMemo(() => sp.get("search") || "", [sp]);

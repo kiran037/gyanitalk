@@ -239,7 +239,15 @@ function BlockedTable({
 /* =================================================================================
    Page (client)
 ================================================================================= */
+
 export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BlockAstrologer />
+    </Suspense>
+  );
+}
+function BlockAstrologer() {
   const sp = useSearchParams();
   const page = useMemo(() => parseInt(sp.get("page") || "1", 10), [sp]);
   const search = useMemo(() => sp.get("search") || "", [sp]);

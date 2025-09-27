@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import { Plus, Pencil } from "lucide-react";
@@ -382,6 +382,13 @@ function CommissionsTable({ page }: { page: number }) {
 
 /* ---------------- Page Wrapper ---------------- */
 export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Commission />
+    </Suspense>
+  );
+}
+function Commission() {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page") || "1");
 
