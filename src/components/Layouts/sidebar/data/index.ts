@@ -122,6 +122,16 @@ export const NAV_DATA = [
             url: "/commissions",
             icon: IndianRupee,
           },
+          {
+            title: "Sorting Astrologers",
+            url: "/sorting_astrologers",
+            icon: Folder,
+          },
+          {
+            title: "Groups",
+            url: "/astrologer_group",
+            icon: Folder,
+          },
         ],
       },
       {

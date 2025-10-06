@@ -79,12 +79,15 @@ model astrohost {
 
 model astrologer_assign_group {
   id           Int           @id @default(autoincrement())
-  group_id     Int?
+  group_id     BigInt?
   astrologerId BigInt?       @db.UnsignedBigInt
   created_at   DateTime?     @default(now()) @db.Timestamp(0)
-  updated_at   DateTime?     @db.Timestamp(0)
+  updated_at   DateTime?     @default(now()) @db.Timestamp(0)
 
   astrologer   astrologers?  @relation(fields: [astrologerId], references: [id])
+  group      astrologer_groups? @relation(fields: [group_id], references: [id])
+
+  @@map("astrologer_assign_group")
 }
 
 
@@ -220,6 +223,9 @@ model astrologer_groups {
   name       String?   @db.VarChar(250)
   created_at DateTime? @default(now()) @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
+
+  astrologerassign   astrologer_assign_group[] // relation
+   @@map("astrologer_groups")
 }
 
 model astrologer_product {
@@ -373,7 +379,7 @@ model astrologers {
   order_requests order_request[]
   followers     astrologer_followers[] 
   astrologerGifts   astrologer_gifts[]  @relation("AstrologerGiftsRelation")
-  assignGroups   astrologer_assign_group[]
+  astrologerassign   astrologer_assign_group[]
   liveastro      liveastro[]   
   stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
   blocks        blockastrologer[]
