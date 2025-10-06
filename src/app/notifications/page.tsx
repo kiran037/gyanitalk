@@ -1,29 +1,35 @@
 "use client";
 
 import { use, useEffect, useState, useCallback } from "react";
-import { Plus, X, Edit3, Send } from "lucide-react";
+import { X, Send } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/Toast/ToastProvider";
 import {
   getNotifications,
   createNotifications,
-  updateNotifications,
+  sendNotifications,
 } from "./fetch";
+
+/* ---------------- Topics ---------------- */
+const TOPIC_OPTIONS = [
+  { value: "All", label: "All Users" },
+  { value: "User", label: "Active Users" },
+  { value: "Astrologer", label: "Astrologers" },
+  { value: "User_Never_Recharged", label: "Users Never Recharged" },
+  { value: "User_Not_Used_Free_Chat_Call", label: "Users Not Used Free Chat/Call" },
+];
 
 /* ---------------- Types ---------------- */
 interface Notification {
   id: number | string;
   title: string;
   description: string;
-  created_at?: string | null;
-  updated_at?: string | null;
 }
 
-/* ---------------- Utilities ---------------- */
 const cx = (...c: Array<string | false | null | undefined>) =>
   c.filter(Boolean).join(" ");
 
-/* ---------------- Glass Atoms ---------------- */
+/* ---------------- Glass Components ---------------- */
 function GlassCard({
   children,
   className = "",
@@ -51,7 +57,7 @@ function GlassButton(
 ) {
   const base =
     "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-60";
-  const styles = {
+  const styles: Record<"primary" | "secondary" | "danger" | "ghost", string> = {
     primary:
       "text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
     secondary:
@@ -60,7 +66,7 @@ function GlassButton(
       "text-white bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700",
     ghost:
       "text-slate-700 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-white/[0.08]",
-  } as const;
+  };
 
   return (
     <button {...rest} className={cx(base, styles[variant], className)}>
@@ -150,10 +156,7 @@ function GlassModal({
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* BACKDROP */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
-
-      {/* CONTENT */}
       <div
         className={`relative w-full ${maxWidth} rounded-2xl overflow-hidden bg-white/70 dark:bg-white/[0.07] backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-2xl`}
       >
@@ -178,12 +181,10 @@ function GlassModal({
 /* ---------------- Notification Item ---------------- */
 function NotificationItem({
   item,
-  onEdit,
-  onSend,
+  onResend,
 }: {
   item: Notification;
-  onEdit: (n: Notification) => void;
-  onSend: (n: Notification) => void;
+  onResend: (n: Notification) => void;
 }) {
   return (
     <GlassCard className="flex items-start justify-between gap-4">
@@ -196,21 +197,13 @@ function NotificationItem({
         </p>
       </div>
       <div className="shrink-0 flex gap-2">
-        {/* <GlassButton
-          variant="secondary"
-          onClick={() => onEdit(item)}
-          aria-label="Edit"
-        >
-          <Edit3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Edit</span>
-        </GlassButton> */}
         <GlassButton
           variant="primary"
-          onClick={() => onSend(item)}
-          aria-label="Send"
+          onClick={() => onResend(item)}
+          aria-label="Resend"
         >
           <Send className="h-4 w-4" />
-          <span className="hidden sm:inline">Send</span>
+          <span className="hidden sm:inline">Resend</span>
         </GlassButton>
       </div>
     </GlassCard>
@@ -223,11 +216,15 @@ function NotificationList() {
   const [data, setData] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<Notification | null>(null);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [formData, setFormData] = useState({ title: "", description: "" });
 
-  const [showSendModal, setShowSendModal] = useState(false);
+  const [resendModal, setResendModal] = useState<{
+    open: boolean;
+    notification: Notification | null;
+  }>({ open: false, notification: null });
+  const [resendTopic, setResendTopic] = useState("");
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
@@ -244,25 +241,44 @@ function NotificationList() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  async function handleSave() {
-    if (!formData.title || !formData.description) {
-      toast("warning", "Warning", "Title & description required");
+  // New send (create + send) handler
+  const handleSendNew = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formData.title || !formData.description || !selectedTopic) {
+      toast("warning", "Warning", "Topic, title & description required");
       return;
     }
     try {
-      if (editingItem) {
-        await updateNotifications(Number(editingItem.id), formData);
-        toast("success", "Updated", "Notification updated");
-      } else {
-        await createNotifications(formData);
-        toast("success", "Created", "Notification created");
-      }
-      setShowModal(false);
+      const newNotification = await createNotifications(formData);
+      await sendNotifications({ id: newNotification.data?.id, role: selectedTopic });
+      toast("success", "Sent", "Notification created & sent");
+      setShowSendModal(false);
+      setFormData({ title: "", description: "" });
+      setSelectedTopic("");
       fetchNotifications();
     } catch {
-      toast("error", "Error", "Failed to save");
+      toast("error", "Error", "Failed to send new notification");
     }
-  }
+  };
+
+  // Confirm resend handler
+  const handleConfirmResend = async () => {
+    if (!resendTopic || !resendModal.notification) {
+      toast("warning", "Warning", "Please select a topic");
+      return;
+    }
+    try {
+      await sendNotifications({
+        id: resendModal.notification.id,
+        role: resendTopic,
+      });
+      toast("success", "Resent", "Notification resent successfully!");
+      setResendModal({ open: false, notification: null });
+      setResendTopic("");
+    } catch {
+      toast("error", "Error", "Failed to resend");
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -271,8 +287,8 @@ function NotificationList() {
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
           Notifications
         </h2>
-        <GlassButton onClick={() => setShowModal(true)}>
-          <Plus className="h-4 w-4" /> Add
+        <GlassButton onClick={() => setShowSendModal(true)}>
+          Send Notification
         </GlassButton>
       </div>
 
@@ -291,79 +307,97 @@ function NotificationList() {
             <li key={item.id}>
               <NotificationItem
                 item={item}
-                onEdit={(n) => {
-                  setEditingItem(n);
-                  setFormData({ title: n.title, description: n.description });
-                  setShowModal(true);
-                }}
-                onSend={() => setShowSendModal(true)}
+                onResend={(n) => setResendModal({ open: true, notification: n })}
               />
             </li>
           ))}
         </ul>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Send New Notification Modal */}
       <GlassModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        title={editingItem ? "Edit Notification" : "Add Notification"}
+        open={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        title="Send New Notification"
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="grid gap-4"
-        >
+        <form onSubmit={handleSendNew} className="grid gap-4">
+          <div>
+            <label className="text-sm font-medium">Select Topic</label>
+            <GlassSelect
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              required
+            >
+              <option value="">--Select Topic--</option>
+              {TOPIC_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </GlassSelect>
+          </div>
+
           <GlassInput
             placeholder="Title"
             value={formData.title}
-            onChange={(e) => setFormData((s) => ({ ...s, title: e.target.value }))}
+            onChange={(e) =>
+              setFormData((s) => ({ ...s, title: e.target.value }))
+            }
           />
           <GlassTextarea
             placeholder="Description"
             rows={4}
             value={formData.description}
-            onChange={(e) => setFormData((s) => ({ ...s, description: e.target.value }))}
+            onChange={(e) =>
+              setFormData((s) => ({ ...s, description: e.target.value }))
+            }
           />
           <div className="flex justify-end gap-3">
-            <GlassButton variant="secondary" type="button" onClick={() => setShowModal(false)}>
-              Cancel
-            </GlassButton>
-            <GlassButton type="submit">
-              {editingItem ? "Save" : "Create"}
-            </GlassButton>
-          </div>
-        </form>
-      </GlassModal>
-
-      {/* Send Modal */}
-      <GlassModal
-        open={showSendModal}
-        onClose={() => setShowSendModal(false)}
-        title="Send Notification"
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            toast("success", "Sent", "Notification sent successfully!");
-            setShowSendModal(false);
-          }}
-          className="grid gap-4"
-        >
-          <GlassSelect defaultValue="all">
-            <option value="all">All</option>
-            <option value="user">User</option>
-            <option value="astrologer">Astrologer</option>
-          </GlassSelect>
-          <div className="flex justify-end gap-3">
-            <GlassButton variant="secondary" type="button" onClick={() => setShowSendModal(false)}>
+            <GlassButton
+              variant="secondary"
+              type="button"
+              onClick={() => setShowSendModal(false)}
+            >
               Cancel
             </GlassButton>
             <GlassButton type="submit">Send</GlassButton>
           </div>
         </form>
+      </GlassModal>
+
+      {/* Resend Modal */}
+      <GlassModal
+        open={resendModal.open}
+        onClose={() => setResendModal({ open: false, notification: null })}
+        title="Resend Notification"
+      >
+        <div className="grid gap-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            Resend: <strong>{resendModal.notification?.title}</strong>
+          </p>
+          <GlassSelect
+            value={resendTopic}
+            onChange={(e) => setResendTopic(e.target.value)}
+            required
+          >
+            <option value="">--Select Topic--</option>
+            {TOPIC_OPTIONS.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </GlassSelect>
+          <div className="flex justify-end gap-3">
+            <GlassButton
+              variant="secondary"
+              type="button"
+              onClick={() => setResendModal({ open: false, notification: null })}
+            >
+              Cancel
+            </GlassButton>
+            <GlassButton onClick={handleConfirmResend}>Confirm</GlassButton>
+          </div>
+        </div>
       </GlassModal>
     </div>
   );
@@ -385,7 +419,6 @@ export default function NotificationPage({
         <div className="absolute -top-20 -right-32 w-[26rem] h-[26rem] rounded-full bg-blue-400/20 blur-3xl" />
         <div className="absolute -bottom-28 -left-32 w-[28rem] h-[28rem] rounded-full bg-purple-400/20 blur-3xl" />
       </div>
-
       <NotificationList />
     </div>
   );

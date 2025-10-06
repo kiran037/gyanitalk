@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import { format } from "date-fns";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 /* ---------- helpers ---------- */
@@ -113,6 +114,7 @@ export default function AstroChatSessionList({ sessions }: { sessions: any[] }) 
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((session) => {
+          const chatId = session.chatId || "N/A"; // fallback to avoid null
           const u = session.user || {};
           const createdAt = session.created_at ? format(new Date(session.created_at), "dd MMM yyyy, hh:mm a") : "-";
           const sec = parseInt(session.chat_duration || "0", 10);
@@ -128,7 +130,9 @@ export default function AstroChatSessionList({ sessions }: { sessions: any[] }) 
                     <div className="text-xs text-slate-500 dark:text-slate-400">{createdAt}</div>
                   </div>
                 </div>
-                <StatusBadge s={session.chatStatus} />
+                <div className="flex flex-col items-end gap-1">
+                  <StatusBadge s={session.chatStatus} />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 border-t border-white/60 dark:border-white/10 p-4 text-sm">
@@ -143,6 +147,19 @@ export default function AstroChatSessionList({ sessions }: { sessions: any[] }) 
                     />
                     <RowInfo label="Chat ID" value={session.chatId || "N/A"} />
                   </>
+                )}
+              </div>
+              <div className="text-right mb-5 mr-2">
+                {session.chatId ? (
+                  <Link
+                    href={`/conversation/${session.chatId}`}
+                    target="_blank"
+                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition-colors shadow-sm"
+                  >
+                    View History
+                  </Link>
+                ) : (
+                  <span className="text-slate-200 text-sm"></span>
                 )}
               </div>
             </GlassCard>
