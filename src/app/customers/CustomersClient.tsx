@@ -16,7 +16,8 @@ import {
 import ExportButton from "@/components/ExportButton";
 import { useToast } from "@/components/Toast/ToastProvider";
 import { cn } from "@/lib/utils";
-import { addMoneyToWallet, searchCustomers } from "./fetch";
+import { addCustomer, addMoneyToWallet, searchCustomers } from "./fetch";
+import { uploadImage } from "@/upload";
 
 type Props = {
   data: any[];
@@ -111,6 +112,58 @@ export default function CustomersClient({
     },
     [toast]
   );
+
+  // ----------- Add Custoemr state & logic -----------
+
+  const [isAddUserOpen, setAddUserOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    birthDate: "",
+    birthTime: "",
+    pincode: "",
+    city: "",
+    gender: "",
+    email: "",
+    contactNo: "",
+    address: "",
+    profile: "",
+  });
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [profilePreview, setProfilePreview] = useState<string>("");
+
+  const handleAddUserChange = (field: string, value: string) => {
+    setNewUser((prev) => ({ ...prev, [field]: value }));
+  };
+
+  async function uploadProfileAndGetPath(file: File) {
+    const up = await uploadImage(file, "images");
+    if (!up?.success || !up?.path) {
+      throw new Error("Upload failed. Please try again.");
+    }
+    return up.path as string;
+  }
+
+  const onConfirmAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUser.name) {
+      toast("warning", "Name Required", "Customer name is mandatory");
+      return;
+    }
+    setIsAddingUser(true);
+    const res = await addCustomer(newUser);
+    setIsAddingUser(false);
+    if (res?.status) {
+      toast("success", "Added", res.message);
+      setAddUserOpen(false);
+      // optional: refresh/revalidate customers list
+    } else {
+      toast("error", "Error", res.message || "Could not add user");
+    }
+  };
+
+
+
 
   // ----------- Add Money modal state & logic -----------
   const [isAddMoneyOpen, setAddMoneyOpen] = useState(false);
@@ -311,6 +364,15 @@ export default function CustomersClient({
                 buttonText="Export"
                 className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-[0_8px_20px_rgba(99,102,241,0.25)] transition"
               />
+
+              <button
+                type="button"
+                onClick={() => setAddUserOpen(true)}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-[0_8px_20px_rgba(99,102,241,0.25)] transition"
+                title="Add new customer"
+              >
+                + Add User
+              </button>
             </form>
           </div>
         </div>
@@ -671,6 +733,154 @@ export default function CustomersClient({
             </form>
           </div>
         )}
+
+
+
+        {isAddUserOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setAddUserOpen(false)}
+            />
+            <form
+              onSubmit={onConfirmAddUser}
+              className="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-lg border border-white/20 space-y-4 overflow-y-auto max-h-[90vh]"
+            >
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Add New Customer
+                </h3>
+                <button type="button" onClick={() => setAddUserOpen(false)}>✕</button>
+              </div>
+
+              {/* Profile image upload */}
+              <div>
+                <label className="block text-sm">Profile Image</label>
+
+                <div className="flex items-center gap-3">
+                  {/* Preview (optional) */}
+                  {profilePreview ? (
+                    <Image
+                      src={profilePreview}
+                      width={48}
+                      height={48}
+                      alt="Preview"
+                      className="rounded-full object-cover ring-2 ring-white/70 dark:ring-white/10"
+                    />
+                  ) : null}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploadingProfile}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        setIsUploadingProfile(true);
+                        const localUrl = URL.createObjectURL(file);
+                        setProfilePreview(localUrl);
+                        const path = await uploadProfileAndGetPath(file);
+                        handleAddUserChange("profile", path);
+
+                        const fullUrl = `${process.env.NEXT_PUBLIC_BASEURL || ""}${path}`;
+                        setProfilePreview(fullUrl);
+                      } catch (err: any) {
+                        setProfilePreview("");
+                        handleAddUserChange("profile", "");
+                        toast("error", "Upload Failed", err?.message || "Could not upload image.");
+                      } finally {
+                        setIsUploadingProfile(false);
+                      }
+                    }}
+                  />
+                </div>
+
+                {isUploadingProfile ? (
+                  <p className="text-xs text-slate-500 mt-1">Uploading…</p>
+                ) : newUser.profile ? (
+                  <p className="text-xs text-emerald-600 mt-1">Uploaded ✓ (saved path: {newUser.profile})</p>
+                ) : null}
+              </div>
+
+
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={newUser.name}
+                  onChange={(e) => handleAddUserChange("name", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="text"
+                  placeholder="Contact No."
+                  value={newUser.contactNo}
+                  onChange={(e) => handleAddUserChange("contactNo", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={newUser.email}
+                  onChange={(e) => handleAddUserChange("email", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="date"
+                  value={newUser.birthDate}
+                  onChange={(e) => handleAddUserChange("birthDate", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="time"
+                  value={newUser.birthTime}
+                  onChange={(e) => handleAddUserChange("birthTime", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="text"
+                  placeholder="Pincode"
+                  value={newUser.pincode}
+                  onChange={(e) => handleAddUserChange("pincode", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={newUser.city}
+                  onChange={(e) => handleAddUserChange("city", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                />
+                <select
+                  value={newUser.gender}
+                  onChange={(e) => handleAddUserChange("gender", e.target.value)}
+                  className="px-3 py-2 rounded-xl border"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              <textarea
+                placeholder="Current Address"
+                value={newUser.address}
+                onChange={(e) => handleAddUserChange("address", e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border"
+              />
+
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setAddUserOpen(false)} className="px-4 py-2 border rounded-xl">Cancel</button>
+                <button type="submit" disabled={isAddingUser} className="px-4 py-2 bg-blue-600 text-white rounded-xl">
+                  {isAddingUser ? "Adding…" : "Add User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
       </div>
     </div>
   );

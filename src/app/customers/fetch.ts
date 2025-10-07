@@ -606,3 +606,66 @@ export async function searchCustomers(query: string) {
     ...u,
   }));
 }
+
+export async function addCustomer(data: {
+  name: string;
+  birthDate?: string;
+  birthTime?: string;
+  pincode?: string;
+  city?: string;
+  gender?: string;
+  email?: string;
+  contactNo?: string;
+  address?: string;
+  profile?: string;
+}) {
+  try {
+    const newUser = await prisma.users.create({
+      data: {
+        name: data.name,
+        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        birthTime: data.birthTime || null,
+        pincode: Number(data.pincode) || null,
+        location: data.city || null,
+        gender: data.gender || null,
+        email: data.email || null,
+        contactNo: data.contactNo || null,
+        addressLine2: data.address || null,
+        profile: data.profile || null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    const systemFlag = await prisma.systemflag.findFirst({
+      where: { name: "SignupBonus" },
+    });
+    const amount = systemFlag ? Number(systemFlag.value) : 0;
+
+    await prisma.user_wallets.create({
+      data: {
+        userId: BigInt(newUser.id),
+        amount: amount,
+        created_at: new Date(),
+        createdBy: Number(newUser.id),
+        modifiedBy: Number(newUser.id),
+      },
+    });
+
+    await prisma.wallettransaction.create({
+      data: {
+        userId: BigInt(newUser.id),
+        amount: amount,
+        transactionType: "SignupBonus",
+        created_at: new Date(),
+        createdBy: Number(newUser.id),
+        modifiedBy: Number(newUser.id),
+      },
+    });
+
+    return { status: true, message: "Customer added successfully", user: newUser };
+  } catch (err: any) {
+    console.error("addCustomer error:", err);
+    return { status: false, message: err.message };
+  }
+}
