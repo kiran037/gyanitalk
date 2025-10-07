@@ -137,11 +137,11 @@ export default function CustomersClient({
   };
 
   async function uploadProfileAndGetPath(file: File) {
-    const up = await uploadImage(file, "images");
-    if (!up?.success || !up?.path) {
+    const up = await uploadImage(file, "images", 'public/storage');
+    if (!up?.success || !up?.mainPath) {
       throw new Error("Upload failed. Please try again.");
     }
-    return up.path as string;
+    return up.mainPath as string;
   }
 
   const onConfirmAddUser = async (e: React.FormEvent) => {
@@ -782,8 +782,7 @@ export default function CustomersClient({
                         setProfilePreview(localUrl);
                         const path = await uploadProfileAndGetPath(file);
                         handleAddUserChange("profile", path);
-
-                        const fullUrl = `${process.env.NEXT_PUBLIC_BASEURL || ""}${path}`;
+                        const fullUrl = `${path}`;
                         setProfilePreview(fullUrl);
                       } catch (err: any) {
                         setProfilePreview("");

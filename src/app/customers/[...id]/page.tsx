@@ -238,8 +238,8 @@ export default function Page() {
       setSaving(true);
       let uploadedPath: string | undefined;
       if (form.profile instanceof File) {
-        const up = await uploadImage(form.profile, "images");
-        uploadedPath = up?.path;
+        const up = await uploadImage(form.profile, "images", 'public/storage');
+        uploadedPath = up?.mainPath;
       }
       const payload = {
         name: form.name,

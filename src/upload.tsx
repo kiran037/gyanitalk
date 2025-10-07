@@ -14,7 +14,7 @@ export async function uploadImage(
   const baseDir =
     newPath && newPath.trim() !== ""
       ? newPath
-      : process.env.UPLOAD_PATH || path.join(process.cwd(), "public/uploads");
+      : process.env.UPLOAD_PATH;
 
   if (!baseDir) {
     throw new Error("UPLOAD_PATH not defined in environment variables");
@@ -38,7 +38,7 @@ export async function uploadImage(
 
   return {
     success: true,
-    // path: finalPath,
+    mainPath: `${newPath}/${uploadPath}/${uniqueName}`,
     path: publicPath, //local path
   };
 }
