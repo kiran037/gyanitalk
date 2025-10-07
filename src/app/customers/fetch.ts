@@ -516,3 +516,93 @@ export async function getUserGiftsOnly({ id }: { id: number | string }) {
   });
   return rows.map((x: any) => ({ ...x, giftAmount: x.giftAmount?.toNumber() ?? null }));
 }
+
+
+export async function addMoneyToWallet({
+  userId,
+  amount,
+}: {
+  userId: number;
+  amount: number;
+}) {
+  try {
+    // 1. Always log the payment
+    const txn = await prisma.payment.create({
+      data: {
+        paymentMode: "Admin",
+        amount: amount,
+        paymentStatus: "success",
+        userId: BigInt(userId),
+        created_at: new Date(),
+        createdBy: userId,
+        modifiedBy: userId,
+      },
+    });
+
+    // 2. Update existing wallet balance instead of create
+    const existingWallet = await prisma.user_wallets.findFirst({
+      where: { userId: BigInt(userId) },
+    });
+
+    if (existingWallet) {
+      await prisma.user_wallets.update({
+        where: { id: existingWallet.id }, // primary key
+        data: {
+          amount: Number(existingWallet.amount || 0) + Number(amount),
+          modifiedBy: Number(userId),
+          updated_at: new Date(),
+        },
+      });
+    } else {
+      // if no wallet row yet, create one
+      await prisma.user_wallets.create({
+        data: {
+          userId: BigInt(userId),
+          amount: amount,
+          created_at: new Date(),
+          createdBy: Number(userId),
+          modifiedBy: Number(userId),
+        },
+      });
+    }
+
+    return {
+      status: true,
+      message: `₹${amount} added successfully`,
+      transaction: txn,
+    };
+  } catch (err: any) {
+    console.error("addMoneyToWallet error:", err);
+    return { status: false, message: err.message };
+  }
+}
+
+
+
+
+export async function searchCustomers(query: string) {
+  if (!query) return [];
+
+  const isNumeric = /^\d+$/.test(query);
+  const isAlpha = /[a-zA-Z]/.test(query);
+
+  const users = await prisma.users.findMany({
+    where: {
+      isActive: true,
+      isDelete: false,
+      ...(isAlpha && { name: { contains: query } }),
+      ...(isNumeric && { contactNo: { contains: query } }),
+    },
+    orderBy: { id: "desc" },
+    select: {
+      id: true,
+      name: true,
+      contactNo: true,
+      profile: true,
+    },
+  });
+
+  return users.map((u: any) => ({
+    ...u,
+  }));
+}

@@ -1,8 +1,7 @@
-
 // app/customers/CustomersClient.tsx
 "use client";
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -17,6 +16,7 @@ import {
 import ExportButton from "@/components/ExportButton";
 import { useToast } from "@/components/Toast/ToastProvider";
 import { cn } from "@/lib/utils";
+import { addMoneyToWallet, searchCustomers } from "./fetch";
 
 type Props = {
   data: any[];
@@ -112,6 +112,114 @@ export default function CustomersClient({
     [toast]
   );
 
+  // ----------- Add Money modal state & logic -----------
+  const [isAddMoneyOpen, setAddMoneyOpen] = useState(false);
+  const [custQuery, setCustQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [amount, setAmount] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const results = await searchCustomers(query);
+      setSuggestions(results);
+    } catch (err) {
+      console.error("search error:", err);
+      setSuggestions([]);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    // simple debounce
+    const t = setTimeout(() => {
+      handleSearch(custQuery);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [custQuery, handleSearch]);
+
+  const openAddMoneyModal = useCallback(() => {
+    setAddMoneyOpen(true);
+    setCustQuery("");
+    setSuggestions([]);
+    setSelectedCustomer(null);
+    setAmount("");
+  }, []);
+
+  const closeAddMoneyModal = useCallback(() => {
+    setAddMoneyOpen(false);
+  }, []);
+
+  const onConfirmAddMoney = useCallback(
+    async (e?: React.FormEvent) => {
+      e?.preventDefault?.();
+      if (!selectedCustomer) {
+        toast("warning", "Select Customer", "Please pick a customer.");
+        return;
+      }
+      const amt = Number(amount);
+      if (isNaN(amt) || amt <= 0) {
+        toast("warning", "Invalid Amount", "Amount must be positive.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      const res = await addMoneyToWallet({
+        userId: selectedCustomer.id,
+        amount: amt,
+      });
+      setIsSubmitting(false);
+
+      if (res?.status) {
+        toast("success", "Added", res.message);
+        closeAddMoneyModal();
+        // optional: refresh page or SWR revalidate here
+      } else {
+        toast("error", "Error", res?.message || "Could not add money");
+      }
+    },
+    [selectedCustomer, amount, addMoneyToWallet, toast, closeAddMoneyModal]
+  );
+
+
+  // When user clicks a suggestion
+  const pickSuggestion = (c: any) => {
+    setSelectedCustomer(c);
+    setCustQuery(`${c.name || "Unnamed"} • ${c.contactNo || ""}`);
+    setSuggestions([]);
+  };
+
+  // derived display label for Total card to include Add Money button
+  const TotalStat = useMemo(
+    () => (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-2xl border border-white/30 dark:border-white/10 bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
+        <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+          Total: {total} customers
+        </span>
+
+        {/* spacer */}
+        <div className="ml-3" />
+
+        {/* Add Money quick button */}
+        <button
+          onClick={openAddMoneyModal}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-sm transition"
+          title="Add money to a customer's wallet"
+        >
+          <Wallet className="h-4 w-4" />
+          Add Money
+        </button>
+      </div>
+    ),
+    [total, openAddMoneyModal]
+  );
+
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-950 dark:via-blue-950/20 dark:to-purple-950/10">
       {/* Ambient liquid glows */}
@@ -141,12 +249,8 @@ export default function CustomersClient({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-2 rounded-2xl border border-white/30 dark:border-white/10 bg-white/40 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
-                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  Total: {total} customers
-                </span>
-              </div>
+              {/* REPLACED HERE: TotalStat (includes Add Money button) */}
+              {TotalStat}
             </div>
 
             {/* Filters */}
@@ -408,6 +512,163 @@ export default function CustomersClient({
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Add Money Modal */}
+        {isAddMoneyOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={closeAddMoneyModal}
+            />
+            <form
+              onSubmit={onConfirmAddMoney}
+              className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-lg border border-white/20"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Add Money to Wallet
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Search by name or phone, select customer and add amount.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeAddMoneyModal}
+                  className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <label className="block text-sm text-slate-600 dark:text-slate-300">
+                  Customer (name / phone)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={custQuery}
+                    onChange={(e) => {
+                      setCustQuery(e.target.value);
+                      setSelectedCustomer(null);
+                    }}
+                    placeholder="Type name or phone..."
+                    className="w-full px-3 py-2 rounded-xl border bg-white/60 dark:bg-white/[0.02] border-white/30 dark:border-white/10 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                    aria-autocomplete="list"
+                    aria-controls="customer-suggestions"
+                    aria-expanded={suggestions.length > 0}
+                  />
+
+                  {/* suggestions dropdown */}
+                  {suggestions.length > 0 && (
+                    <ul
+                      id="customer-suggestions"
+                      className="absolute left-0 right-0 mt-2 max-h-60 overflow-auto rounded-xl bg-white dark:bg-slate-800 border border-white/20 shadow-md z-30"
+                    >
+                      {suggestions.map((c) => (
+                        <li
+                          key={c.id}
+                          onClick={() => pickSuggestion(c)}
+                          className="px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
+                        >
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
+                            <Image
+                              src={avatarSrc(c.profile)}
+                              width={32}
+                              height={32}
+                              alt={`${c.name || "User"} avatar`}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                              {c.name || "Unnamed"}
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                              {c.contactNo || "No contact"} • id: {c.id}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-600 dark:text-slate-300">
+                    Selected Customer
+                  </label>
+                  <div className="px-3 py-2 rounded-xl border bg-white/50 dark:bg-white/[0.02] border-white/20">
+                    {selectedCustomer ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden">
+                          <Image
+                            src={avatarSrc(selectedCustomer.profile)}
+                            width={36}
+                            height={36}
+                            alt={`${selectedCustomer.name} avatar`}
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900 dark:text-white">
+                            {selectedCustomer.name}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {selectedCustomer.contactNo} • id: {selectedCustomer.id}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-500 dark:text-slate-400">No customer selected</div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-600 dark:text-slate-300">
+                    Amount (INR)
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="w-full px-3 py-2 rounded-xl border bg-white/60 dark:bg-white/[0.02] border-white/30 dark:border-white/10 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={closeAddMoneyModal}
+                    className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border text-sm"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Adding…" : "Add Money"}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         )}
       </div>
