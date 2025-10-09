@@ -3,29 +3,37 @@ const prisma = require("../../prismaClient");
 import FirestoreService from "@/services/firestore_services";
 
 export async function getConversation(chatId: string, nextPageToken?: string) {
-  const firestoreService = new FirestoreService();
 
-  // chatId format = astroId_userId
+  if (!chatId || !chatId.includes("_")) {
+    throw new Error(`Invalid chatId format: ${chatId}`);
+  }
+
+  const firestoreService = new FirestoreService();
   const [astroId, userId] = chatId.split("_");
 
-  // Firestore messages
-  const data = await firestoreService.getFullChat(chatId, userId);
+  // ✅ Fetch only once
+  const chatData = await firestoreService.getFullChat(chatId, userId);
 
-  // Attach DB user info (optional)
+  // ✅ Sort by createdAt
+  const allMessages = (chatData?.messages || []).sort(
+    (a, b) =>
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
   const user = await prisma.users.findFirst({
     where: { id: Number(userId) },
-    select: { id: true, name: true, avatar: true },
+    select: { id: true, name: true, profile: true },
   });
 
   const astro = await prisma.users.findFirst({
     where: { id: Number(astroId) },
-    select: { id: true, name: true, avatar: true },
+    select: { id: true, name: true, profile: true },
   });
 
   return {
-    conversation: data.messages.map((m: any) => ({
+    conversation: allMessages.map((m: any) => ({
       ...m,
-      sender_id: Number(m.sender_id), // 🔹 force number
+      sender_id: Number(m.sender_id),
     })),
     userId: Number(userId),
     astroId: Number(astroId),
@@ -34,4 +42,27 @@ export async function getConversation(chatId: string, nextPageToken?: string) {
     astro,
     nextPageToken: nextPageToken || null,
   };
+}
+
+export async function sendChatMessage(
+  chatId: string,
+  senderId: number,
+  receiverId: number,
+  message: string,
+  messageId: string
+) {
+  const firestoreService = new FirestoreService();
+  try {
+    const res = await firestoreService.sendMessage(
+      chatId,
+      String(senderId),
+      String(receiverId),
+      message,
+      messageId
+    );
+    return { success: true, data: { ...res, messageId } };
+  } catch (error) {
+    console.error("Error sending message:", error);
+    return { success: false, error: String(error) };
+  }
 }
