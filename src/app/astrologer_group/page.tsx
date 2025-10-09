@@ -1,508 +1,742 @@
-
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import Select from "react-select";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronUp, CheckSquare } from "lucide-react";
-import { getGroupAstrologer, getAstrologersByGroup, removeAstrologerFromGroup,
-  addAstrologerGroup, editAstrologerGroup, getAstrologerlist, assignAstroToGroup,
+import { createPortal } from "react-dom";
+import Select from "react-select";
+import {
+  getGroupAstrologer,
+  getAstrologersByGroup,
+  removeAstrologerFromGroup,
+  addAstrologerGroup,
+  editAstrologerGroup,
+  getAstrologerlist,
+  assignAstroToGroup,
+  deleteAstrologerGroup,
 } from "./fetch";
+import {
+  Users,
+  Plus,
+  Edit2,
+  Trash2,
+  X as XIcon,
+  Check as CheckIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* =================================================================================
-   Tiny Glass Kit
+   Theme helpers
 ================================================================================= */
-const cx = (...c: Array<string | false | null | undefined>) => c.filter(Boolean).join(" ");
-const BASE = process.env.NEXT_PUBLIC_BASEURL || "";
-const FALLBACK = "https://gyanitalk.com/build/assets/images/person.png";
+const cx = (...c: Array<string | false | null | undefined>) =>
+  c.filter(Boolean).join(" ");
 
 const glass = {
   surface:
-    "relative overflow-hidden rounded-3xl border border-white/30 dark:border-white/10 " +
-    "bg-white/70 dark:bg-white/[0.06] backdrop-blur-xl shadow-[0_8px_28px_rgba(0,0,0,0.08)] " +
-    "dark:shadow-[0_8px_28px_rgba(0,0,0,0.35)]",
-  lift:
-    "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_44px_rgba(0,0,0,0.10)] " +
-    "dark:hover:shadow-[0_16px_44px_rgba(0,0,0,0.45)]",
+    "relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-white/10 " +
+    "bg-white/70 dark:bg-white/[0.06] backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.10)] " +
+    "dark:shadow-[0_12px_36px_rgba(0,0,0,0.40)]",
   input:
-    "rounded-xl border border-white/30 dark:border-white/10 bg-white/85 dark:bg-white/[0.06] " +
-    "px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500/40",
-  pill:
-    "inline-flex items-center gap-2 rounded-full border border-white/30 dark:border-white/10 " +
-    "bg-white/70 dark:bg-white/[0.06] text-xs px-3 py-1",
-  th:
-    "text-left text-[12px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300",
-  td: "align-middle text-sm text-slate-700 dark:text-slate-200",
+    "rounded-xl border border-slate-300/70 dark:border-white/10 bg-white/90 dark:bg-slate-900/60 " +
+    "px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/40",
   btn:
-    "inline-flex items-center justify-center gap-2 rounded-xl h-9 px-3 text-sm font-medium transition active:scale-[0.98]",
+    "inline-flex items-center justify-center gap-2 rounded-xl h-9 px-3 text-sm font-medium " +
+    "transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
   btnPrimary:
-    "text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700",
+    "text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg",
   btnNeutral:
-    "text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-white/[0.06] border border-white/30 dark:border-white/10 hover:bg-white",
+    "text-slate-800 dark:text-slate-200 bg-white/85 dark:bg-white/[0.08] " +
+    "border border-slate-200/70 dark:border-white/10 hover:bg-white dark:hover:bg-white/10",
+  pill:
+    "inline-flex items-center gap-1 rounded-full border border-slate-200/70 dark:border-white/10 " +
+    "bg-slate-900/5 dark:bg-white/10 text-xs px-2.5 py-1",
+};
+
+
+/* =================================================================================
+   Types
+================================================================================= */
+type GroupItem = {
+  id: number;
+  name: string | null;
+  created_at?: string | Date | null;
+  updated_at?: string | Date | null;
+  astrologerassign_count?: number;
+};
+
+type AstroRow = {
+  id: number;
+  group_id: number;
+  astrologer_id: number;
+  astrologer_name: string;
+  index: number;
 };
 
 /* =================================================================================
-   Skeleton
+   Modal via Portal (always on top)
 ================================================================================= */
-function GroupsSkeleton() {
-  return (
-    <div className={glass.surface + " p-6"}>
-      <div className="h-6 w-40 mb-4 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-      <div className="overflow-hidden rounded-2xl border border-white/30">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={cx(
-              "grid grid-cols-12 items-center gap-4 px-4 py-3",
-              i % 2 ? "bg-white/60 dark:bg-white/[0.04]" : "bg-transparent"
-            )}
-          >
-            <div className="col-span-4 sm:col-span-4 h-10 rounded-full bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-            <div className="col-span-4 h-4 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-            <div className="col-span-4 h-4 rounded bg-slate-200/70 dark:bg-white/[0.06] animate-pulse" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+function useMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
 }
-/* =================================================================================
-   Table (client-fetched)
-================================================================================= */
-function GroupsTable({
-  page = 1,
-  limit = 15,
-  search = "",
-}: {
-  page?: number;
-  limit?: number;
-  search?: string;
-}) {
-  const [rows, setRows] = useState<any[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(page);
-  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
-  const [loading, setLoading] = useState(false);
-  const [groupAstrologers, setGroupAstrologers] = useState<{ [key: number]: any[] }>({});
-
-  const [showAdd, setShowAdd] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showAssign, setShowAssign] = useState(false);
-
-  const [astrologerList, setAstrologerList] = useState<{ id: number; name: string }[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const [editData, setEditData] = useState<{ id?: number; name?: string }>({});
-  const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
-  const [assignData, setAssignData] = useState<{ id?: number; astrologers?: number[] }>({});
-
-  // 🧙 Fetch astrologer groups (main table)
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await getGroupAstrologer({ page, limit, search });
-        if (!mounted) return;
-        setRows(res.groups || []);
-        setTotalPages(res.totalPages || 1);
-        setCurrentPage(res.currentPage || page);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [page, limit, search]);
-
-  // 🔍 Fetch astrologers dynamically (used in Assign modal)
-  useEffect(() => {
-    const fetchAstrologers = async () => {
-      const data = await getAstrologerlist(searchTerm);
-      setAstrologerList(data);
-    };
-    fetchAstrologers();
-  }, [searchTerm]);
-
-  // ➕ Add new group
-  const handleAddSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const name = formData.get("name") as string;
-
-    try {
-      const newGroup = await addAstrologerGroup(name);
-      setRows((prev) => [newGroup, ...prev]);
-      setShowAdd(false); // close modal
-      form.reset(); // clear form
-    } catch (err: any) {
-      alert(err.message);
-      console.error(err);
-    }
-  };
-
-  // ✏️ Edit existing group
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editData.id || !editData.name) return;
-
-    try {
-      await editAstrologerGroup({ id: editData.id, name: editData.name });
-      alert("Group updated successfully");
-      setShowEdit(false);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update group");
-    }
-  };
-
-  const filteredOptions = astrologerList
-  .filter((astro) =>
-    astro.name.toLowerCase().startsWith(searchTerm.toLowerCase())
-  )
-  .map((astro) => ({ value: astro.id, label: astro.name }));
-
-  // 🧙 Assign astrologers to group
-  const handleAssignSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!assignData.id || !assignData.astrologers) return;
-    const res = await assignAstroToGroup(assignData.id, assignData.astrologers);
-    if (res.success) {
-      alert("Astrologers assigned successfully!");
-      setShowAssign(false);
-      setAssignData({});
-      setSelectedOptions([]); // reset select
-    } else {
-      alert("Error: " + res.message);
-    }
-  };
-
-  // 🔽 Expand group to show astrologers
-  const toggleExpand = async (id: number) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-
-    if (!groupAstrologers[id]) {
-      const data = await getAstrologersByGroup(id);
-      setGroupAstrologers((prev) => ({ ...prev, [id]: data }));
-    }
-  };
-
-  // ❌ Remove astrologer from group
-  const handleRemove = async (assignId: number, groupId: number) => {
-  if (!confirm("Are you sure you want to remove this astrologer?")) return;
-
-  try {
-    await removeAstrologerFromGroup(assignId);
-    const updated = await getAstrologersByGroup(groupId);
-    setGroupAstrologers((prev) => ({ ...prev, [groupId]: updated }));
-  } catch (err) {
-    alert("Failed to remove astrologer");
-    console.error(err);
-  }
-};
-
-  if (loading) return <GroupsSkeleton />;
-  return (
-    <div className={glass.surface + " p-0 overflow-hidden"}>
-      <div className="px-6 pt-6 flex items-center justify-between">
-        {/* Left side content */}
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Astrologer Group</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Manage astrologer groups and assignments.
-          </p>
-        </div>
-
-        {/* Right side content */}
-        <div>
-          <button
-            type="button"
-            className={cx(glass.btn, glass.btnPrimary)}
-            onClick={() => setShowAdd(true)}
-          >
-            Add Astrologer Group
-          </button>
-        </div>
-      </div>
-      
-      {/* Head */}
-      <div className="mt-4">
-        <div className="grid grid-cols-12 gap-4 px-6 py-3 border-y border-white/30 bg-white/60 dark:bg-white/[0.06]">
-          <div className={cx("col-span-4 ml-15", glass.th)}>Name</div>
-          <div className={cx("col-span-4 text-center", glass.th)}>Astrologers</div>
-          <div className={cx("col-span-4 text-center", glass.th)}>ACTIONS</div>
-        </div>
-
-        {/* Rows */}
-        <div className="divide-y divide-white/30">
-          {rows.map((item: any, idx: number) => {
-            const isOpen = expanded[item.id];
-            return (
-              <div
-                key={`group-${item.id}`} // prefix to ensure uniqueness
-                className={cn(
-                  "grid grid-cols-12 items-center gap-4 px-6 py-3 cursor-pointer",
-                  idx % 2 ? "bg-white/50 dark:bg-white/[0.03]" : "bg-transparent"
-                )}
-                 onClick={() => toggleExpand(item.id)}
-              >
-                {/* User */}
-                <div className="col-span-4 flex items-center gap-2 ml-10">
-                  {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-slate-500" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-500" />
-                  )}
-                  <span className="font-medium">{item.name || "-"}</span>
-                </div>
-
-                {/* Astrologers */}
-                <div className="col-span-4 text-center font-medium">
-                  {item.astrologerassign_count || 0}
-                </div>
-
-                {/* Actions */}
-                <div className={cn("col-span-4 text-center flex justify-center gap-4", glass.td)}>
-                  {/* Edit Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditData({ id: item.id, name: item.name });
-                        setShowEdit(true);
-                      }}
-                      className="flex items-center mr-3 text-blue-600 hover:text-blue-800"
-                    >
-                      <CheckSquare className="w-4 h-4 mr-1 inline" />
-                      Edit
-                    </button>
-
-                    {/* Assign Astrologer Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAssignData({ id: item.id, astrologers: [] });
-                        setShowAssign(true);
-                      }}
-                      className="flex items-center mr-3 text-green-600 hover:text-green-800"
-                    >
-                      <CheckSquare className="w-4 h-4 mr-1 inline" />
-                      Assign Astrologer
-                    </button>
-                </div>
-              {/* Expanded astrologer list */}
-                {isOpen && (
-                  <div className="col-span-12 w-full bg-slate-50 px-4 py-2">
-                    {(groupAstrologers[item.id] || []).length > 0 ? (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left border-b border-white/20">
-                          <th className="py-1">#</th>
-                          <th className="py-1 text-center">Astrologer</th>
-                          <th className="py-1 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {groupAstrologers[item.id].map((astro, i) => (
-                          <tr key={`astro-${item.id}-${astro.id}-${i}`}>
-                            <td className="py-2">{i + 1}</td>
-                            <td className="py-2 text-center">
-                              <a
-                                href={`/astrologers/${astro.astrologer_id}`}
-                                target="_blank"
-                                className="text-blue-600 hover:underline"
-                              >
-                                {astro.astrologer_name}
-                              </a>
-                            </td>
-                            <td className="py-2 text-center">
-                              <button
-                                onClick={() => handleRemove(astro.id, item.id)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    ) : (
-                      <p className="text-center text-slate-500">No astrologers in this group.</p>
-                    )}
-                  </div>
-                )}
-                </div>
-               );
-          })}
-          {!rows.length && (
-            <div className="px-6 py-10 text-center text-sm text-slate-600 dark:text-slate-400">
-              No astrologer groups found
-            </div>
-          )}
-
-          {/* ✅ Add Group Modal */}
-          {showAdd && (
-            <Modal onClose={() => setShowAdd(false)} title="Add Astrologer Group">
-              <form onSubmit={handleAddSubmit} className="space-y-4">
-                <div>
-                  <label className="block mb-1 font-medium">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="Enter group name"
-                    className="form-control w-full p-2 border rounded"
-                  />
-                </div>
-                <button className={cx(glass.btn, glass.btnPrimary)} >Add Astrologer Group</button>
-              </form>
-            </Modal>
-          )}
-
-          {/* ✅ Edit Group Modal */}
-          {showEdit && (
-            <Modal onClose={() => setShowEdit(false)} title="Edit Astrologer Group">
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                <input type="hidden" value={editData.id} />
-                <div>
-                  <label className="block mb-1 font-medium">Name</label>
-                  <input
-                    type="text"
-                    value={editData.name || ""}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    required
-                    placeholder="Name"
-                    className="form-control w-full p-2 border rounded"
-                  />
-                </div>
-                <button className={cx(glass.btn, glass.btnPrimary)}>Save</button>
-              </form>
-            </Modal>
-          )}
-
-          {/* ✅ Assign Astrologer Modal */}
-          {showAssign && (
-            <Modal onClose={() => setShowAssign(false)} title="Assign Astrologer Group">
-              <form onSubmit={handleAssignSubmit} className="space-y-4">
-                <input type="hidden" value={assignData.id} />
-                {/* 🧙 Astrologer multi-select */}
-                <div>
-                  <label className="block mb-1 font-medium">Astrologers</label>
-                  <Select
-                    isMulti
-                    options={filteredOptions} // filtered based on searchTerm
-                    value={selectedOptions}
-                    onChange={(opts: any) => {
-                      const selected = opts as { value: number; label: string }[];
-                      setSelectedOptions(selected);
-                      setAssignData({
-                        ...assignData,
-                        astrologers: selected.map((o) => o.value),
-                      });
-                    }}
-                    onInputChange={(inputValue) => setSearchTerm(inputValue)} // updates searchTerm
-                    placeholder="Search or select astrologers..."
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                  />
-                </div>
-                {/* Action buttons */}
-                <div className="flex justify-end gap-2">
-                  <button type="button" className={cx(glass.btn)} onClick={() => setShowAssign(false)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className={cx(glass.btn, glass.btnPrimary)}>
-                    Save
-                  </button>
-                </div>
-              </form>
-            </Modal>
-          )}
-      
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="px-6 pt-4 pb-6 flex justify-end gap-2 flex-wrap text-sm">
-              {Array.from({ length: totalPages }, (_, i) => {
-                const pageNum = i + 1;
-                const isLast = pageNum === totalPages;
-                const isCurrent = pageNum === currentPage;
-                const shouldShow =
-                  pageNum <= 3 ||
-                  pageNum === totalPages ||
-                  pageNum === currentPage ||
-                  pageNum === currentPage - 1 ||
-                  pageNum === currentPage + 1;
-
-                if (!shouldShow) {
-                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                    return (
-                      <span key={i} className="px-2 text-slate-500">
-                        …
-                      </span>
-                    );
-                  }
-                  return null;
-                }
-
-                const href = `?page=${pageNum}${search ? `&search=${encodeURIComponent(search)}` : ""}`;
-
-                return (
-                  <a
-                    key={i}
-                    href={href}
-                    className={cn(
-                      glass.btn,
-                      isCurrent
-                        ? glass.btnPrimary
-                        : glass.btnNeutral
-                    )}
-                  >
-                    {isLast ? "Last" : pageNum}
-                  </a>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>   
-    );
-} 
-    
 function Modal({
   children,
   title,
   onClose,
+  icon,
 }: {
   children: React.ReactNode;
   title: string;
   onClose: () => void;
+  icon?: React.ReactNode;
 }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4 relative">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="font-semibold">{title}</h2>
-          <button onClick={onClose}>✕</button>
+  const mounted = useMounted();
+  if (!mounted) return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200/70 dark:border-white/10 animate-slide-up">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/70 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            {icon}
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              {title}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
+            aria-label="Close modal"
+          >
+            <XIcon className="h-4 w-4" />
+          </button>
         </div>
-        {children}
+        <div className="p-6">{children}</div>
       </div>
+
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0 }
+          to { opacity: 1 }
+        }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(16px) scale(0.98) }
+          to { opacity: 1; transform: translateY(0) scale(1) }
+        }
+        .animate-fade-in { animation: fade-in .18s ease-out }
+        .animate-slide-up { animation: slide-up .22s ease-out }
+      `}</style>
+    </div>,
+    document.body
+  );
+}
+
+/* =================================================================================
+   Left Pane: Groups list (search + add + pagination)
+================================================================================= */
+function GroupsPane({
+  selectedId,
+  onSelect,
+  onOpenAdd,
+  page,
+  setPage,
+  search,
+  setSearch,
+  refreshToken,
+  onRequestDelete,
+}: {
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+  onOpenAdd: () => void;
+  page: number;
+  setPage: (n: number) => void;
+  search: string;
+  setSearch: (s: string) => void;
+  refreshToken: number; // bump to refetch after create/edit/remove/assign
+  onRequestDelete: (group: GroupItem) => void;
+}) {
+  const [rows, setRows] = useState<GroupItem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // fetch page of groups
+  useEffect(() => {
+    let ok = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getGroupAstrologer({ page, limit: 15, search });
+        if (!ok) return;
+        setRows(res.groups || []);
+        setTotalPages(res.totalPages || 1);
+      } finally {
+        if (ok) setLoading(false);
+      }
+    })();
+    return () => {
+      ok = false;
+    };
+  }, [page, search, refreshToken]);
+
+  return (
+    <div className={glass.surface + " overflow-hidden"}>
+      {/* Header */}
+      <div className="p-5 border-b border-slate-200/70 dark:border-white/10 bg-gradient-to-r from-white/70 to-white/40 dark:from-white/[0.06] dark:to-white/[0.03]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Groups
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Select a group to manage members
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <form
+          className="mt-4 flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+          }}
+        >
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search groups"
+            className={cx(glass.input, "w-full")}
+          />
+          <button className={cx(glass.btn, glass.btnPrimary)}>Search</button>
+          {search && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
+              className={cx(glass.btn, glass.btnNeutral)}
+            >
+              Clear
+            </button>
+          )}
+        </form>
+      </div>
+      {/* List */}
+      <div className="max-h-[560px] overflow-auto p-3 space-y-2">
+        {loading ? (
+          <div className="p-6 text-center text-slate-600 dark:text-slate-300">Loading…</div>
+        ) : rows.length === 0 ? (
+          <div className="p-6 text-center text-slate-600 dark:text-slate-300">No groups found</div>
+        ) : (
+          rows.map((g) => {
+            const active = selectedId === g.id;
+            return (
+              <div
+                key={g.id}
+                className={cn(
+                  "group relative w-full cursor-pointer rounded-xl p-4 transition-colors",
+                  active
+                    ? "bg-indigo-50/70 dark:bg-indigo-900/20 shadow-sm ring-1 ring-inset ring-indigo-500/30"
+                    : "hover:bg-white/70 dark:hover:bg-white/5"
+                )}
+                onClick={() => onSelect(g.id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        {g.name || "-"}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                      {g.astrologerassign_count ?? 0} astrologer
+                      {(g.astrologerassign_count ?? 0) === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      title="Delete group"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRequestDelete(g);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity rounded-lg p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="p-4 flex items-center justify-between">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage(Math.max(1, page - 1))}
+            className={cx(
+              glass.btn,
+              glass.btnNeutral,
+              page <= 1 && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            Prev
+          </button>
+          <div className="text-xs text-slate-600 dark:text-slate-400">
+            Page {page} of {totalPages}
+          </div>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            className={cx(
+              glass.btn,
+              glass.btnNeutral,
+              page >= totalPages && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
 /* =================================================================================
-   Page (client)
+   Right Pane: Group details (edit + assign + list)
+================================================================================= */
+function GroupDetailPane({
+  groupId,
+  onEdited,
+  onAssigned,
+  onRemoved,
+  onRequestDelete,
+}: {
+  groupId: number | null;
+  onEdited: () => void;
+  onAssigned: () => void;
+  onRemoved: () => void;
+  onRequestDelete: (group: GroupItem) => void;
+}) {
+  const [group, setGroup] = useState<GroupItem | null>(null);
+  const [members, setMembers] = useState<AstroRow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState("");
+
+  const [showAssign, setShowAssign] = useState(false);
+  const [astrologerList, setAstrologerList] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState<
+    { value: number; label: string }[]
+  >([]);
+
+  // load group + members
+  useEffect(() => {
+    let ok = true;
+    (async () => {
+      if (!groupId) {
+        setGroup(null);
+        setMembers([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        // set minimal group (name will fill after edit)
+        const placeholder: GroupItem = { id: groupId, name: null, astrologerassign_count: 0 };
+        setGroup((prev) => prev ?? placeholder);
+
+        const m = await getAstrologersByGroup(groupId);
+        if (!ok) return;
+        setMembers(m || []);
+      } finally {
+        if (ok) setLoading(false);
+      }
+    })();
+    return () => {
+      ok = false;
+    };
+  }, [groupId]);
+
+  // fetch options for assign select
+  useEffect(() => {
+    const run = async () => {
+      const data = await getAstrologerlist(searchTerm);
+      if (Array.isArray(data)) setAstrologerList(data);
+    };
+    run();
+  }, [searchTerm]);
+
+  // Edit submit
+  const onEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupId || !editName.trim()) return;
+    await editAstrologerGroup({ id: groupId, name: editName.trim() });
+    setGroup((prev) => (prev ? { ...prev, name: editName.trim() } : prev));
+    setShowEdit(false);
+    onEdited();
+  };
+
+  // Assign submit
+  const onAssignSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupId || selectedOptions.length === 0) return;
+    const ids = selectedOptions.map((o) => o.value);
+    const res = await assignAstroToGroup(groupId, ids);
+    if ((res as any)?.success) {
+      const m = await getAstrologersByGroup(groupId);
+      setMembers(m || []);
+      setShowAssign(false);
+      setSelectedOptions([]);
+      onAssigned();
+    } else {
+      alert((res as any)?.message || "Failed to assign");
+    }
+  };
+
+  // Remove member
+  const onRemove = async (assignId: number) => {
+    if (!groupId) return;
+    if (!confirm("Remove this astrologer from the group?")) return;
+    await removeAstrologerFromGroup(assignId);
+    const m = await getAstrologersByGroup(groupId);
+    setMembers(m || []);
+    onRemoved();
+  };
+
+  const options = astrologerList
+    .filter((a) =>
+      a.name.toLowerCase().includes(searchTerm.toLowerCase().trim())
+    )
+    .map((a) => ({ value: a.id, label: a.name }));
+
+  if (!groupId) {
+    return (
+      <div className={glass.surface + " p-10 text-center"}>
+        <Users className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          Select a Group
+        </h3>
+        <p className="text-slate-600 dark:text-slate-400">
+          Choose a group on the left to view and manage its astrologers.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={glass.surface + " overflow-hidden"}>
+      {/* Header */}
+      <div className="p-6 bg-gradient-to-r from-white/70 to-white/40 dark:from-white/[0.06] dark:to-white/[0.03] border-b border-slate-200/70 dark:border-white/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              {group?.name || "Group"}
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Assign or remove astrologers in this group
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              title="Edit group"
+              className={cx(glass.btn, glass.btnNeutral)}
+              onClick={() => {
+                setEditName(group?.name || "");
+                setShowEdit(true);
+              }}
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+            <button
+              title="Assign astrologers"
+              className={cx(glass.btn, glass.btnPrimary)}
+              onClick={() => {
+                setSelectedOptions([]);
+                setShowAssign(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <button
+              title="Delete group"
+              className={cx(
+                glass.btn,
+                "text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 border border-red-200/70 dark:border-red-900"
+              )}
+              onClick={() => onRequestDelete(group!)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="p-6">
+        {loading ? (
+          <div className="text-center text-slate-600 dark:text-slate-300">
+            Loading…
+          </div>
+        ) : members.length === 0 ? (
+          <div className="text-center text-slate-600 dark:text-slate-300">
+            No astrologers in this group.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-slate-200/70 dark:border-white/10">
+                  <th className="py-2 text-slate-700 dark:text-slate-200">#</th>
+                  <th className="py-2 text-slate-700 dark:text-slate-200">Astrologer</th>
+                  <th className="py-2 text-slate-700 dark:text-slate-200 text-center">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((m, i) => (
+                  <tr key={m.id} className="border-b border-white/10">
+                    <td className="py-2">{i + 1}</td>
+                    <td className="py-2">
+                      <a
+                        href={`/astrologers/${m.astrologer_id}`}
+                        target="_blank"
+                        className="text-indigo-600 dark:text-indigo-300 hover:underline"
+                      >
+                        {m.astrologer_name}
+                      </a>
+                    </td>
+                    <td className="py-2 text-center">
+                      <button
+                        onClick={() => onRemove(m.id)}
+                        className="inline-flex items-center rounded-lg p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                        title="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Edit Modal */}
+      {showEdit && (
+        <Modal
+          title="Edit Group"
+          onClose={() => setShowEdit(false)}
+          icon={<Edit2 className="h-4 w-4 text-indigo-500" />}
+        >
+          <form onSubmit={onEditSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium text-slate-800 dark:text-slate-100">
+                Group Name
+              </label>
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/40 outline-none"
+                placeholder="Enter group name"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={cx(glass.btn, glass.btnNeutral)}
+                onClick={() => setShowEdit(false)}
+              >
+                Cancel
+              </button>
+              <button className={cx(glass.btn, glass.btnPrimary)}>Save</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Assign Modal */}
+      {showAssign && (
+        <Modal
+          title="Assign Astrologers"
+          onClose={() => setShowAssign(false)}
+          icon={<Users className="h-4 w-4 text-indigo-500" />}
+        >
+          <form onSubmit={onAssignSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium text-slate-800 dark:text-slate-100">
+                Astrologers
+              </label>
+              <Select
+                isMulti
+                options={options}
+                value={selectedOptions}
+                onChange={(opts: any) => {
+                  const selected = (opts || []) as { value: number; label: string }[];
+                  setSelectedOptions(selected);
+                }}
+                onInputChange={(val) => setSearchTerm(val)}
+                placeholder="Search or select astrologers..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    backgroundColor: "transparent",
+                    borderColor: "rgba(255,255,255,.2)",
+                  }),
+                  menu: (base) => ({ ...base, zIndex: 1001 }),
+                }}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={cx(glass.btn, glass.btnNeutral)}
+                onClick={() => setShowAssign(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className={cx(glass.btn, glass.btnPrimary)}>
+                Save
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* =================================================================================
+   Delete Group Confirm Modal (global)
+================================================================================= */
+function DeleteGroupModal({
+  open,
+  onClose,
+  onConfirm,
+  name,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  name?: string | null;
+}) {
+  if (!open) return null;
+  return (
+    <Modal
+      title="Delete Group"
+      onClose={onClose}
+      icon={<Trash2 className="h-4 w-4 text-red-500" />}
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-slate-700 dark:text-slate-300">
+          Are you sure you want to delete{" "}
+          <span className="font-semibold">{name || "this group"}</span>? This
+          will remove its assignments. This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className={cx(glass.btn, glass.btnNeutral)}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className={cn(
+              glass.btn,
+              "text-white bg-red-600 hover:bg-red-700 shadow-lg"
+            )}
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* =================================================================================
+   Page (Two-pane layout)
 ================================================================================= */
 export default function Page() {
   const sp = useSearchParams();
-  const page = useMemo(() => parseInt(sp.get("page") || "1", 10), [sp]);
-  const search = useMemo(() => sp.get("search") || "", [sp]);
+  const initialPage = useMemo(() => parseInt(sp.get("page") || "1", 10), [sp]);
+  const [page, setPage] = useState(initialPage);
+  const [search, setSearch] = useState(sp.get("search") || "");
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(null);
+
+  // simple token to trigger left pane refetch after mutations
+  const [refreshToken, setRefreshToken] = useState(0);
+  const bump = () => setRefreshToken((n) => n + 1);
+
+  // Add group modal (global)
+  const [addOpen, setAddOpen] = useState(false);
+  const [addName, setAddName] = useState("");
+
+  // Delete group modal (global)
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<GroupItem | null>(null);
+
+  const onOpenAdd = () => setAddOpen(true);
+
+  const onRequestDelete = (g: GroupItem) => {
+    setDeleteTarget(g);
+    setDeleteOpen(true);
+  };
+
+  const onConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteAstrologerGroup(deleteTarget.id);
+    if (selectedId === deleteTarget.id) {
+      setSelectedId(null);
+      setSelectedGroupName(null);
+    }
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    bump();
+  };
+
+  const addSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = addName.trim();
+    if (!n) return;
+    const res = await addAstrologerGroup(n);
+    if ((res as any)?.success) {
+      setAddOpen(false);
+      setAddName("");
+      bump();
+    } else {
+      alert((res as any)?.message || "Failed to add group");
+    }
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/25 to-purple-50/20 dark:from-slate-950 dark:via-blue-950/20 dark:to-purple-950/10">
+    <div className="relative min-h-screen overflow-visible bg-gradient-to-br from-slate-50 via-blue-50/25 to-purple-50/20 dark:from-slate-950 dark:via-blue-950/20 dark:to-purple-950/10">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -right-32 h-[22rem] w-[22rem] rounded-full bg-gradient-to-br from-blue-400/15 to-purple-400/10 blur-3xl" />
@@ -511,35 +745,109 @@ export default function Page() {
       </div>
 
       <div className="relative mx-auto w-full max-w-7xl p-6 md:p-8 space-y-6">
-        {/* Title */}
+        {/* Page header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Astrologers Group</h1>
-        </div>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent dark:from-white dark:to-gray-300">
+                Astrologer Groups
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Create groups and assign astrologers
+              </p>
+            </div>
+          </div>
 
-        {/* Filters */}
-        <div className={glass.surface + " p-5"}>
-          <form method="get" className="flex flex-wrap items-center gap-3">
-            <input
-              name="search"
-              defaultValue={search}
-              placeholder="Search by name/contact"
-              className={cx(glass.input, "min-w-[240px]")}
-            />
-            <button type="submit" className={cx(glass.btn, glass.btnPrimary)}>
-              Search
-            </button>
-            {search && (
-              <a href="?page=1" className={cx(glass.btn, glass.btnNeutral)}>
-                Clear
-              </a>
+          <button
+            onClick={onOpenAdd}
+            className={cx(
+              glass.btn,
+              glass.btnPrimary,
+              "h-9 rounded-xl px-3 shadow-lg hover:shadow-[0_12px_24px_rgba(79,70,229,0.25)]"
             )}
-          </form>
+          >
+            <Plus className="h-4 w-4" />
+            New Group
+          </button>
+
         </div>
 
-        <Suspense fallback={<GroupsSkeleton />}>
-          <GroupsTable page={page} search={search} />
-        </Suspense>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Groups list */}
+          <div className="lg:col-span-1">
+            <GroupsPane
+              selectedId={selectedId}
+              onSelect={(id) => setSelectedId(id)}
+              onOpenAdd={onOpenAdd}
+              page={page}
+              setPage={setPage}
+              search={search}
+              setSearch={(s) => {
+                setSearch(s);
+                if (!s) setPage(1);
+              }}
+              refreshToken={refreshToken}
+              onRequestDelete={onRequestDelete}
+            />
+          </div>
+
+          {/* Right: Details */}
+          <div className="lg:col-span-2">
+            <GroupDetailPane
+              groupId={selectedId}
+              onEdited={bump}
+              onAssigned={bump}
+              onRemoved={bump}
+              onRequestDelete={onRequestDelete}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Add Group Modal */}
+      {addOpen && (
+        <Modal
+          title="Add Astrologer Group"
+          onClose={() => setAddOpen(false)}
+          icon={<Plus className="h-4 w-4 text-indigo-500" />}
+        >
+          <form onSubmit={addSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium text-slate-800 dark:text-slate-100">
+                Name
+              </label>
+              <input
+                value={addName}
+                onChange={(e) => setAddName(e.target.value)}
+                placeholder="Enter group name"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/40 outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={cx(glass.btn, glass.btnNeutral)}
+                onClick={() => setAddOpen(false)}
+              >
+                Cancel
+              </button>
+              <button className={cx(glass.btn, glass.btnPrimary)}>
+                <CheckIcon className="h-4 w-4" />
+                Add
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete Group Modal */}
+      <DeleteGroupModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={onConfirmDelete}
+        name={deleteTarget?.name}
+      />
     </div>
   );
 }
