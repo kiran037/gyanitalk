@@ -1,3 +1,4 @@
+// /src/components/Layouts/sidebar.tsx
 "use client";
 
 import Image from "next/image";
@@ -8,10 +9,6 @@ import { useEffect, useState } from "react";
 import { NAV_DATA } from "./data";
 import { ChevronRight, X, Menu } from "lucide-react";
 import { useSidebarContext } from "./sidebar-context";
-
-// const LOGO_LIGHT_SRC = "https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png";
-// const LOGO_DARK_SRC = "https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png";
-// const LOGO_SIZE = 50;
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -60,53 +57,27 @@ export function Sidebar() {
       )}
 
       <aside
-  className={cn(
-    "relative overflow-hidden transition-all duration-300 ease-in-out",
-    "bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-900/80",
-    "border-r border-gray-200/60 dark:border-gray-700/50",
-    "backdrop-blur-xl",
-    // ⬇️ keep the sidebar from shrinking
-    "shrink-0 flex-none",
-    isMobile ? "fixed inset-y-0 left-0 z-50 shadow-2xl" : "sticky top-0 h-screen",
-    isMobile ? (isOpen ? "w-full max-w-[300px]" : "w-0") : "w-[250px]"
-  )}
-  aria-label="Main navigation"
-  aria-hidden={isMobile ? !isOpen : false}
-  {...(isMobile && !isOpen ? { inert: true } : {})}
->
-
+        className={cn(
+          "relative transition-all duration-300 ease-in-out",
+          "bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-900/80",
+          "border-r border-gray-200/60 dark:border-gray-700/50",
+          "backdrop-blur-xl",
+          "shrink-0 flex-none",
+          // Desktop: fill grid row (no page scroll). Mobile: drawer.
+          isMobile ? "fixed inset-y-0 left-0 z-50 shadow-2xl" : "h-full",
+          isMobile ? (isOpen ? "w-full max-w-[300px]" : "w-0") : "w-[250px]"
+        )}
+        aria-label="Main navigation"
+        aria-hidden={isMobile ? !isOpen : false}
+        {...(isMobile && !isOpen ? { inert: true } : {})}
+      >
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] via-transparent to-purple-500/[0.02] dark:from-blue-400/[0.03] dark:to-purple-400/[0.03]" />
 
+        {/* Column (header + scroll area) */}
         <div className="relative flex h-full flex-col">
-          {/* Header */}
+          {/* Header row (logo / close) */}
           <div className="flex items-center justify-between p-6 pb-4">
-            {/* <Link
-              href="/"
-              onClick={() => isMobile && toggleSidebar()}
-              className="group transition-all duration-200"
-              aria-label="Go to dashboard"
-            >
-              <Image
-                src={LOGO_LIGHT_SRC}
-                alt="Logo"
-                width={LOGO_SIZE}
-                height={LOGO_SIZE}
-                priority
-                className="block dark:hidden object-contain transition-transform duration-200 group-hover:scale-105"
-                sizes={`${LOGO_SIZE}px`}
-              />
-              <Image
-                src={LOGO_DARK_SRC}
-                alt="Logo (dark)"
-                width={LOGO_SIZE}
-                height={LOGO_SIZE}
-                priority
-                className="hidden dark:block object-contain transition-transform duration-200 group-hover:scale-105"
-                sizes={`${LOGO_SIZE}px`}
-              />
-            </Link> */}
-
             {isMobile && (
               <button
                 onClick={toggleSidebar}
@@ -118,8 +89,8 @@ export function Sidebar() {
             )}
           </div>
 
-          {/* Navigation */}
-          <div className="flex-1 overflow-y-auto px-4 pb-6">
+          {/* Scrollable nav area — only scrolls when hovered; no scroll chaining; hidden scrollbar */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 no-scrollbar">
             <div className="space-y-8">
               {NAV_DATA.map((section, sectionIndex) => (
                 <div key={section.label}>
@@ -145,29 +116,36 @@ export function Sidebar() {
                                 className={cn(
                                   "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200",
                                   "hover:bg-white/80 hover:shadow-sm dark:hover:bg-gray-800/60",
-                                  activeChild && "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
+                                  activeChild &&
+                                    "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
                                   hoveredItem === itemKey && "scale-[1.02] transform"
                                 )}
                               >
-                                <div className={cn(
-                                  "rounded-lg p-1.5 transition-colors duration-200",
-                                  activeChild
-                                    ? "bg-blue-100 dark:bg-blue-800/50"
-                                    : "bg-gray-100 group-hover:bg-white dark:bg-gray-700 dark:group-hover:bg-gray-600"
-                                )}>
-                                  <item.icon className={cn(
-                                    "h-4 w-4 transition-colors duration-200",
+                                <div
+                                  className={cn(
+                                    "rounded-lg p-1.5 transition-colors duration-200",
                                     activeChild
-                                      ? "text-blue-600 dark:text-blue-400"
-                                      : "text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200"
-                                  )} />
+                                      ? "bg-blue-100 dark:bg-blue-800/50"
+                                      : "bg-gray-100 group-hover:bg-white dark:bg-gray-700 dark:group-hover:bg-gray-600"
+                                  )}
+                                >
+                                  <item.icon
+                                    className={cn(
+                                      "h-4 w-4 transition-colors duration-200",
+                                      activeChild
+                                        ? "text-blue-600 dark:text-blue-400"
+                                        : "text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200"
+                                    )}
+                                  />
                                 </div>
-                                <span className={cn(
-                                  "flex-1 truncate transition-colors duration-200",
-                                  activeChild
-                                    ? "text-blue-700 dark:text-blue-300"
-                                    : "text-gray-700 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-white"
-                                )}>
+                                <span
+                                  className={cn(
+                                    "flex-1 truncate transition-colors duration-200",
+                                    activeChild
+                                      ? "text-blue-700 dark:text-blue-300"
+                                      : "text-gray-700 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-white"
+                                  )}
+                                >
                                   {item.title}
                                 </span>
                                 <ChevronRight
@@ -198,23 +176,28 @@ export function Sidebar() {
                                           className={cn(
                                             "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200",
                                             "hover:bg-white/80 hover:shadow-sm dark:hover:bg-gray-800/60",
-                                            isActive && "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
+                                            isActive &&
+                                              "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
                                             hoveredItem === subItemKey && "scale-[1.02] transform"
                                           )}
                                           role="menuitem"
                                         >
-                                          <div className={cn(
-                                            "h-2 w-2 rounded-full transition-colors duration-200",
-                                            isActive
-                                              ? "bg-blue-500 dark:bg-blue-400"
-                                              : "bg-gray-300 group-hover:bg-gray-400 dark:bg-gray-600 dark:group-hover:bg-gray-500"
-                                          )} />
-                                          <span className={cn(
-                                            "truncate transition-colors duration-200",
-                                            isActive
-                                              ? "font-medium text-blue-700 dark:text-blue-300"
-                                              : "text-gray-600 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
-                                          )}>
+                                          <div
+                                            className={cn(
+                                              "h-2 w-2 rounded-full transition-colors duration-200",
+                                              isActive
+                                                ? "bg-blue-500 dark:bg-blue-400"
+                                                : "bg-gray-300 group-hover:bg-gray-400 dark:bg-gray-600 dark:group-hover:bg-gray-500"
+                                            )}
+                                          />
+                                          <span
+                                            className={cn(
+                                              "truncate transition-colors duration-200",
+                                              isActive
+                                                ? "font-medium text-blue-700 dark:text-blue-300"
+                                                : "text-gray-600 group-hover:text-gray-900 dark:text-gray-400 group-hover:dark:text-white"
+                                            )}
+                                          >
                                             {sub.title}
                                           </span>
                                         </Link>
@@ -245,29 +228,36 @@ export function Sidebar() {
                               className={cn(
                                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                                 "hover:bg-white/80 hover:shadow-sm dark:hover:bg-gray-800/60",
-                                isActive && "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
+                                isActive &&
+                                  "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300",
                                 hoveredItem === itemKey && "scale-[1.02] transform"
                               )}
                             >
-                              <div className={cn(
-                                "rounded-lg p-1.5 transition-colors duration-200",
-                                isActive
-                                  ? "bg-blue-100 dark:bg-blue-800/50"
-                                  : "bg-gray-100 group-hover:bg-white dark:bg-gray-700 dark:group-hover:bg-gray-600"
-                              )}>
-                                <item.icon className={cn(
-                                  "h-4 w-4 transition-colors duration-200",
+                              <div
+                                className={cn(
+                                  "rounded-lg p-1.5 transition-colors duration-200",
                                   isActive
-                                    ? "text-blue-600 dark:text-blue-400"
-                                    : "text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200"
-                                )} />
+                                    ? "bg-blue-100 dark:bg-blue-800/50"
+                                    : "bg-gray-100 group-hover:bg-white dark:bg-gray-700 dark:group-hover:bg-gray-600"
+                                )}
+                              >
+                                <item.icon
+                                  className={cn(
+                                    "h-4 w-4 transition-colors duration-200",
+                                    isActive
+                                      ? "text-blue-600 dark:text-blue-400"
+                                      : "text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200"
+                                  )}
+                                />
                               </div>
-                              <span className={cn(
-                                "truncate transition-colors duration-200",
-                                isActive
-                                  ? "text-blue-700 dark:text-blue-300"
-                                  : "text-gray-700 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-white"
-                              )}>
+                              <span
+                                className={cn(
+                                  "truncate transition-colors duration-200",
+                                  isActive
+                                    ? "text-blue-700 dark:text-blue-300"
+                                    : "text-gray-700 group-hover:text-gray-900 dark:text-gray-300 dark:group-hover:text-white"
+                                )}
+                              >
                                 {item.title}
                               </span>
                             </Link>
@@ -281,7 +271,16 @@ export function Sidebar() {
             </div>
           </div>
 
-
+          {/* hide scrollbar helper */}
+          <style jsx global>{`
+            .no-scrollbar {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+            .no-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
         </div>
       </aside>
     </>

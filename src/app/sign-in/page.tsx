@@ -1,33 +1,76 @@
-
-import { SignJWT } from "jose";
+// src/app/sign-in/page.tsx
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import SigninWithPassword from "@/components/Auth/SigninWithPassword";
-const prisma = require("../../prismaClient"); 
+import { signUserJWT } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me");
+/**
+ * NOTE: We return a literal `ok: true` type to satisfy the component's Props:
+ * (formData) => Promise<{ ok: true; user: { id: number; email: string; name?: string|null }; loginAt: string }>
+ */
+type LoginResult = {
+  ok: true;
+  user: { id: number; email: string; name?: string | null };
+  loginAt: string;
+};
 
 export default function SigninPage() {
-  async function loginUser(formData: FormData) {
+  async function loginUser(formData: FormData): Promise<LoginResult> {
     "use server";
 
     const email = String(formData.get("email") || "").trim().toLowerCase();
     const password = String(formData.get("password") || "");
+    const remember =
+      String(formData.get("remember") || "") === "true" ||
+      String(formData.get("remember") || "") === "on";
 
-    const user = await prisma.users.findFirst({ where: { email } });
-    if (!user) throw new Error("User not found");
+    // Find user by email
+    const user = await prisma.users.findFirst({
+      where: { email },
+      select: { id: true, email: true, name: true, password: true },
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    if (!user.password) {
+      throw new Error("Password not set");
+    }
 
+    // Verify password
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new Error("Invalid password");
+    if (!isValid) {
+      throw new Error("Invalid password");
+    }
 
-    const token = await new SignJWT({ userId: Number(user.id) })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("24h")
-      .sign(secret);
+    // Build JWT + cookie
+    const loginAt = new Date().toISOString();
+    const ttl = remember ? "30d" : "24h";
+    const token = await signUserJWT(
+      { userId: Number(user.id), email: user.email ?? "", name: user.name ?? null, loginAt },
+      ttl
+    );
 
+    const jar = await cookies();
+    jar.set({
+      name: "token",
+      value: token,
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24, // 30d vs 1d
+    });
+
+    // Explicit literal return to keep `ok` = true (not boolean)
     return {
-      token,
-      user: { id: Number(user.id), email: user.email },
+      ok: true as const,
+      user: {
+        id: Number(user.id),
+        email: user.email ?? "",
+        name: user.name ?? null,
+      },
+      loginAt,
     };
   }
 
