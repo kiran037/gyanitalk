@@ -1,44 +1,86 @@
-"use server"
+"use server";
 const prisma = require("../../prismaClient");
 import FirestoreService from "@/services/firestore_services";
 
-export async function getConversation(chatId: string, nextPageToken?: string) {
+/** Resolve the astrologer’s users.id whether chatId uses astrologers.id or users.id */
+async function resolveAstroUserId(rawAstroIdNum: number): Promise<number> {
+  // If it's an astrologers.id, fetch its users.id
+  const astroRow = await prisma.astrologers.findFirst({
+    where: { id: Number(rawAstroIdNum) },
+    select: { userId: true },
+  });
+  if (astroRow?.userId) return Number(astroRow.userId);
 
+  // Otherwise assume it's already a users.id
+  return Number(rawAstroIdNum);
+}
+
+export async function getConversation(chatId: string, nextPageToken?: string) {
   if (!chatId || !chatId.includes("_")) {
     throw new Error(`Invalid chatId format: ${chatId}`);
   }
 
   const firestoreService = new FirestoreService();
-  const [astroId, userId] = chatId.split("_");
+  const [astroPart, userPart] = chatId.split("_");
+  const rawAstroId = Number(astroPart);
+  const userUserId = Number(userPart);
 
-  // ✅ Fetch only once
-  const chatData = await firestoreService.getFullChat(chatId, userId);
+  // Normalize to the IDs your UI should use everywhere (both are users.id)
+  const astroUserId = await resolveAstroUserId(rawAstroId);
 
-  // ✅ Sort by createdAt
-  const allMessages = (chatData?.messages || []).sort(
-    (a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
+  // Get Firestore chat (room key stays the original chatId)
+  const chatData = await firestoreService.getFullChat(chatId, String(userUserId));
 
-  const user = await prisma.users.findFirst({
-    where: { id: Number(userId) },
-    select: { id: true, name: true, profile: true },
-  });
-
-  const astro = await prisma.users.findFirst({
-    where: { id: Number(astroId) },
-    select: { id: true, name: true, profile: true },
-  });
-
-  return {
-    conversation: allMessages.map((m: any) => ({
+  // Sort + normalize fields
+  const allMessages = (chatData?.messages || [])
+    .map((m: any) => ({
       ...m,
       sender_id: Number(m.sender_id),
-    })),
-    userId: Number(userId),
-    astroId: Number(astroId),
+      receiver_id: m.receiver_id != null ? Number(m.receiver_id) : undefined,
+    }))
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+  // Fetch user (customer)
+  const user = await prisma.users.findFirst({
+    where: { id: userUserId },
+    select: { id: true, name: true, profile: true },
+  });
+
+  // Fetch astrologer display from both tables (prefer astrologers table)
+  const astroUser = await prisma.users.findFirst({
+    where: { id: astroUserId },
+    select: { id: true, name: true, profile: true },
+  });
+
+  const astroProfileRow = await prisma.astrologers.findFirst({
+    where: {
+      OR: [{ id: rawAstroId }, { userId: astroUserId }],
+    },
+    select: { name: true, profileImage: true },
+  });
+
+  const astro = {
+    id: astroUserId,
+    name: astroProfileRow?.name ?? astroUser?.name ?? null,
+    profile: astroProfileRow?.profileImage ?? astroUser?.profile ?? null,
+  };
+
+  const userDisplay = {
+    id: userUserId,
+    name: user?.name ?? null,
+    profile: user?.profile ?? null,
+  };
+
+  return {
+    conversation: allMessages,
+    // ⬇️ Use these for comparisons and for sending
+    userId: Number(userDisplay.id),
+    astroId: Number(astro.id),
     chatId,
-    user,
+    user: userDisplay,
     astro,
     nextPageToken: nextPageToken || null,
   };

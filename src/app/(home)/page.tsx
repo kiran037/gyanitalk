@@ -1,8 +1,9 @@
-
-export const dynamic = "force-dynamic"; 
+///Users/xeoren/gyanitallk-admin/src/app/(home)/page.tsx
+export const dynamic = "force-dynamic";
 
 // src/app/(home)/page.tsx
 import { unstable_cache } from "next/cache";
+import Link from "next/link";
 import React from "react";
 import { getDashboardOverview, getDashboardChartData } from "./fetch";
 import ChartClient from "./ChartsClient";
@@ -18,7 +19,6 @@ import {
   UserPlus,
   TrendingUp,
   Activity,
-  Zap
 } from "lucide-react";
 
 type ChartApiResponse = {
@@ -50,6 +50,16 @@ export default async function Home() {
     getOverviewCached(),
     getChartCached() as Promise<ChartApiResponse>,
   ]);
+
+  // Build today's date in IST (YYYY-MM-DD) for query params
+  const todayParam = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" })
+    .format(new Date());
+  const qsToday = `?search=&startDate=${todayParam}&endDate=${todayParam}`;
+
+  const hrefCustomersToday = `/customers${qsToday}`;
+  const hrefWalletToday = `/wallet${qsToday}`;
+  const hrefPaymentsToday = `/payments${qsToday}`;
+
 
   // ---- Derived for top 3 cards (all based on real data) ----
   const totalIncome = n(data.totalEarning);
@@ -390,8 +400,12 @@ export default async function Home() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mt-0.5">Comprehensive platform metrics and insights</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-5 auto-rows-[1fr]">
-              {/* Customers */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              {/* Customers (CLICK → /customers) */}
+              <Link
+                href="/customers"
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                aria-label="Open Customers"
+              >
                 {/* animated overlay */}
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-blue-500/12 blur-2xl animate-pulse" />
@@ -421,10 +435,14 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">{fmt(data.totalReportRequest)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
 
-              {/* Astrologers */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              {/* Astrologers (CLICK → /(astrologers)/astrologers) */}
+              <Link
+                href="/astrologers"
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+                aria-label="Open Astrologers"
+              >
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-purple-500/12 blur-2xl animate-pulse" />
                   <div className="absolute -bottom-16 -left-16 size-28 rounded-full bg-fuchsia-500/10 blur-2xl animate-pulse delay-1000" />
@@ -452,9 +470,9 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">{fmt(data.totalOrders)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
 
-              {/* Live Activity */}
+              {/* Live Activity (unchanged / not clickable) */}
               <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-emerald-500/12 blur-2xl animate-pulse" />
@@ -485,8 +503,12 @@ export default async function Home() {
                 </dl>
               </section>
 
-              {/* Earnings */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              {/* Earnings (CLICK → /withdrawal_requests) */}
+              <Link
+                href="/withdrawal_requests"
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                aria-label="Open Earnings / Withdrawal Requests"
+              >
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-amber-500/12 blur-2xl animate-pulse" />
                   <div className="absolute -bottom-16 -left-16 size-28 rounded-full bg-orange-500/10 blur-2xl animate-pulse delay-1000" />
@@ -514,10 +536,14 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">₹{fmt(data.totalWithdraw)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
 
-              {/* Deposits */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              {/* Deposits (CLICK → /(transactions)/wallet) */}
+              <Link
+                href="/wallet"
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                aria-label="Open Deposits / Wallet"
+              >
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-cyan-500/12 blur-2xl animate-pulse" />
                   <div className="absolute -bottom-16 -left-16 size-28 rounded-full bg-sky-500/10 blur-2xl animate-pulse delay-1000" />
@@ -545,104 +571,104 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">₹{fmt(data.totalDeposit?.pending)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
             </div>
 
-                      {/* Communication Stats */}
-          <div className="mt-5 grid gap-4 lg:grid-cols-3">
-            {/* Call Requests */}
-            <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 dark:from-blue-400/20 dark:to-blue-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                    <Phone className="text-3xl text-blue-600 dark:text-blue-400" size={32} />
+            {/* Communication Stats */}
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              {/* Call Requests */}
+              <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 dark:from-blue-400/20 dark:to-blue-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Phone className="text-3xl text-blue-600 dark:text-blue-400" size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Call Requests</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs">Voice communication stats</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Call Requests</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">Voice communication stats</p>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallRequest)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Completed</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallCompleteRequest?.count)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Total Time</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallCompleteRequest?.time)} min</span>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallRequest)}</span>
+              {/* Chat Requests */}
+              <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-400/20 dark:to-purple-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <MessageCircle className="text-3xl text-purple-600 dark:text-purple-400" size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Chat Requests</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs">Text communication stats</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Completed</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallCompleteRequest?.count)}</span>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatRequest)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Completed</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatComplteRequest?.count)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Total Time</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatComplteRequest?.time)} min</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Time</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalCallCompleteRequest?.time)} min</span>
+                </div>
+              </div>
+
+              {/* Expert Astro Match */}
+              <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 dark:from-emerald-400/20 dark:to-emerald-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Brain className="text-3xl text-emerald-600 dark:text-emerald-400" size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Expert Match</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs">AI-powered matching</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(n(data.successRequests) + n(data.pendingRequests))}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Assigned</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.successRequests)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Pending</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.pendingRequests)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Chat Requests */}
-            <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-400/20 dark:to-purple-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                    <MessageCircle className="text-3xl text-purple-600 dark:text-purple-400" size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Chat Requests</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">Text communication stats</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatRequest)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Completed</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatComplteRequest?.count)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Time</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.totalChatComplteRequest?.time)} min</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Expert Astro Match */}
-            <div className="group backdrop-blur-2xl backdrop-saturate-150 bg-white/50 dark:bg-white/[0.05] border border-white/30 dark:border-white/[0.08] rounded-2xl p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_10px_28px_rgba(0,0,0,0.4)] hover:scale-[1.01] hover:-translate-y-[2px] transition-all duration-400 ease-out relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 dark:from-emerald-400/20 dark:to-emerald-500/20 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                    <Brain className="text-3xl text-emerald-600 dark:text-emerald-400" size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Expert Match</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">AI-powered matching</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Total Requests</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(n(data.successRequests) + n(data.pendingRequests))}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200/30 dark:border-white/10">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Assigned</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.successRequests)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">Pending</span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{fmt(data.pendingRequests)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           </div>
         </div>
 
@@ -655,7 +681,11 @@ export default async function Home() {
             <p className="text-gray-600 dark:text-gray-400 mt-0.5">Real-time daily metrics and activities</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-5 auto-rows-[1fr]">
               {/* New Customers Today */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              <Link
+                href={hrefCustomersToday}
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                aria-label="Open Customers filtered for today"
+              >
                 {/* animated overlay */}
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-blue-500/12 blur-2xl animate-pulse" />
@@ -674,10 +704,14 @@ export default async function Home() {
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums mb-1.5">{fmt(data.todayCustomer)}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Joined today</p>
                 </div>
-              </section>
+              </Link>
 
               {/* Today Earnings */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              <Link
+                href={hrefWalletToday}
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                aria-label="Open Wallet filtered for today"
+              >
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-emerald-500/12 blur-2xl animate-pulse" />
                   <div className="absolute -bottom-16 -left-16 size-28 rounded-full bg-green-500/10 blur-2xl animate-pulse delay-1000" />
@@ -705,9 +739,9 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">₹{fmt(data.todayWithdraw)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
 
-              {/* Today Calls */}
+              {/* Today Calls (unchanged, not clickable) */}
               <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-cyan-500/12 blur-2xl animate-pulse" />
@@ -738,7 +772,7 @@ export default async function Home() {
                 </dl>
               </section>
 
-              {/* Today Chats */}
+              {/* Today Chats (unchanged, not clickable) */}
               <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-indigo-500/12 blur-2xl animate-pulse" />
@@ -770,7 +804,11 @@ export default async function Home() {
               </section>
 
               {/* Today Deposits */}
-              <section className="group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4">
+              <Link
+                href={hrefPaymentsToday}
+                className="block group relative h-full rounded-2xl border border-white/15 dark:border-white/10 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl shadow-[0_6px_18px_rgba(0,0,0,0.06)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.28)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.10)] dark:hover:shadow-[0_10px_26px_rgba(0,0,0,0.38)] hover:-translate-y-[2px] transition-all duration-300 overflow-hidden p-4 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                aria-label="Open Payments filtered for today"
+              >
                 <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="absolute -top-14 -right-20 size-36 rounded-full bg-amber-500/12 blur-2xl animate-pulse" />
                   <div className="absolute -bottom-16 -left-16 size-28 rounded-full bg-orange-500/10 blur-2xl animate-pulse delay-1000" />
@@ -798,9 +836,8 @@ export default async function Home() {
                     <dd className="text-gray-900 dark:text-gray-100 tabular-nums">₹{fmt(data.todayDeposit?.pending)}</dd>
                   </div>
                 </dl>
-              </section>
+              </Link>
             </div>
-
           </div>
 
 
@@ -882,3 +919,8 @@ export default async function Home() {
     </div>
   );
 }
+
+
+
+
+

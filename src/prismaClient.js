@@ -6,10 +6,9 @@ const globalForPrisma = global;
 const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ['error', 'warn'], // optional logs
+    log: ['error', 'warn'], 
   });
 
-// dev mode में हर reload पर नया client ना बने
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }

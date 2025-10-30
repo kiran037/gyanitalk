@@ -1,4 +1,4 @@
-
+///Users/xeoren/gyanitallk-admin/src/app/(astrologers)/astrologers/[...id]/page.tsx
 "use client";
 
 import Image from "next/image";
