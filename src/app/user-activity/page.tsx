@@ -56,9 +56,9 @@ export default async function UserActivityPage({
           </div>
         </div>
 
-        {/* Date Picker Card - Fixed version */}
-        <GlassCard hover={false} className="p-5 relative z-10">
-          <div className="w-full">
+        {/* Date Picker Card */}
+        <GlassCard hover={false} className="p-5">
+          <div className="max-w-md">
             <DatePicker selectedDate={selectedDate || null} />
           </div>
         </GlassCard>
