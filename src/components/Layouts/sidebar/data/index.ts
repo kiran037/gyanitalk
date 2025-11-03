@@ -300,6 +300,17 @@ export const NAV_DATA = [
           },
         ],
       },
+       {
+        title: "Analytics",
+        icon: Layers,
+        items: [
+          {
+            title: "User Activity",
+            url: "/user-activity",
+            icon: Edit,
+          }
+        ],
+      },
     ],
   },
 ];
