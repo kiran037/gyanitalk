@@ -1,7 +1,8 @@
+import axios from "axios";
+import { format } from "date-fns";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
-import axios from "axios";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -49,8 +50,52 @@ class FirestoreService {
   }
 
   async getFullChat(chatId, user1) {
-    const baseUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${user1}/messages`;
-    return { messages: await this.fetchMessages(baseUrl) };
+    try {
+      if (!chatId || !chatId.includes("_")) {
+        throw new Error(`Invalid chatId format: ${chatId}`);
+      }
+
+      // Extract astroId and userId
+      const [astroId, userId] = chatId.split("_");
+
+      // Build both Firestore collection URLs
+      const userUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${userId}/messages`;
+      const astroUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${astroId}/messages`;
+
+      // ✅ Fetch both sides
+      const [userMessages, astroMessages] = await Promise.all([
+        this.fetchMessages(userUrl),
+        this.fetchMessages(astroUrl),
+      ]);
+
+      // ✅ Merge and remove duplicates properly
+      const mergedMessages = [
+        ...userMessages,
+        ...astroMessages,
+      ];
+
+      // ✅ Deduplicate based on unique messageId
+      const uniqueMessages = mergedMessages.filter(
+        (msg, index, self) =>
+          index === self.findIndex((m) => m.messageId === msg.messageId)
+      );
+
+      // ✅ Ensure createdAt is always a Date (for sorting)
+      uniqueMessages.forEach(msg => {
+        if (!(msg.createdAt instanceof Date)) {
+          msg.createdAt = new Date(msg.createdAt);
+        }
+      });
+
+      // ✅ Sort by date (oldest first)
+      uniqueMessages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+      // ✅ Return all messages cleanly
+      return { messages: uniqueMessages };
+    } catch (error) {
+      console.error("🔥 getFullChat error:", error?.response?.data || error);
+      return { messages: [] };
+    }
   }
 
   async fetchMessages(url) {
@@ -58,35 +103,48 @@ class FirestoreService {
     let nextPageToken = null;
 
     do {
-      const apiUrl = url + (nextPageToken ? `?orderBy=createdAt%20desc&pageToken=${nextPageToken}` : `?orderBy=createdAt%20desc`);
+     const apiUrl = url + (nextPageToken ? `?orderBy=createdAt%20desc&pageToken=${nextPageToken}` : `?orderBy=createdAt%20desc`);
       const response = await axios.get(apiUrl);
       const data = response.data;
 
       if (data.documents) {
         for (const doc of data.documents) {
-          const fields = doc.fields;
+          const fields = doc.fields || {};
+
+          // Handle timestamp / string variations
+          const rawTime =
+            fields.createdAt?.timestampValue ||
+            fields.createdAt?.stringValue ||
+            null;
+
+          const createdAt = rawTime ? new Date(rawTime) : new Date();
+
+          // ✅ Construct a clean message object
           messages.push({
-            name: doc.name || "",
+            messageId: fields.messageId?.stringValue || doc.name,
             message: fields.message?.stringValue || "",
-            messageId: fields.messageId?.stringValue || "",
             sender_id: fields.userId1?.stringValue || "",
             receiver_id: fields.userId2?.stringValue || "",
             replymsg: fields.replymsg?.stringValue || "",
-            createdAt: formatDate(fields.createdAt?.timestampValue),
+            name: doc.name?.split("/").pop() || "",
+            createdAt,
+            formattedDate: format(createdAt, "dd MMM yyyy, hh:mm a"),
           });
         }
       }
       nextPageToken = data.nextPageToken || null;
     } while (nextPageToken);
-
-    return messages.reverse();
+    return messages;
   }
 
-  async sendMessage(chatId, senderId, receiverId, message) {
-    const url = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${senderId}/messages`;
+  async sendMessage(chatId, senderId, receiverId, message, messageId) {
+   try { 
+    // Use messageId as the document ID
+    const url = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${senderId}/messages?documentId=${messageId}`;
     const now = new Date().toISOString();
     const data = {
       fields: {
+        messageId: { stringValue: messageId }, // store messageId explicitly
         userId1: { stringValue: senderId },
         userId2: { stringValue: receiverId },
         message: { stringValue: message },
@@ -95,7 +153,12 @@ class FirestoreService {
       },
     };
     const response = await axios.post(url, data);
+    if (!response?.data) throw new Error("Empty Firestore response");
     return response.data;
+     } catch (error) {
+      console.error("🔥 Firestore sendMessage error:", error?.response?.data || error);
+      throw error;
+    }
   }
 
   async getLiveStatus(channelName) {

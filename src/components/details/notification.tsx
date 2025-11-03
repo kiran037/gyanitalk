@@ -1,38 +1,22 @@
-
+// // components/details/notification.tsx
 "use client";
 
 import { format } from "date-fns";
+import { GlassCard } from "@/components/GlassUI/GlassKit";
 
-export default function NoitificationsList({
-  noitifications = [],
-}: {
-  noitifications?: any[];
-}) {
+export default function NoitificationsList({ noitifications = [] }: { noitifications?: any[] }) {
   return (
     <div className="p-6">
-      <div
-        className={[
-          "relative rounded-2xl overflow-hidden",
-          "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
-          "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-        ].join(" ")}
-      >
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
-
+      <GlassCard>
         <div className="relative px-4 pt-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Notifications</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">Recent alerts and messages</p>
         </div>
 
-        {/* header */}
         <div className="relative grid grid-cols-4 gap-3 border-t border-white/60 dark:border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          <div>#</div>
-          <div>Title</div>
-          <div>Description</div>
-          <div className="text-right">Date</div>
+          <div>#</div><div>Title</div><div>Description</div><div className="text-right">Date</div>
         </div>
 
-        {/* rows */}
         <div className="relative divide-y divide-white/60 dark:divide-white/10">
           {noitifications.length ? (
             noitifications.map((n, i) => {
@@ -54,7 +38,7 @@ export default function NoitificationsList({
             <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No notifications found.</div>
           )}
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

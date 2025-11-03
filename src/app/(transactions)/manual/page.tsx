@@ -1,92 +1,125 @@
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { getManual } from "@/components/manual/fetch";
-import { Suspense } from "react";
-import { ManualSkeleton } from "@/components/manual/manual-skeleton";
-import ManualTable from "@/components/manual/manual-table";
+import moment from "moment";
+import { revalidatePath } from "next/cache";
+import { getManual, manualtransactionapprove } from "@/app/(transactions)/manual/fetch";
+import { GlassBadge } from "@/components/GlassUI/GlassBadge";
+import { SearchBar } from "@/components/transactions/SearchBar";
+import { Pagination } from "@/components/transactions/Pagination";
+import { ManualCard } from "@/components/transactions/ManualCard";
+
+type PaymentManual = {
+  id: number;
+  userId: number;
+  amount: number;
+  paymentMode: string;
+  paymentReference: string | null;
+  paymentStatus: "success" | "pending" | "failed" | string;
+  created_at: string | null;
+  updated_at: string | null;
+  user?: { name: string | null; contactNo: string | null };
+};
+
+// server action (page-owned)
+async function updateStatus(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id"));
+  const status = (formData.get("status") as "success" | "failed") || "failed";
+  if (!id || !["success", "failed"].includes(status)) return;
+  await manualtransactionapprove({ id, status });
+  revalidatePath("/(transactions)/manual");
+}
 
 export default async function ManualPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  }>;
+  // 👇 Next 15: it's a Promise now
+  searchParams: Promise<{ page?: string; search?: string; status?: string; startDate?: string; endDate?: string }>;
 }) {
-  // 👇 await karo
-  const params = await searchParams;
+  const sp = await searchParams; // ✅ await before using
+  const page = parseInt(sp?.page || "1", 10);
+  const search = sp?.search || "";
+  const status = sp?.status || "";
+  const startDate = sp?.startDate;
+  const endDate = sp?.endDate;
 
-  const page = parseInt(params?.page || "1", 10);
-  const search = params?.search || "";
-  const status = params?.status || "";
-  const startDate = params?.startDate;
-  const endDate = params?.endDate;
-
- // ✅ fetch data from server
-  const { payment_manual, totalPages, currentPage } = await getManual({
+  const { payment_manual, totalPages, currentPage } = (await getManual({
     page,
     limit: 15,
     search,
     status,
     startDate,
     endDate,
-  });
+  })) as {
+    payment_manual: PaymentManual[];
+    totalPages: number;
+    currentPage: number;
+  };
 
   return (
-    <div className="space-y-10">
-      <Breadcrumb pageName="Manual Transaction" />
-
-      {/* Search Form */}
-      <form method="get" className="flex gap-2">
-        <input
-          name="search"
-          defaultValue={search}
-          placeholder="Search by name or contactNo"
-          className="min-w-[250px] rounded border px-4 py-2 text-sm dark:bg-dark dark:text-white"
-        />
-        <div className="w-56 relative text-slate-500 inline-block">
-            <select className ="form-control w-56 box pr-10 px-4 py-2" name="status"  defaultValue={status} >
-                <option value="">All</option>
-                <option value="success">Success</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-            </select>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
+      <div className="w-full mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Manual Transactions</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {payment_manual.length} transaction{payment_manual.length !== 1 ? "s" : ""} found
+            </p>
+          </div>
+          <GlassBadge variant="blue" className="px-4 py-2 text-sm">
+            Page {currentPage} of {totalPages}
+          </GlassBadge>
         </div>
-        <input
-          type="date"
-          name="startDate"
-          defaultValue={startDate}
-          className="rounded border px-4 py-2 text-sm dark:bg-dark dark:text-white"
-        />
-        <input
-          type="date"
-          name="endDate"
-          defaultValue={endDate}
-          className="rounded border px-4 py-2 text-sm dark:bg-dark dark:text-white"
-        />
-        <button
-          type="submit"
-          className="bg-primary px-4 py-2 text-white rounded"
-        >
-          Search
-        </button>
-      </form>
 
-      {/* Astrologer Categories Table */}
-      <Suspense fallback={<ManualSkeleton />}>
-        <ManualTable
-          payment_manual={payment_manual}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          page={page}
+        {/* Search Bar with Status filter */}
+        <SearchBar
           search={search}
-          status={status}
           startDate={startDate}
           endDate={endDate}
+          statusValue={status}
+          statusOptions={[
+            { label: "All Status", value: "" },
+            { label: "Success", value: "success" },
+            { label: "Pending", value: "pending" },
+            { label: "Failed", value: "failed" },
+          ]}
+          placeholder="Search by name or contact..."
         />
-      </Suspense>  
+
+        {/* List */}
+        <div className="space-y-3">
+          {payment_manual.length > 0 ? (
+            payment_manual.map((item) => (
+              <ManualCard
+                key={item.id}
+                item={item}
+                onApproveAction={updateStatus}
+                onRejectAction={updateStatus}
+                formatDate={(d) => (d ? moment(d).utcOffset("+05:30").format("DD MMM YY") : "-")}
+                formatTime={(d) => (d ? moment(d).utcOffset("+05:30").format("hh:mm A") : "")}
+              />
+            ))
+          ) : (
+            <ManualCard.Empty />
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            buildHref={(pageNum) => {
+              const qs =
+                `?page=${pageNum}` +
+                (search ? `&search=${encodeURIComponent(search)}` : "") +
+                (status ? `&status=${encodeURIComponent(status)}` : "") +
+                (startDate ? `&startDate=${encodeURIComponent(startDate)}` : "") +
+                (endDate ? `&endDate=${encodeURIComponent(endDate)}` : "");
+              return qs;
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

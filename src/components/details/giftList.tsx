@@ -1,8 +1,9 @@
-
+// // components/details/giftList.tsx
 "use client";
 
 import { format } from "date-fns";
 import Image from "next/image";
+import { GlassCard } from "@/components/GlassUI/GlassKit";
 
 const abs = (p?: string) => (p ? `${process.env.NEXT_PUBLIC_BASEURL}${p.startsWith("/") ? "" : "/"}${p}` : "");
 const avatar = (p?: string) => abs(p) || "https://gyanitalk.com/build/assets/images/person.png";
@@ -11,27 +12,14 @@ const avatar = (p?: string) => abs(p) || "https://gyanitalk.com/build/assets/ima
 export default function GiftList({ gifts = [] }: { gifts?: any[] }) {
   return (
     <div className="p-6">
-      <div
-        className={[
-          "relative rounded-2xl overflow-hidden",
-          "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
-          "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-        ].join(" ")}
-      >
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
-
+      <GlassCard>
         <div className="relative px-4 pt-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Gift History</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">All gifts received</p>
         </div>
 
-        {/* header */}
         <div className="relative grid grid-cols-[1.2fr_0.8fr_1fr_0.8fr_1fr] gap-4 border-t border-white/60 dark:border-white/10 px-4 py-2.5 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          <div>Name</div>
-          <div>Gift Icon</div>
-          <div>Gift Name</div>
-          <div>Amount</div>
-          <div>Date</div>
+          <div>Name</div><div>Gift Icon</div><div>Gift Name</div><div>Amount</div><div>Date</div>
         </div>
 
         <div className="relative divide-y divide-white/60 dark:divide-white/10 text-sm">
@@ -61,7 +49,7 @@ export default function GiftList({ gifts = [] }: { gifts?: any[] }) {
             <div className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">No gifts found.</div>
           )}
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }
@@ -80,46 +68,27 @@ export function UserGiftList({ gifts = [] }: { gifts?: any[] }) {
             const date = g?.created_at ? format(new Date(g.created_at), "dd MMM yyyy, hh:mm a") : "N/A";
 
             return (
-              <div
-                key={g.id}
-                className={[
-                  "relative rounded-2xl overflow-hidden p-4",
-                  "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
-                  "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition",
-                ].join(" ")}
-              >
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
-                <div className="relative">
-                  <div className="mb-3 flex items-center gap-3">
-                    <div className="h-14 w-14 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
-                      <Image src={avatar(giftImage)} alt={`${giftName} Icon`} width={56} height={56} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-slate-900 dark:text-white">{giftName}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">Sent to: {astrologerName}</div>
-                    </div>
+              <GlassCard key={g.id} className="p-4 hover:-translate-y-0.5 transition">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="h-14 w-14 overflow-hidden rounded-full ring-2 ring-white/70 dark:ring-white/10 shadow-sm">
+                    <Image src={avatar(giftImage)} alt={`${giftName} Icon`} width={56} height={56} className="h-full w-full object-cover" />
                   </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">₹ {giftAmount}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">{date}</div>
+                  <div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{giftName}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Sent to: {astrologerName}</div>
                   </div>
                 </div>
-              </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">₹ {giftAmount}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{date}</div>
+                </div>
+              </GlassCard>
             );
           })}
         </div>
       ) : (
-        <div
-          className={[
-            "relative rounded-2xl overflow-hidden p-6 text-center",
-            "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
-            "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-          ].join(" ")}
-        >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
-          <div className="relative text-slate-500 dark:text-slate-400">No gifts found.</div>
-        </div>
+        <GlassCard className="p-6 text-center text-slate-500 dark:text-slate-400">No gifts found.</GlassCard>
       )}
     </div>
   );

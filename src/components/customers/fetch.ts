@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/customers/fetch.ts
 "use server"
 const prisma = require("../../prismaClient");
 
