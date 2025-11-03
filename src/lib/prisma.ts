@@ -9,10 +9,7 @@ declare global {
 const prisma =
   globalThis.prisma ??
   new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
-        : ["error"],
+    
   });
 
 // Prevent multiple instances in dev (Next.js HMR)
