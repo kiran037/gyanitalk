@@ -1,4 +1,4 @@
-
+// src/components/Auth/SigninWithPassword.tsx
 "use client";
 
 import * as React from "react";
@@ -6,11 +6,9 @@ import { useState } from "react";
 import { EmailIcon, PasswordIcon } from "@/assets/icons";
 import { useToast } from "@/components/Toast/ToastProvider";
 
-/* tiny utils (allow numbers to avoid TS union issues) */
 const cx = (...c: Array<string | number | false | null | undefined>) =>
   c.filter(Boolean).join(" ");
 
-/* Liquid Glass primitives */
 function GlassCard({
   children,
   className = "",
@@ -126,9 +124,8 @@ function GlassInput({
   );
 }
 
-/* Component */
 type Props = {
-  loginUser: (formData: FormData) => Promise<{ token: string; user: { id: number; email: string } }>;
+  loginUser: (formData: FormData) => Promise<{ ok: true; user: { id: number; email: string; name?: string | null }; loginAt: string }>;
 };
 
 export default function SigninWithPassword({ loginUser }: Props) {
@@ -149,17 +146,12 @@ export default function SigninWithPassword({ loginUser }: Props) {
       const formData = new FormData();
       formData.append("email", data.email);
       formData.append("password", data.password);
+      formData.append("remember", String(data.remember));
 
       const result = await loginUser(formData);
 
-      // persist
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
-
-      const maxAge = data.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 2; // 30d vs 2h
-      document.cookie = `token=${result.token}; path=/; max-age=${maxAge}`;
-
-      toast("success", "Signed in", "Welcome back!");
+      toast("success", "Signed in", `Welcome back${result?.user?.name ? `, ${result.user.name}` : ""}!`);
+      // Let the server cookie be authoritative. Just go home:
       window.location.href = "/";
     } catch (err: any) {
       toast("error", "Login failed", err?.message || "Something went wrong");

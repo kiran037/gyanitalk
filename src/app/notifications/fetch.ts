@@ -1,9 +1,8 @@
 "use server"
-import { NextResponse } from "next/server";
 const prisma = require("../../prismaClient");
-import { sendNotification } from "@/services/fcm.js"; // custom FCM service (same logic as Laravel)
+import { sendNotificationToTopic } from "@/services/fcm";
 
-// Get all notifications
+// Get All Notifications
 export async function getNotifications() {
   
   const [notifications] = await Promise.all([
@@ -25,7 +24,7 @@ export async function getNotifications() {
   };
 }
 
-// Create new notifications
+// Create New Notifications
 export async function createNotifications(payload: {
   title: string;
   description: string;
@@ -51,7 +50,7 @@ export async function createNotifications(payload: {
   }
 }
 
-// Update notifications
+// Update Notifications
 export async function updateNotifications(
   id: number,
   payload: {
@@ -77,3 +76,45 @@ export async function updateNotifications(
   }
 }
 
+export async function sendNotifications({
+  id,
+  role,
+}: {
+  id: number | string;
+  role: string;
+}) {
+  try {
+    const notification = await prisma.notifications.findFirst({
+      where: { id: Number(id) },
+    });
+
+    if (!notification) throw new Error("Notification not found");
+
+    // ✅ Prepare message template
+    const messageTemplate = {
+      notification: {
+        title: notification.title,
+        body: notification.description || "",
+      },
+      data: {
+        title: notification.title,
+        description: notification.description || "",
+        click_action: "FLUTTER_NOTIFICATION_CLICK",
+        body: JSON.stringify({}, (_, value) =>
+          typeof value === "bigint" ? value.toString() : value
+        ),
+      },
+      android: {
+        priority: "high",
+      },
+    };
+
+    await sendNotificationToTopic(role, messageTemplate);
+    return { status: 200, message: "Notification sent successfully" };
+  } catch (error: any) {
+    return {
+      status: 500,
+      message: error.message || "Error sending notification",
+    };
+  }
+}

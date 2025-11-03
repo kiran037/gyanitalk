@@ -1,32 +1,17 @@
-
+// // components/details/followersList.tsx
 "use client";
 
 import Image from "next/image";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
 import { unFollow } from "../../app/(astrologers)/astrologers/fetch";
+import { GlassCard } from "@/components/GlassUI/GlassKit";
+import GlassButton from "@/components/GlassUI/GlassButton";
 
-/* ---------- helpers ---------- */
 const ensureAbs = (p?: string) =>
   p ? `${process.env.NEXT_PUBLIC_BASEURL}${p.startsWith("/") ? "" : "/"}${p}` : "";
 const avatar = (p?: string) =>
   ensureAbs(p) || "https://gyanitalk.com/build/assets/images/person.png";
-
-function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={[
-        "relative rounded-2xl overflow-hidden",
-        "bg-white/55 dark:bg-white/[0.06] border border-white/60 dark:border-white/10",
-        "backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-        className,
-      ].join(" ")}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent dark:from-white/[0.05] dark:via-white/[0.03] dark:to-transparent" />
-      <div className="relative">{children}</div>
-    </div>
-  );
-}
 
 function TableHeader() {
   return (
@@ -37,7 +22,6 @@ function TableHeader() {
     </div>
   );
 }
-
 function Row({ left, middle, right }: { left: React.ReactNode; middle: React.ReactNode; right: React.ReactNode }) {
   return (
     <div className="grid grid-cols-3 items-center gap-3 px-4 py-3 text-sm text-slate-800 dark:text-slate-200">
@@ -48,7 +32,6 @@ function Row({ left, middle, right }: { left: React.ReactNode; middle: React.Rea
   );
 }
 
-/* ---------- ASTRO’s followers (with Unfollow) ---------- */
 export default function AstroFollowerList({ followers }: { followers: any[] }) {
   const [isPending, startTransition] = useTransition();
 
@@ -57,7 +40,7 @@ export default function AstroFollowerList({ followers }: { followers: any[] }) {
       try {
         await unFollow({ id });
         toast.success("Unfollowed successfully!");
-        location.reload(); // keep existing behavior
+        location.reload();
       } catch {
         toast.error("Something went wrong while unfollowing.");
       }
@@ -92,18 +75,14 @@ export default function AstroFollowerList({ followers }: { followers: any[] }) {
                     }
                     middle={<span className="text-slate-700 dark:text-slate-300">{user?.contactNo || "-"}</span>}
                     right={
-                      <button
+                      <GlassButton
                         onClick={() => handleUnfollow(f.id)}
                         disabled={isPending}
-                        className={[
-                          "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium",
-                          isPending
-                            ? "bg-slate-400 text-white"
-                            : "bg-gradient-to-r from-rose-500 to-pink-600 text-white hover:from-rose-600 hover:to-pink-700 shadow-sm",
-                        ].join(" ")}
+                        variant="danger"
+                        className="px-3 py-1.5 text-xs"
                       >
                         {isPending ? "Removing..." : "Unfollow"}
-                      </button>
+                      </GlassButton>
                     }
                   />
                 );
@@ -118,7 +97,6 @@ export default function AstroFollowerList({ followers }: { followers: any[] }) {
   );
 }
 
-/* ---------- USER’s followed list (read-only) ---------- */
 export function UserFollowerList({ followers }: { followers: any[] }) {
   return (
     <div className="p-6">

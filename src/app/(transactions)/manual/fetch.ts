@@ -1,8 +1,5 @@
 "use server"
-const prisma = require("../../prismaClient");
-// import { referCommission } from "@/lib/refer"; 
-
-// Get Withdraw Request
+const prisma = require("../../../prismaClient");
 export async function getManual({
   page = 1,
   limit = 15,
