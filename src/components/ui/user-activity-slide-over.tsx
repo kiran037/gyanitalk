@@ -3,7 +3,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import SlideOver from "@/components/ui/SlideOver";
+import SlideOver from "@/components/ui/slide-over";
 
 type RecentItem = { id: string; screenName: string; timestampISO: string | null };
 

@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { listDateIdsDesc, getUsersForDateWithRecent } from "./fetch";
-import UserCards from "@/components/ui/UserCards";
+import UserCards from "@/components/ui/user-cards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import UserActivitySlideOver from "@/components/ui/UserActivitySlideOver";
+import UserActivitySlideOver from "@/components/ui/user-activity-slide-over";
 
 type RecentItem = { id: string; screenName: string; timestampISO: string | null };
 type UserRowClient = {
