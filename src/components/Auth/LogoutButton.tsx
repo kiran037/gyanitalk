@@ -38,7 +38,7 @@ export default function LogoutButton({ className = "", iconOnly = false }: Props
     } finally {
       clearClientState();
       toast("success", "Signed out", "You have been logged out.");
-      router.push("/sign-in");
+      router.push("/landing");
       router.refresh();
     }
   };

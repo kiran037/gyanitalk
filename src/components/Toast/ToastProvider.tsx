@@ -1,7 +1,7 @@
 // components/Toast/ToastProvider.tsx
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import Toast, { ToastProps, ToastType } from "./Toast";
 
 interface ToastContextType {
@@ -13,17 +13,18 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const addToast = (type: ToastType, title: string, message: string) => {
-    const id =
-      Date.now().toString() + Math.random().toString(36).substring(2, 8);
+  // Use useCallback to memoize removeToast so it doesn't change on every render
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []); // Empty dependency array means this function never changes
+
+  // Use useCallback for addToast as well
+  const addToast = useCallback((type: ToastType, title: string, message: string) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(2, 8);
     const toast = { id, type, title, message, onClose: removeToast };
     setToasts((prev) => [...prev, toast]);
     setTimeout(() => removeToast(id), 4000);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, [removeToast]); // Depends on removeToast
 
   return (
     <ToastContext.Provider value={{ addToast }}>
@@ -43,12 +44,3 @@ export function useToast() {
     throw new Error("useToast must be used within a ToastProvider");
   return context.addToast;
 }
-
-// import { useToast } from "@/components/Toast/ToastProvider";
-//   const toast = useToast();
-//   toast("error", "Error", "Upload failed. Please try again.")
-//    toast("warning", "Warning", "Please fill required fields: Title, File Upload, and Price.")
-//     toast("error", "Error", "Failed to save ebook: " + (err.error || "Unknown error"))
-//     toast("info", "Error", "Failed to save ebook: " + (err.error || "Unknown error"))
-//     toast("success", "Error", "Failed to save ebook: " + (err.error || "Unknown error"))
-

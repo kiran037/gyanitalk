@@ -58,19 +58,20 @@ export default function AddBlogModal({
     else setFileType(null);
   };
 
-  const save = async () => {
-    try {
-      if (!form.title?.trim()) return toast("warning", "Warning", "Title is required.");
-      setBusy(true);
-      const payload: any = { ...form };
-      if (form.blogImage instanceof File) {
-        const up = await uploadImage(form.blogImage, "images");
-        if (!up?.success || !up?.path) throw new Error("Upload failed. Please try again.");
-        payload.blogImage = up.path;
-        payload.extension = getFileExtension(form.blogImage);
-      } else if (typeof form.blogImage === "string") {
-        payload.extension = getFileExtension(form.blogImage);
-      }
+const save = async () => {
+  try {
+    if (!form.title?.trim()) return toast("warning", "Warning", "Title is required.");
+    setBusy(true);
+    const payload: any = { ...form };
+    if (form.blogImage instanceof File) {
+      const up = await uploadImage(form.blogImage, "images");
+      if (!up?.success || !up?.path) throw new Error("Upload failed. Please try again.");
+      payload.blogImage = up.path; // ✅ This will now be full URL
+      payload.extension = getFileExtension(form.blogImage);
+    } else if (typeof form.blogImage === "string") {
+      payload.blogImage = form.blogImage; // ✅ ADD THIS LINE - preserve existing URL
+      payload.extension = getFileExtension(form.blogImage);
+    }
 
       await createBlogs(payload);
       toast("success", "Created", "Blog created successfully.");

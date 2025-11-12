@@ -73,7 +73,7 @@ export async function getCustomers({
   // Add search filters
   if (search) {
     if (isAlphaSearch) {
-      baseWhere.name = { contains: search, mode: "insensitive" };
+      baseWhere.name = { contains: search };
     } else if (isNumericSearch) {
       baseWhere.contactNo = { contains: search };
     }
@@ -131,18 +131,18 @@ export async function getUserDetails({ id }: { id?: any }) {
 
   const userDetail = userDetailRaw
     ? {
-        ...userDetailRaw,
-        id: String(userDetailRaw.id),
-        birthDate: userDetailRaw.birthDate
-          ? dayjs(userDetailRaw.birthDate).tz("Asia/Kolkata").format("YYYY-MM-DD")
-          : null,
-        created_at: formatToIST(userDetailRaw.created_at),
-        updated_at: formatToIST(userDetailRaw.updated_at),
-        user_wallets: userDetailRaw.user_wallets.map((w: { amount: any }) => ({
-          ...w,
-          amount: w.amount ? Number(w.amount) : 0,
-        })),
-      }
+      ...userDetailRaw,
+      id: String(userDetailRaw.id),
+      birthDate: userDetailRaw.birthDate
+        ? dayjs(userDetailRaw.birthDate).tz("Asia/Kolkata").format("YYYY-MM-DD")
+        : null,
+      created_at: formatToIST(userDetailRaw.created_at),
+      updated_at: formatToIST(userDetailRaw.updated_at),
+      user_wallets: userDetailRaw.user_wallets.map((w: { amount: any }) => ({
+        ...w,
+        amount: w.amount ? Number(w.amount) : 0,
+      })),
+    }
     : null;
 
   const callHistory = await prisma.callrequest.findMany({
@@ -410,7 +410,7 @@ export async function getAllCustomers({
 
   if (search) {
     if (isAlphaSearch) {
-      baseWhere.name = { contains: search, mode: "insensitive" };
+      baseWhere.name = { contains: search };
     } else if (isNumericSearch) {
       baseWhere.contactNo = { contains: search };
     }
