@@ -1,8 +1,7 @@
 import "server-only";
 import { db } from "@/services/firebase";
 import moment from "moment";
-import prisma from "../../prismaClient";
-
+import { prisma } from "@/lib/prisma";
 
 // ---------- Types ----------
 export type Activity = {
@@ -15,8 +14,8 @@ export type UserRow = {
     userId: string;
     name?: string | null;
     profile?: string | null;
-    total?: number; // optional aggregation count
-    recent: Activity[]; // recent activities
+    total?: number;
+    recent: Activity[];
 };
 
 // ---------- Helpers ----------
@@ -25,15 +24,6 @@ const DATE_FMT = "DD-MM-YYYY";
 function parseDateId(id: string): number | null {
     const m = moment(id, DATE_FMT, true);
     return m.isValid() ? m.valueOf() : null;
-}
-
-// ---------- Firestore: dates (top-level docs) ----------
-export async function listDateIdsDesc(): Promise<string[]> {
-    const refs = await db.collection("user_activity_logs").listDocuments();
-    return refs
-        .map((r) => r.id)
-        .filter((id) => parseDateId(id) !== null)
-        .sort((a, b) => (parseDateId(b)! - parseDateId(a)!));
 }
 
 // ---------- Firestore: user IDs under a date ----------
@@ -75,6 +65,7 @@ export async function countActivitiesForUserOnDate(
         return undefined;
     }
 }
+
 // ---- Sanitize helpers ----
 const toCleanId = (v: unknown): string | null => {
     if (v === null || v === undefined) return null;
@@ -89,30 +80,30 @@ const normalizeNumericIdsToBigInt = (ids: unknown[]): bigint[] => {
             ids
                 .map(toCleanId)
                 .filter((v): v is string => v !== null)
-                .map((s) => s.replace(/\s+/g, ""))        // remove stray spaces
-                .filter((s) => /^\d+$/.test(s))           // keep only digits
+                .map((s) => s.replace(/\s+/g, ""))
+                .filter((s) => /^\d+$/.test(s))
         )
     );
     return cleaned.map((s) => BigInt(s));
 };
+
 // ---------- Prisma: names for many userIds ----------
 export async function getUserNames(userIds: string[]) {
-    // Convert Firestore subcollection IDs -> BigInt[]; drop null/"null"/non-digits
     const idsBigInt = normalizeNumericIdsToBigInt(userIds);
     if (idsBigInt.length === 0) return {};
 
     const rows = await prisma.users.findMany({
-        where: { id: { in: idsBigInt } },  // <-- BIGINT values
+        where: { id: { in: idsBigInt } },
         select: { id: true, name: true, profile: true },
     });
 
-    // r.id is bigint => key as string for map
     const map: Record<string, { name?: string | null; profile?: string | null }> = {};
     for (const r of rows) {
         map[String(r.id)] = { name: r.name, profile: (r as any).profile ?? null };
     }
     return map;
 }
+
 // ---------- Combined: users list (with names) for a selected date ----------
 export async function getUsersForDateWithRecent({
     dateDocId,

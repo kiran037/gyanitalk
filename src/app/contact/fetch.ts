@@ -16,75 +16,84 @@ export async function getContacts(
     endDate?: string;
   }) {
 
-  let startOfToday: Date | undefined;
-  let endOfToday: Date | undefined;
-
-  if (startDate) {
-    startOfToday = new Date(startDate);
-    startOfToday.setHours(0, 0, 0, 0);
-  }
-
-  if (endDate) {
-    endOfToday = new Date(endDate);
-    endOfToday.setHours(23, 59, 59, 999);
-  }
-
-
-  const isNumericSearch = /^\d+$/.test(search);
-  const isAlphaSearch = /[a-zA-Z]/.test(search);
-
+  try {
     const offset = (page - 1) * limit;
-  const baseWhere = {
-    isActive: true,
-    isDelete: false,
-    ...(startDate && endDate && {
-      created_at: {
-        gte: new Date(startDate),
-        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
-      },
-    }),
+    
+    // Build where clause based on ACTUAL schema fields
+    const whereClause: any = {
+      // Add search conditions if search is not empty
+      ...(search && {
+        OR: [
+          { contact_name: { contains: search, mode: 'insensitive' } },
+          { contact_email: { contains: search, mode: 'insensitive' } },
+          { contact_message: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+      // Add date filters if provided
+      ...(startDate && endDate && {
+        created_at: {
+          gte: new Date(startDate),
+          lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+        },
+      }),
+    };
 
-    ...(search &&
-      isAlphaSearch && {
-      name: { contains: search },
-    }),
-    ...(search &&
-      isNumericSearch && {
-      contactNo: { contains: search },
-    }),
-  };
-  
-  const [contact_us, totalCount] = await Promise.all([
-    prisma.contact_us.findMany({
-      skip: offset,
-      take: limit,
-      orderBy: { id: "desc" },
-      where: {
-          // isDelete: false,   // ✅ only fields that exist in your schema
-          // add more filters directly if needed
-            contact_name: { contains: search },
-            contact_email: { contains: search },
-      },
-    }),
-    prisma.contact_us.count({
-      where: {
-        // add more filters directly if needed
-        contact_name: { contains: search },
-        contact_email: { contains: search },
-      },
-    }),
-  ]);
+    console.log("Fetching contacts with params:", { page, limit, search, startDate, endDate });
+    console.log("Where clause:", JSON.stringify(whereClause, null, 2));
 
-  // ✅ Format Date objects into strings
-  const data = contact_us.map((c: any) => ({
-    ...c,
-    created_at: c.created_at ? c.created_at.toISOString() : null,
-  }));
+    const [contact_us, totalCount] = await Promise.all([
+      prisma.contact_us.findMany({
+        skip: offset,
+        take: limit,
+        orderBy: { id: "desc" },
+        where: whereClause,
+      }),
+      prisma.contact_us.count({
+        where: whereClause,
+      }),
+    ]);
 
-  return {
-    data,
-    total: totalCount, // uncomment if you add count query
-    totalPages: Math.ceil(totalCount / limit),
-    currentPage: page,
-  };
+    console.log("Fetched contacts:", contact_us.length);
+    console.log("Total count:", totalCount);
+
+    // Format Date objects into strings
+    const data = contact_us.map((c: any) => ({
+      ...c,
+      created_at: c.created_at ? c.created_at.toISOString() : null,
+      updated_at: c.updated_at ? c.updated_at.toISOString() : null,
+    }));
+
+    return {
+      data,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+    };
+  } catch (error: any) {
+    console.error("❌ Error fetching contacts:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    console.error("Full error:", JSON.stringify(error, null, 2));
+    
+    // Handle UTF-8 encoding errors
+    if (error.message?.includes("UTF-8") || error.message?.includes("Conversion failed")) {
+      console.error("UTF-8 encoding issue detected in database");
+      return {
+        data: [],
+        total: 0,
+        totalPages: 0,
+        currentPage: page,
+        error: "Database encoding error. Please contact administrator.",
+      };
+    }
+    
+    // Return generic error for other cases
+    return {
+      data: [],
+      total: 0,
+      totalPages: 0,
+      currentPage: page,
+      error: error.message || "Failed to fetch contacts",
+    };
+  }
 }

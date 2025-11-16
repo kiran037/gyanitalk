@@ -65,18 +65,19 @@ export default function BlogCard({
     else setFileType(null);
   };
 
-  const save = useCallback(async () => {
-    try {
-      setBusy(true);
-      const payload: any = { ...form };
-      if (form.blogImage instanceof File) {
-        const up = await uploadImage(form.blogImage, "images");
-        if (!up?.success || !up?.path) throw new Error("Upload failed. Please try again.");
-        payload.blogImage = up.path;
-        payload.extension = getFileExtension(form.blogImage);
-      } else if (typeof form.blogImage === "string") {
-        payload.extension = getFileExtension(form.blogImage);
-      }
+const save = useCallback(async () => {
+  try {
+    setBusy(true);
+    const payload: any = { ...form };
+    if (form.blogImage instanceof File) {
+      const up = await uploadImage(form.blogImage, "images");
+      if (!up?.success || !up?.path) throw new Error("Upload failed. Please try again.");
+      payload.blogImage = up.path; // ✅ This will now be full URL
+      payload.extension = getFileExtension(form.blogImage);
+    } else if (typeof form.blogImage === "string") {
+      payload.blogImage = form.blogImage; // ✅ ADD THIS LINE - preserve existing URL
+      payload.extension = getFileExtension(form.blogImage);
+    }
       await updateBlogs(item.id, payload);
       toast("success", "Saved", "Blog updated successfully.");
       setShowEdit(false);

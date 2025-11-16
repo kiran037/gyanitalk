@@ -5,10 +5,6 @@ import SigninWithPassword from "@/components/Auth/SigninWithPassword";
 import { signUserJWT } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-/**
- * NOTE: We return a literal `ok: true` type to satisfy the component's Props:
- * (formData) => Promise<{ ok: true; user: { id: number; email: string; name?: string|null }; loginAt: string }>
- */
 type LoginResult = {
   ok: true;
   user: { id: number; email: string; name?: string | null };
