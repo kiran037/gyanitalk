@@ -1,4 +1,4 @@
-// lib/prisma.js
+///Users/xeoren/gyanitallk-admin/src/prismaClient.js
 const { PrismaClient } = require('@prisma/client');
 
 const globalForPrisma = global;

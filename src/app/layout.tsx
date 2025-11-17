@@ -1,4 +1,3 @@
-// /src/app/layout.tsx
 "use client";
 
 import "@/css/satoshi.css";
@@ -18,17 +17,17 @@ export default function RootLayout({ children }: PropsWithChildren) {
   const pathname = usePathname();
 
   // Define public pages (accessible without auth)
-const publicPages = [
-  "/landing", 
-  "/sign-in", 
-  "/landing/about",
-  "/landing/termsofservice",
-  "/landing/privacypolicy",
-  "/landing/contact",
-  "/landing/blog"
-];
+  const publicPages = [
+    "/", // Root path for landing page
+    "/sign-in",
+    "/landing/about",
+    "/landing/termsofservice",
+    "/landing/privacypolicy",
+    "/landing/contact",
+    "/landing/blog"
+  ];
 
-const isPublicPage = publicPages.includes(pathname) || pathname.startsWith("/landing/blog/");
+  const isPublicPage = publicPages.includes(pathname) || pathname.startsWith("/landing/blog/");
 
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
