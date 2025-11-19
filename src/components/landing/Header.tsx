@@ -18,13 +18,12 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
         { label: "Contact", href: "/landing/contact" },
         { label: "Blog", href: "/landing/blog" }
     ];
-
     const items = menuItems || defaultMenuItems;
 
     return (
         <>
             <nav className="fixed top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 z-50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-2xl shadow-[#FF6B35]/10 rounded-2xl sm:rounded-3xl transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-14 sm:h-16">
                         {/* Logo */}
                         <a href="/" className="flex items-center gap-2 cursor-pointer">
@@ -39,7 +38,6 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                                 Gyani Talk
                             </span>
                         </a>
-
                         {/* Desktop Menu */}
                         <div className="hidden md:flex items-center gap-6 lg:gap-8">
                             {items.map((item) => (
@@ -53,7 +51,6 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                                 </a>
                             ))}
                         </div>
-
                         {/* Right Side Actions */}
                         <div className="flex items-center gap-2 sm:gap-3">
                             {/* Theme Toggle */}
@@ -68,7 +65,6 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                                     <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                                 )}
                             </button>
-
                             {/* Mobile Menu Button */}
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -81,19 +77,10 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                                     <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                                 )}
                             </button>
-
-                            {/* Sign In Button */}
-                            <a
-                                href="/sign-in"
-                                className="hidden sm:block px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:from-[#FF5722] hover:to-[#FF6B35] text-white font-semibold rounded-full hover:shadow-2xl hover:shadow-[#FF6B35]/50 hover:scale-105 transition-all duration-300"
-                            >
-                                Sign In
-                            </a>
                         </div>
                     </div>
                 </div>
             </nav>
-
             {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-40 md:hidden">
@@ -116,13 +103,6 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                                     {item.label}
                                 </a>
                             ))}
-                            <a
-                                href="/sign-in"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="mt-2 px-6 py-3 text-center bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] text-white font-semibold rounded-full shadow-lg"
-                            >
-                                Sign In
-                            </a>
                         </div>
                     </div>
                 </div>

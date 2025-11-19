@@ -82,7 +82,7 @@ export default function BlogListPage() {
                 <div className="absolute top-20 -left-20 w-64 h-64 sm:w-96 sm:h-96 bg-[#FF6B35]/20 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
                 <div className="absolute bottom-20 -right-20 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#FFB347]/20 rounded-full blur-3xl animate-pulse pointer-events-none" style={{animationDelay: '1s'}}></div>
 
-                <div className="max-w-7xl mx-auto relative z-10">
+                <div className="w-full px-10 mx-auto relative z-10">
                     <div className="text-center mb-12 sm:mb-16">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/30 dark:border-gray-700/30 text-[#FF6B35] dark:text-[#FF8C61] rounded-full text-sm font-semibold mb-6 shadow-lg">
                             <Sparkles className="w-4 h-4" />
@@ -100,7 +100,7 @@ export default function BlogListPage() {
 
             {/* Blog List Section */}
             <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
+                <div className="w-full px-10 mx-auto">
                     {/* Category Filter */}
                     {categories.length > 0 && (
                         <div className="mb-12">

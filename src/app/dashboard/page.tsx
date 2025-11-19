@@ -1,7 +1,7 @@
-///Users/xeoren/gyanitallk-admin/src/app/(home)/page.tsx
+///Users/xeoren/gyanitallk-admin/src/app/dashboard/page.tsx
 export const dynamic = "force-dynamic";
 
-// src/app/(home)/page.tsx
+// src/app/dashboard/page.tsx
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import React from "react";
