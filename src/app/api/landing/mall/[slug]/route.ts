@@ -66,7 +66,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     // Try to find product by slug first, then by generated slug
     let product = await prisma.astromall_products.findFirst({

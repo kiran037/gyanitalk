@@ -8,7 +8,6 @@ export default function AppDownloadPopup() {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        // Show popup after a short delay when component mounts
         const timer = setTimeout(() => {
             setIsOpen(true);
         }, 800);
@@ -75,30 +74,158 @@ export default function AppDownloadPopup() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="relative">
-                                {/* Rotating cosmic ring with rounded corners */}
+                                {/* Rotating Zodiac Circle - Outer Ring */}
                                 <motion.div
-                                    className="absolute -inset-3 sm:-inset-4 rounded-[28px] sm:rounded-[32px]"
-                                    style={{
-                                        background: "linear-gradient(45deg, #FF6B35, #FFB347, #FF6B35)",
-                                        backgroundSize: "200% 200%",
-                                    }}
-                                    animate={{
-                                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                                        rotate: 360,
-                                    }}
-                                    transition={{
-                                        backgroundPosition: {
-                                            duration: 3,
-                                            repeat: Infinity,
-                                            ease: "linear"
-                                        },
-                                        rotate: {
-                                            duration: 8,
-                                            repeat: Infinity,
-                                            ease: "linear"
-                                        }
-                                    }}
-                                />
+                                    className="absolute -inset-8 sm:-inset-12"
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                                >
+                                    {/* Zodiac symbols positioned in circle */}
+                                    {[
+                                        { symbol: "♈", angle: 0 },
+                                        { symbol: "♉", angle: 30 },
+                                        { symbol: "♊", angle: 60 },
+                                        { symbol: "♋", angle: 90 },
+                                        { symbol: "♌", angle: 120 },
+                                        { symbol: "♍", angle: 150 },
+                                        { symbol: "♎", angle: 180 },
+                                        { symbol: "♏", angle: 210 },
+                                        { symbol: "♐", angle: 240 },
+                                        { symbol: "♑", angle: 270 },
+                                        { symbol: "♒", angle: 300 },
+                                        { symbol: "♓", angle: 330 },
+                                    ].map((zodiac, i) => {
+                                        const radius = window.innerWidth < 640 ? 140 : 180;
+                                        const x = Math.cos((zodiac.angle * Math.PI) / 180) * radius;
+                                        const y = Math.sin((zodiac.angle * Math.PI) / 180) * radius;
+                                        
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                className="absolute w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-lg sm:text-2xl font-bold text-[#FF6B35] dark:text-[#FFB347]"
+                                                style={{
+                                                    top: `calc(50% + ${y}px)`,
+                                                    left: `calc(50% + ${x}px)`,
+                                                    transform: `translate(-50%, -50%) rotate(-${zodiac.angle}deg)`,
+                                                    filter: "drop-shadow(0 0 8px rgba(255,107,53,0.6))",
+                                                }}
+                                                animate={{
+                                                    opacity: [0.5, 1, 0.5],
+                                                    scale: [1, 1.2, 1],
+                                                }}
+                                                transition={{
+                                                    duration: 2,
+                                                    repeat: Infinity,
+                                                    delay: i * 0.1,
+                                                }}
+                                            >
+                                                {zodiac.symbol}
+                                            </motion.div>
+                                        );
+                                    })}
+                                </motion.div>
+
+                                {/* Planetary Orbits - Middle Layer */}
+                                <motion.div
+                                    className="absolute -inset-4 sm:-inset-6"
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                                >
+                                    {/* Orbit circles */}
+                                    <div className="absolute inset-0 border-2 border-[#FF6B35]/20 dark:border-[#FFB347]/20 rounded-full" />
+                                    
+                                    {/* Planetary symbols */}
+                                    {[
+                                        { symbol: "☉", angle: 0, size: "text-base sm:text-xl" }, // Sun
+                                        { symbol: "☽", angle: 120, size: "text-base sm:text-xl" }, // Moon
+                                        { symbol: "☿", angle: 240, size: "text-sm sm:text-base" }, // Mercury
+                                    ].map((planet, i) => {
+                                        const radius = window.innerWidth < 640 ? 70 : 100;
+                                        const x = Math.cos((planet.angle * Math.PI) / 180) * radius;
+                                        const y = Math.sin((planet.angle * Math.PI) / 180) * radius;
+                                        
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                className={`absolute ${planet.size} font-bold text-[#FFB347] dark:text-[#FF6B35]`}
+                                                style={{
+                                                    top: `calc(50% + ${y}px)`,
+                                                    left: `calc(50% + ${x}px)`,
+                                                    transform: "translate(-50%, -50%)",
+                                                    filter: "drop-shadow(0 0 12px rgba(255,179,71,0.8))",
+                                                }}
+                                                animate={{
+                                                    scale: [1, 1.3, 1],
+                                                    opacity: [0.7, 1, 0.7],
+                                                }}
+                                                transition={{
+                                                    duration: 2.5,
+                                                    repeat: Infinity,
+                                                    delay: i * 0.3,
+                                                }}
+                                            >
+                                                {planet.symbol}
+                                            </motion.div>
+                                        );
+                                    })}
+                                </motion.div>
+
+                                {/* Chakra System - Inner Layer */}
+                                <motion.div
+                                    className="absolute -inset-2 sm:-inset-3"
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                >
+                                    <svg className="w-full h-full" viewBox="0 0 200 200">
+                                        {/* Sacred geometry pattern */}
+                                        <motion.circle
+                                            cx="100"
+                                            cy="100"
+                                            r="60"
+                                            fill="none"
+                                            stroke="url(#gradient1)"
+                                            strokeWidth="2"
+                                            opacity="0.4"
+                                            animate={{
+                                                r: [60, 65, 60],
+                                                opacity: [0.4, 0.6, 0.4],
+                                            }}
+                                            transition={{
+                                                duration: 3,
+                                                repeat: Infinity,
+                                            }}
+                                        />
+                                        <motion.circle
+                                            cx="100"
+                                            cy="100"
+                                            r="45"
+                                            fill="none"
+                                            stroke="url(#gradient2)"
+                                            strokeWidth="1.5"
+                                            opacity="0.3"
+                                            animate={{
+                                                r: [45, 50, 45],
+                                                opacity: [0.3, 0.5, 0.3],
+                                            }}
+                                            transition={{
+                                                duration: 2.5,
+                                                repeat: Infinity,
+                                                delay: 0.5,
+                                            }}
+                                        />
+                                        
+                                        <defs>
+                                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stopColor="#FF6B35" />
+                                                <stop offset="100%" stopColor="#FFB347" />
+                                            </linearGradient>
+                                            <linearGradient id="gradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                                <stop offset="0%" stopColor="#FFB347" />
+                                                <stop offset="100%" stopColor="#FF6B35" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                </motion.div>
 
                                 {/* Glowing orbs */}
                                 <motion.div
@@ -125,9 +252,9 @@ export default function AppDownloadPopup() {
                                     }}
                                 />
 
-                                {/* Main card - Theme Aware with Better Readability */}
+                                {/* Main card */}
                                 <div className="relative bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black rounded-[24px] sm:rounded-[28px] p-6 sm:p-8 shadow-2xl overflow-hidden border-[3px] border-[#FF6B35]/20 dark:border-[#FF6B35]/30">
-                                    {/* Animated gradient border effect - More subtle in light mode */}
+                                    {/* Animated gradient border effect */}
                                     <div className="absolute inset-0 rounded-[24px] sm:rounded-[28px] overflow-hidden pointer-events-none">
                                         <motion.div
                                             className="absolute inset-0 opacity-30 dark:opacity-100"
@@ -145,7 +272,7 @@ export default function AppDownloadPopup() {
                                         />
                                     </div>
 
-                                    {/* Floating particles - More subtle in light mode */}
+                                    {/* Floating particles */}
                                     {[...Array(8)].map((_, i) => (
                                         <motion.div
                                             key={i}
@@ -169,7 +296,7 @@ export default function AppDownloadPopup() {
                                         />
                                     ))}
 
-                                    {/* Close button - Fixed with proper z-index and larger hit area */}
+                                    {/* Close button */}
                                     <motion.button
                                         onClick={handleClose}
                                         className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[100] w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-gray-300 dark:border-white/20 transition-all duration-200 shadow-lg cursor-pointer"
@@ -182,49 +309,21 @@ export default function AppDownloadPopup() {
 
                                     {/* Content */}
                                     <div className="relative z-10 text-center">
-                                        {/* Icon with pulse effect */}
-                                        {/* <motion.div
-                                            className="mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#FF6B35] to-[#FFB347] rounded-[20px] sm:rounded-[24px] flex items-center justify-center mb-4 sm:mb-6 relative p-2 sm:p-2.5"
-                                            animate={{
-                                                boxShadow: [
-                                                    "0 0 20px rgba(255,107,53,0.5)",
-                                                    "0 0 35px rgba(255,107,53,0.8)",
-                                                    "0 0 20px rgba(255,107,53,0.5)",
-                                                ],
-                                            }}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                            }}
-                                        > */}
+                                        {/* App Icon */}
+                                        
+                                        <motion.div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-4 sm:mb-6 relative">
                                             <motion.img
                                                 src="https://gyanitalk.s3.ap-south-1.amazonaws.com/public/storage/images/astrologer_7851728112667.png"
                                                 alt="Gyani Talk"
-                                                className="w-full h-full object-contain"
+                                                className="w-full h-full object-contain rounded-2xl"
                                                 animate={{ 
                                                     scale: [1, 1.05, 1],
                                                 }}
                                                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                                             />
+                                        </motion.div>
 
-                                            {/* Orbiting mini stars - Responsive */}
-                                            <motion.div
-                                                className="absolute w-full h-full pointer-events-none"
-                                                animate={{ rotate: 360 }}
-                                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                            >
-                                                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-300 absolute -top-1 sm:-top-2 left-1/2 -translate-x-1/2" />
-                                            </motion.div>
-                                            <motion.div
-                                                className="absolute w-full h-full pointer-events-none"
-                                                animate={{ rotate: -360 }}
-                                                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                                            >
-                                                <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-orange-300 absolute -bottom-1 sm:-bottom-2 left-1/2 -translate-x-1/2" />
-                                            </motion.div>
-                                        {/* </motion.div> */}
-
-                                        {/* Title with gradient animation - Better contrast */}
+                                        {/* Title */}
                                         <motion.h2
                                             className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3"
                                             initial={{ opacity: 0, y: 20 }}
@@ -252,10 +351,10 @@ export default function AppDownloadPopup() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.4 }}
                                         >
-                                            🌟 Get ₹51 Sign-up Bonus & Free Consultation
+                                            Get ₹51 Sign-up Bonus
                                         </motion.p>
 
-                                        {/* Download buttons - Enhanced borders and shadows */}
+                                        {/* Download buttons */}
                                         <motion.div
                                             className="flex flex-col gap-2.5 sm:gap-3"
                                             initial={{ opacity: 0, y: 20 }}
@@ -311,7 +410,7 @@ export default function AppDownloadPopup() {
                                             </motion.a>
                                         </motion.div>
 
-                                        {/* Trust badges - Better contrast */}
+                                        {/* Trust badges */}
                                         <motion.div
                                             className="mt-4 sm:mt-6 flex items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium"
                                             initial={{ opacity: 0 }}

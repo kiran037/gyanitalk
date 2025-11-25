@@ -79,7 +79,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     // Try to find course by slug first
     let course = await prisma.courses.findFirst({
