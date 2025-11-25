@@ -16,7 +16,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
 
-    // ✅ NEW: verify JWT, read userId/email from claims
     const claims = await verifyUserJWT(token);
 
     const user = await prisma.users.findUnique({

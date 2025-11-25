@@ -1,23 +1,26 @@
-// /src/middleware.js
+// // /src/middleware.js
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_ROUTES = [
-  "/",
-  "/sign-in",
-  "/landing/about",
-  "/landing/termsofservice",
-  "/landing/privacypolicy",
+// ✅ Public route prefixes that support dynamic segments
+const PUBLIC_ROUTE_PREFIXES = [
+  "/landing/about-us",
+  "/landing/terms-of-service",
+  "/landing/privacy-policy",
   "/landing/contact",
-  "/landing/blog"
+  "/landing/blog", 
+  "/landing/astro",
 ];
 
-const PROTECTED_ROUTES = ["/dashboard", "/profile"]; // Define your actual protected dashboard routes
+const PUBLIC_EXACT_ROUTES = [
+  "/",
+  "/sign-in",
+];
 
+const PROTECTED_ROUTES = ["/dashboard", "/profile"]; 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 function isStaticAsset(pathname) {
-  // allow requests that look like files: /something/file.png, /foo/bar.svg, /fonts/abc.woff2
   return !!pathname.match(/\.[a-zA-Z0-9]+$/);
 }
 
@@ -25,17 +28,29 @@ export async function middleware(req) {
   const token = req.cookies.get("token")?.value;
   const pathname = req.nextUrl.pathname;
 
-  // ✅ Allow only /api/landing/* routes to be public (no auth required)
-  // You might want to rename this to /api/public/* for clarity
-  if (pathname.startsWith("/api/landing") || pathname.startsWith("/api/public")) {
+  // ✅ Allow API routes
+  if (pathname.startsWith("/api/landing") || 
+      pathname.startsWith("/api/public")) {
+
     return NextResponse.next();
   }
 
-  // treat any subpath of public routes as public (e.g. /blog and /blog/*)
-  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
-
-  // allow static assets to pass through (images, css, fonts) — important for public/ assets
+  // ✅ Allow static assets
   if (isStaticAsset(pathname)) {
+ 
+    return NextResponse.next();
+  }
+
+  // ✅ Check if it's a public route (exact match or starts with prefix)
+  const isPublicRoute = 
+    PUBLIC_EXACT_ROUTES.includes(pathname) ||
+    PUBLIC_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix));
+
+
+
+  // ✅ If it's a public route, always allow
+  if (isPublicRoute) {
+
     return NextResponse.next();
   }
 
@@ -47,23 +62,30 @@ export async function middleware(req) {
     try {
       await jwtVerify(token, secret);
 
-      // If user is authenticated and trying to access public auth pages, redirect to dashboard
+      // Redirect authenticated users away from login pages
       if (pathname === "/sign-in" || pathname === "/") {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
       return NextResponse.next();
     } catch {
-      // Invalid token - clear it and redirect to home
+      // Invalid token - redirect to home and clear cookie
       const response = NextResponse.redirect(new URL("/", req.url));
       response.cookies.set("token", "", { maxAge: 0 });
       return response;
     }
   }
 
-  // No token - check if trying to access protected route
+  // No token - redirect to home if trying to access protected route
   if (isProtectedRoute) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
 }
+
+// ✅ Configure matcher to avoid checking static files
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
+};

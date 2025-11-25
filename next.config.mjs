@@ -8,7 +8,7 @@ const nextConfig = {
   },
 
   images: {
-    domains: ["localhost", "gyanitalk.com"],
+    domains: ["localhost", "gyanitalk.com", "gyanitalk.s3.ap-south-1.amazonaws.com"],
     remotePatterns: [
       {
         protocol: "https",
@@ -34,6 +34,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "gyanitalk.com",
         port: ""
+      },
+      {
+        protocol: "https",
+        hostname: "gyanitalk.s3.ap-south-1.amazonaws.com"
       }
     ]
   }

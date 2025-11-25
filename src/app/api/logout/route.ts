@@ -1,21 +1,44 @@
-// src/app/api/logout/route.ts
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function POST() {
-  const res = NextResponse.json({ ok: true });
+  try {
+    const cookieStore = await cookies();
+    
+    // Delete the token cookie
+    cookieStore.delete("token");
+    
+    // Also try to delete any variants
+    ["auth_token", "jwt", "session", "accessToken"].forEach((name) => {
+      try {
+        cookieStore.delete(name);
+      } catch {}
+    });
 
-  // Clear common cookie names you may have used
-  ["token", "auth_token", "jwt"].forEach((name) => {
+    const res = NextResponse.json({ 
+      ok: true, 
+      message: "Logged out successfully",
+      cleared: true  // ✅ Add this flag
+    });
+
+    // IMPORTANT: Set the main token cookie to expired with ALL the same options
     res.cookies.set({
-      name,
+      name: "token",
       value: "",
-      maxAge: 0,
+      maxAge: 0,  // Expire immediately
       path: "/",
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
-  });
 
-  return res;
+    return res;
+  } catch (error) {
+    console.error("Logout error:", error);
+    return NextResponse.json({ 
+      ok: false, 
+      error: "Logout failed",
+      cleared: false 
+    }, { status: 500 });
+  }
 }
