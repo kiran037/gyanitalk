@@ -11,7 +11,6 @@ import type { PropsWithChildren } from "react";
 import { Providers } from "./providers";
 import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 export default function RootLayout({ children }: PropsWithChildren) {
   const pathname = usePathname();
@@ -22,13 +21,14 @@ export default function RootLayout({ children }: PropsWithChildren) {
     "/landing/terms-of-service",
     "/landing/privacy-policy",
     "/landing/contact",
-    "/landing/blog", 
+    "/landing/blog",
     "/landing/astro",
-
+    "/landing/mall",
+    "/landing/courses",
   ];
 
-  const isPublicPage = 
-    pathname === "/" || 
+  const isPublicPage =
+    pathname === "/" ||
     pathname === "/sign-in" ||
     publicPrefixes.some(prefix => pathname.startsWith(prefix));
 

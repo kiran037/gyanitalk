@@ -4,6 +4,7 @@ import LandingWrapper from "@/components/landing/LandingWrapper";
 import { Zap, Wallet, Star, Shield, Clock, Users, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import AppDownloadPopup from "@/components/landing/AppDownloadPopup";
 
 export default function HomePage() {
     const [isVisible, setIsVisible] = useState(false);
@@ -17,6 +18,7 @@ export default function HomePage() {
 
     return (
         <LandingWrapper>
+            <AppDownloadPopup />
             {/* Hero Section */}
             <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden pt-20">
                 {/* Animated Grid Background */}

@@ -10,6 +10,8 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/landing/contact",
   "/landing/blog", 
   "/landing/astro",
+  "/landing/mall",
+  "/landing/courses",
 ];
 
 const PUBLIC_EXACT_ROUTES = [
