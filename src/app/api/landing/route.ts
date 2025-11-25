@@ -118,17 +118,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // TODO: Save to database
-      // await prisma.contact_us.create({
-      //   data: {
-      //     contact_name: name,
-      //     contact_email: email,
-      //     contact_message: message,
-      //     created_at: new Date(),
-      //     updated_at: new Date(),
-      //   },
-      // });
-
       return NextResponse.json({
         success: true,
         message: "Thank you for contacting us! We'll get back to you soon.",
