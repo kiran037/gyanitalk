@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import AppDownloadPopup from "@/components/landing/AppDownloadPopup";
 import AstrologerCarousel from "@/components/landing/AstrologerCarousel";
+import ProductCarousel from "@/components/landing/ProductCarousel";
 
 export default function HomePage() {
     const [isVisible, setIsVisible] = useState(false);
@@ -387,6 +388,7 @@ export default function HomePage() {
             </section>
 
             <AstrologerCarousel />
+            <ProductCarousel />
 
             {/* Benefits Section */}
             <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
