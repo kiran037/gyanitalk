@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import AppDownloadPopup from "@/components/landing/AppDownloadPopup";
 import AstrologerCarousel from "@/components/landing/AstrologerCarousel";
 import ProductCarousel from "@/components/landing/ProductCarousel";
+import PlaystoreReviewCarousel from "@/components/landing/PlaystoreReviewCarousel";
 
 export default function HomePage() {
     const [isVisible, setIsVisible] = useState(false);
@@ -390,6 +391,7 @@ export default function HomePage() {
             <AstrologerCarousel />
             <ProductCarousel />
 
+
             {/* Benefits Section */}
             <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
                 <div className="max-w-7xl mx-auto">
@@ -489,6 +491,7 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+                        <PlaystoreReviewCarousel />
         </LandingWrapper>
     );
 }

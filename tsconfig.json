@@ -35,7 +35,7 @@
     ".next/types/**/*.ts",
     "src/middleware.js",
     ".next/dev/types/**/*.ts"
-  ],
+, "src/app/api/landing/playstorereview/route.js"  ],
   "exclude": [
     "node_modules"
   ]
