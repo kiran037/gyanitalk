@@ -57,7 +57,7 @@ export default function ProductCarousel() {
     if (products.length === 0) return null;
 
     return (
-        <section className="relative py-16 sm:py-24 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
+        <section className="relative py-16 sm:py-24 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
