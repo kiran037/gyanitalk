@@ -165,7 +165,7 @@ const handleClickOutside = (e: MouseEvent) => {
   return (
     <header
       role="banner"
-      className="sticky top-0 z-50 w-full bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/30 shadow-2xl shadow-[#FF6B35]/10 transition-all duration-300"
+      className="sticky top-0 z-50 w-full bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/30  transition-all duration-300"
     >
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">

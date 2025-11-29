@@ -3,7 +3,6 @@
 import { Star, ThumbsUp, Calendar, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface Review {
     id: string;
