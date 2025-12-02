@@ -1,8 +1,7 @@
-///Users/xeoren/gyanitallk-admin/src/components/adminUI/Button.tsx
 import { ReactNode } from "react";
 
 interface ButtonProps {
-  children: ReactNode;
+  children?: ReactNode; // <-- made optional
   variant?: "primary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   icon?: ReactNode;
@@ -11,6 +10,7 @@ interface ButtonProps {
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
   className?: string;
+  ariaLabel?: string; // <-- optional aria-label for icon-only buttons
 }
 
 export function Button({
@@ -23,6 +23,7 @@ export function Button({
   onClick,
   type = "button",
   className = "",
+  ariaLabel,
 }: ButtonProps) {
   const baseStyles =
     "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -44,19 +45,26 @@ export function Button({
     lg: "px-6 py-3 text-base",
   };
 
+  // If the button has no visible children, use aria-label for accessibility
+  const ariaProps = ariaLabel ? { "aria-label": ariaLabel } : {};
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...ariaProps}
     >
       {loading ? (
-        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
       ) : (
-        icon && <span>{icon}</span>
+        // show icon if provided
+        icon ? <span aria-hidden>{icon}</span> : null
       )}
-      {children}
+
+      {/* Only render children if provided */}
+      {children ? <span>{children}</span> : null}
     </button>
   );
 }

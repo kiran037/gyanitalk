@@ -57,17 +57,17 @@ export const NAV_DATA = [
         items: [
           {
             title: "Wallet Transactions",
-            url: "/wallet",
+            url: "/transaction/wallet",
             icon: IndianRupee,
           },
           {
             title: "Payment Transactions",
-            url: "/payments",
+            url: "/transaction/payment",
             icon: CreditCard,
           },
           {
             title: "Manual Transactions",
-            url: "/manual",
+            url: "/transaction/manual",
             icon: CreditCard,
           },
         ],
@@ -140,18 +140,13 @@ export const NAV_DATA = [
         items: [
           {
             title: "Category",
-            url: "/category",
+            url: "/courses/categories",
             icon: Layers,
           },
           {
             title: "Courses",
             url: "/courses",
             icon: FileText,
-          },
-          {
-            title: "Chapter",
-            url: "/chapter",
-            icon: FileSpreadsheet,
           },
         ],
       },
