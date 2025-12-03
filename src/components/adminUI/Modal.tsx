@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/adminUI/Modal.tsx
 import { ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
 

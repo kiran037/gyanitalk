@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/adminUI/ActionModal.tsx
 import { AlertTriangle, Trash2, X } from "lucide-react";
 import { Button } from "./Button";
 

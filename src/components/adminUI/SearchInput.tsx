@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/adminUI/SearchInput.tsx
 import { Search, X } from "lucide-react";
 
 interface SearchInputProps {

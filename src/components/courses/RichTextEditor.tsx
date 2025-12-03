@@ -1,3 +1,4 @@
+///Users/xeoren/gyanitallk-admin/src/components/courses/RichTextEditor.tsx
 "use client";
 
 import { useRef, useEffect } from "react";
