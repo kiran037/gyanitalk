@@ -1398,7 +1398,6 @@ model order_request {
 }
 
 
-
 model pages {
   id                 Int         @id @default(autoincrement())
   title              String?     @db.Text
@@ -2131,7 +2130,6 @@ enum pages_type {
   privacy
   terms
   aboutus
-  home
 }
 
 enum coupons_discount_type {

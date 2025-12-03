@@ -11,9 +11,9 @@ import {
   Trash2,
   Package,
   ChevronDown,
-  ChevronUp,
   Filter,
-  Sparkles,
+  Clock,
+  Star,
   TrendingUp,
 } from "lucide-react";
 import { PageHeader } from "@/components/adminUI/PageHeader";
@@ -157,8 +157,8 @@ export default function CoursesPage() {
   const activeFiltersCount = [selectedCategory, isPaidFilter].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-gray-950 dark:via-slate-900 dark:to-gray-900 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
         {/* Header */}
         <PageHeader
           title="Courses"
@@ -174,76 +174,89 @@ export default function CoursesPage() {
           }
         />
 
-        {/* Search & Sort Bar */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm p-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search courses..."
-              className="flex-1 min-w-[240px]"
-            />
+        {/* Search & Filters Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+          {/* Top Bar */}
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search courses..."
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [newSort, newOrder] = e.target.value.split("-");
+                    setSortBy(newSort);
+                    setSortOrder(newOrder);
+                  }}
+                  className="pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all"
+                >
+                  <option value="created_at-desc">Latest First</option>
+                  <option value="created_at-asc">Oldest First</option>
+                  <option value="name-asc">Name: A to Z</option>
+                  <option value="name-desc">Name: Z to A</option>
+                </select>
 
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [newSort, newOrder] = e.target.value.split("-");
-                setSortBy(newSort);
-                setSortOrder(newOrder);
-              }}
-              className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]/50 transition-all"
-            >
-              <option value="created_at-desc">Latest First</option>
-              <option value="created_at-asc">Oldest First</option>
-              <option value="name-asc">Name: A to Z</option>
-              <option value="name-desc">Name: Z to A</option>
-            </select>
+                <button
+                  onClick={() => setFiltersExpanded(!filtersExpanded)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    filtersExpanded
+                      ? "bg-[#FF6B35] text-white shadow-lg shadow-orange-500/25"
+                      : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-white/20 rounded-full text-xs font-bold">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                  <ChevronDown className={`w-4 h-4 transition-transform ${filtersExpanded ? "rotate-180" : ""}`} />
+                </button>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-white/30 rounded-full text-xs font-bold">
-                  {activeFiltersCount}
-                </span>
-              )}
-              {filtersExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
+            {/* Results Count */}
+            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              Showing <span className="font-semibold text-gray-900 dark:text-white">{pagination.total}</span> {pagination.total === 1 ? "course" : "courses"}
+            </div>
           </div>
 
           {/* Collapsible Filters */}
           {filtersExpanded && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3 animate-in slide-in-from-top-2">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+            <div className="px-4 sm:px-6 pb-6 space-y-6 border-t border-gray-100 dark:border-gray-800 pt-6">
+              {/* Categories */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
                   Categories
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedCategory("")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       selectedCategory === ""
-                        ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"
-                        : "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                        ? "bg-[#FF6B35] text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                     }`}
                   >
-                    All Categories
+                    All
                   </button>
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id.toString())}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         selectedCategory === cat.id.toString()
-                          ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"
-                          : "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          ? "bg-[#FF6B35] text-white shadow-md"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                       }`}
                     >
                       {cat.name}
@@ -252,8 +265,9 @@ export default function CoursesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              {/* Pricing */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
                   Pricing
                 </label>
                 <div className="flex gap-2">
@@ -261,8 +275,8 @@ export default function CoursesPage() {
                     onClick={() => setIsPaidFilter(isPaidFilter === "0" ? "" : "0")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       isPaidFilter === "0"
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
-                        : "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                        ? "bg-emerald-500 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                     }`}
                   >
                     Free
@@ -271,8 +285,8 @@ export default function CoursesPage() {
                     onClick={() => setIsPaidFilter(isPaidFilter === "1" ? "" : "1")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       isPaidFilter === "1"
-                        ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"
-                        : "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                        ? "bg-[#FF6B35] text-white shadow-md"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                     }`}
                   >
                     Premium
@@ -281,50 +295,39 @@ export default function CoursesPage() {
               </div>
             </div>
           )}
-
-          <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {pagination.total}
-            </span>{" "}
-            {pagination.total === 1 ? "course" : "courses"} found
-          </div>
         </div>
 
         {/* Courses Grid */}
         {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse"
+                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden animate-pulse"
               >
-                <div className="w-full h-40 bg-gray-200 dark:bg-gray-700" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                  <div className="flex gap-2 pt-2">
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
-                    <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
-                  </div>
+                <div className="aspect-video bg-gray-200 dark:bg-gray-800" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6" />
                 </div>
               </div>
             ))}
           </div>
         ) : courses.length === 0 ? (
-          <div className="text-center py-20 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 mb-4">
-              <Package className="w-8 h-8 text-[#FF6B35]" />
+          <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 mb-4">
+              <Package className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               No Courses Found
             </h3>
             <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-              {searchQuery
-                ? "Try adjusting your search or filters to find what you're looking for"
-                : "Get started by creating your first course and share your knowledge"}
+              {searchQuery || activeFiltersCount > 0
+                ? "Try adjusting your search or filters"
+                : "Get started by creating your first course"}
             </p>
-            {!searchQuery && (
+            {!searchQuery && activeFiltersCount === 0 && (
               <Button
                 variant="primary"
                 icon={<Plus className="w-4 h-4" />}
@@ -336,39 +339,42 @@ export default function CoursesPage() {
           </div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
               {courses.map((course) => (
                 <div
                   key={course.id}
-                  className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#FF6B35]/40 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 overflow-hidden flex flex-col"
+                  className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-xl hover:shadow-gray-900/5 dark:hover:shadow-black/20 transition-all duration-300 overflow-hidden"
                 >
-                  {/* Compact Image */}
-                  <div className="relative h-36 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+                  {/* Image */}
+                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                     {course.image ? (
                       <img
                         src={avatar(course.image)}
                         alt={course.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FF6B35]/10 to-[#FFB347]/10">
-                        <BookOpen className="w-12 h-12 text-[#FF6B35]/40" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="w-16 h-16 text-gray-300 dark:text-gray-700" />
                       </div>
                     )}
                     
-                    {/* Badges */}
-                    <div className="absolute inset-x-0 top-0 p-2 flex items-start justify-between">
+                    {/* Overlay gradient for better badge visibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/20" />
+                    
+                    {/* Top badges */}
+                    <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
                       {course.is_paid === 0 ? (
-                        <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-md shadow-lg backdrop-blur-sm">
+                        <span className="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md shadow-lg">
                           FREE
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-xs font-bold rounded-md shadow-lg backdrop-blur-sm">
+                        <span className="px-2.5 py-1 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-xs font-bold rounded-md shadow-lg">
                           PREMIUM
                         </span>
                       )}
                       {course.category && (
-                        <span className="px-2 py-0.5 bg-white/95 dark:bg-gray-900/95 text-[#FF6B35] text-xs font-semibold rounded-md shadow-lg backdrop-blur-sm">
+                        <span className="px-2.5 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs font-semibold rounded-md shadow-lg">
                           {course.category.name}
                         </span>
                       )}
@@ -376,75 +382,74 @@ export default function CoursesPage() {
                   </div>
 
                   {/* Content */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-2 mb-2 leading-snug">
+                  <div className="p-5 space-y-4">
+                    {/* Title */}
+                    <h3 className="font-bold text-gray-900 dark:text-white text-base leading-snug line-clamp-2 min-h-[3rem]">
                       {course.name}
                     </h3>
 
+                    {/* Description */}
                     {course.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed min-h-[2.5rem]">
                         {course.description}
                       </p>
                     )}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span className="font-medium">{course._count.chapters}</span>
+                    <div className="flex items-center gap-4 py-3 border-y border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm font-medium">{course._count.chapters}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5" />
-                        <span className="font-medium">{course._count.course_purchase}</span>
+                      <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                        <Users className="w-4 h-4" />
+                        <span className="text-sm font-medium">{course._count.course_purchase}</span>
                       </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="mb-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                      {course.is_paid === 1 ? (
-                        <div className="flex items-baseline gap-2">
-                          {course.offer_price &&
-                          course.offer_price < (course.price || 0) ? (
-                            <>
-                              <span className="text-lg font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                                ₹{course.offer_price}
-                              </span>
-                              <span className="text-xs text-gray-400 line-through">
+                    {/* Price & Actions */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        {course.is_paid === 1 ? (
+                          <div className="flex items-baseline gap-2">
+                            {course.offer_price && course.offer_price < (course.price || 0) ? (
+                              <>
+                                <span className="text-2xl font-bold text-[#FF6B35]">
+                                  ₹{course.offer_price}
+                                </span>
+                                <span className="text-sm text-gray-400 line-through">
+                                  ₹{course.price}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-2xl font-bold text-[#FF6B35]">
                                 ₹{course.price}
                               </span>
-                            </>
-                          ) : (
-                            <span className="text-lg font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                              ₹{course.price}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-lg font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-                          Free
-                        </span>
-                      )}
-                    </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-2xl font-bold text-emerald-500">
+                            Free
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 mt-auto">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        icon={<Eye className="w-3.5 h-3.5" />}
-                        onClick={() => router.push(`/courses/${course.id}`)}
-                        className="flex-1 text-xs font-medium"
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        icon={<Trash2 className="w-3.5 h-3.5" />}
-                        onClick={() => handleDelete(course)}
-                        ariaLabel="Delete"
-                        className="shrink-0"
-                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => router.push(`/courses/${course.id}`)}
+                          className="p-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-[#FF6B35] hover:text-white text-gray-700 dark:text-gray-300 rounded-lg transition-all"
+                          aria-label="View course"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(course)}
+                          className="p-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-500 text-red-600 hover:text-white dark:text-red-400 rounded-lg transition-all"
+                          aria-label="Delete course"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -466,7 +471,7 @@ export default function CoursesPage() {
                   Previous
                 </Button>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
                     let pageNum;
                     if (pagination.totalPages <= 5) {
@@ -485,10 +490,10 @@ export default function CoursesPage() {
                         onClick={() =>
                           setPagination((prev) => ({ ...prev, page: pageNum }))
                         }
-                        className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+                        className={`min-w-[2.5rem] h-10 px-3 rounded-lg text-sm font-semibold transition-all ${
                           pagination.page === pageNum
-                            ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"
-                            : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#FF6B35]/30"
+                            ? "bg-[#FF6B35] text-white shadow-md"
+                            : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-[#FF6B35] hover:text-[#FF6B35]"
                         }`}
                       >
                         {pageNum}

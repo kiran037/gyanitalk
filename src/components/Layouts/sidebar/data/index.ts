@@ -155,18 +155,24 @@ export const NAV_DATA = [
         icon:   ShoppingBag,
         items: [
           {
-            title: "Product Categories",
-            url: "/productCategories",
+            title: "Dashboard",
+            url: "/astroshop",
             icon: Folder,
           },
           {
-            title: "Products",
-            url: "/products",
+            title: "Products Categories",
+            url: "/astroshop/categories",
             icon: PackageSearch,
           },
+           {
+            title: "Products",
+            url: "/astroshop/products",
+            icon: PackageSearch,
+          },
+
           {
             title: "Orders",
-            url: "/orders",
+            url: "/astroshop/orders",
             icon: IndianRupee,
           },
         ],

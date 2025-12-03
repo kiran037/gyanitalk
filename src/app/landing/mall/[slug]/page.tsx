@@ -266,7 +266,7 @@ export default function ProductDetailPage() {
 
                                     {/* Action Buttons */}
                                     <div className="absolute top-6 right-6 flex flex-col gap-2">
-                                      
+
                                         <motion.button
                                             onClick={handleShare}
                                             className="w-10 h-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
@@ -456,7 +456,7 @@ export default function ProductDetailPage() {
                                         <div className="text-2xl font-bold text-[#FF6B35] mb-1">{product.productDetails.length}</div>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">Key Features</div>
                                     </div>
-                                 
+
                                 </motion.div>
                             </motion.div>
                         </div>
@@ -512,9 +512,10 @@ export default function ProductDetailPage() {
                                             Key Features & Benefits
                                         </h2>
                                         <div className="prose prose-gray dark:prose-invert max-w-none">
-                                            <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                                                {product.features}
-                                            </div>
+                                            <div
+                                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
+                                                dangerouslySetInnerHTML={{ __html: product.features }}
+                                            />
                                         </div>
 
                                         {/* Feature Highlights */}
