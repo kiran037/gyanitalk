@@ -1,43 +1,50 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
 
   images: {
-    domains: ["localhost", "gyanitalk.com", "gyanitalk.s3.ap-south-1.amazonaws.com"],
     remotePatterns: [
+
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
+        pathname: "/**"
+      },
+
+      {
+        protocol: "https",
+        hostname: "gyanitalk.com",
+        pathname: "/**"
+      },
+
+      {
+        protocol: "https",
+        hostname: "gyanitalk.s3.ap-south-1.amazonaws.com",
+        pathname: "/**"
+      },
+
       {
         protocol: "https",
         hostname: "cdn.sanity.io",
-        port: ""
+        pathname: "/**"
       },
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
-        port: ""
+        pathname: "/**"
       },
       {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
-        port: ""
+        pathname: "/**"
       },
       {
         protocol: "https",
         hostname: "pub-b7fd9c30cdbf439183b75041f5f71b92.r2.dev",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "gyanitalk.com",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "gyanitalk.s3.ap-south-1.amazonaws.com"
+        pathname: "/**"
       }
     ]
   }
