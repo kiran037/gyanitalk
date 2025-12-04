@@ -2,17 +2,7 @@
 import { Eye, Trash2, User, Calendar, Tag, Star } from "lucide-react";
 import { Button } from "../adminUI/Button";
 import { motion } from "framer-motion";
-
-interface TicketData {
-  id: string;
-  ticketNumber: string;
-  subject: string;
-  ticketStatus: string;
-  user: { name: string; email: string } | null;
-  help_support: { name: string } | null;
-  ticketreview: Array<{ rating: number | null }>;
-  created_at: string;
-}
+import type { TicketData } from "@/types/support";
 
 interface TicketsTableProps {
   tickets: TicketData[];

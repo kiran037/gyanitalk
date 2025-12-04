@@ -1,4 +1,4 @@
-// app/api/support/faq/questions/route.ts
+// // app/api/support/faq/questions/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -6,16 +6,18 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+
+    let page = parseInt(searchParams.get("page") || "1", 10);
+    let limit = parseInt(searchParams.get("limit") || "50", 10);
     const search = searchParams.get("search") || "";
     const categoryId = searchParams.get("categoryId");
     const isActive = searchParams.get("isActive");
 
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) limit = 50;
+
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       isDelete: false,
     };
@@ -28,17 +30,22 @@ export async function GET(req: NextRequest) {
     }
 
     if (categoryId) {
-      where.helpSupportId = BigInt(categoryId);
+      try {
+        where.helpSupportId = BigInt(categoryId);
+      } catch {
+        return NextResponse.json(
+          { success: false, error: "Invalid categoryId" },
+          { status: 400 }
+        );
+      }
     }
 
     if (isActive !== null && isActive !== undefined && isActive !== "") {
       where.isActive = isActive === "true";
     }
 
-    // Get total count
     const total = await prisma.help_support_quations.count({ where });
 
-    // Get questions with category and answers
     const questions = await prisma.help_support_quations.findMany({
       where,
       skip,
@@ -58,15 +65,16 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedQuestions = questions.map((q) => ({
       ...q,
       id: q.id.toString(),
       helpSupportId: q.helpSupportId.toString(),
-      support: q.support ? {
-        ...q.support,
-        id: q.support.id.toString(),
-      } : null,
+      support: q.support
+        ? {
+            ...q.support,
+            id: q.support.id.toString(),
+          }
+        : null,
       help_support_quation_answers: q.help_support_quation_answers.map((a) => ({
         ...a,
         id: a.id.toString(),
@@ -98,9 +106,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { helpSupportId, question, answer, isActive, isChatWithus, createdBy } = body;
+    const {
+      helpSupportId,
+      question,
+      answer,
+      isActive,
+      isChatWithus,
+      createdBy,
+    } = body;
 
-    // Validation
     if (!helpSupportId || !question) {
       return NextResponse.json(
         { success: false, error: "Category ID and question are required" },
@@ -108,9 +122,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if category exists
+    let helpSupportBig: bigint;
+    try {
+      helpSupportBig = BigInt(helpSupportId);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid helpSupportId" },
+        { status: 400 }
+      );
+    }
+
     const category = await prisma.help_supports.findUnique({
-      where: { id: BigInt(helpSupportId) },
+      where: { id: helpSupportBig },
     });
 
     if (!category || category.isDelete) {
@@ -122,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     const newQuestion = await prisma.help_support_quations.create({
       data: {
-        helpSupportId: BigInt(helpSupportId),
+        helpSupportId: helpSupportBig,
         question,
         answer: answer || null,
         isActive: isActive !== undefined ? isActive : true,
@@ -141,15 +164,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedQuestion = {
       ...newQuestion,
       id: newQuestion.id.toString(),
       helpSupportId: newQuestion.helpSupportId.toString(),
-      support: newQuestion.support ? {
-        ...newQuestion.support,
-        id: newQuestion.support.id.toString(),
-      } : null,
+      support: newQuestion.support
+        ? {
+            ...newQuestion.support,
+            id: newQuestion.support.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json(

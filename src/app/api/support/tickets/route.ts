@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    
+
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
@@ -39,15 +39,26 @@ export async function GET(req: NextRequest) {
       where.ticketStatus = status;
     }
 
-    // Filter by user
     if (userId) {
+      if (!/^\d+$/.test(userId)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid userId" },
+          { status: 400 }
+        );
+      }
       where.userId = BigInt(userId);
     }
 
-    // Filter by help support category
     if (helpSupportId) {
+      if (!/^\d+$/.test(helpSupportId)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid helpSupportId" },
+          { status: 400 }
+        );
+      }
       where.helpSupportId = BigInt(helpSupportId);
     }
+
 
     // Date range filter
     if (startDate || endDate) {
@@ -91,21 +102,30 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Convert BigInt to string for JSON serialization
     const serializedTickets = tickets.map((ticket) => ({
       ...ticket,
       id: ticket.id.toString(),
       userId: ticket.userId.toString(),
       helpSupportId: ticket.helpSupportId.toString(),
-      user: ticket.user ? {
-        ...ticket.user,
-        id: ticket.user.id.toString(),
-      } : null,
-      help_support: ticket.help_support ? {
-        ...ticket.help_support,
-        id: ticket.help_support.id.toString(),
-      } : null,
+      user: ticket.user
+        ? {
+          ...ticket.user,
+          id: ticket.user.id.toString(),
+        }
+        : null,
+      help_support: ticket.help_support
+        ? {
+          ...ticket.help_support,
+          id: ticket.help_support.id.toString(),
+        }
+        : null,
+      ticketreview: ticket.ticketreview.map((r) => ({
+        ...r,
+        id: (r as any).id?.toString?.() ?? r.id, // in case it's bigint
+        // if you ever include userId/ticketId here, also toString() them
+      })),
     }));
+
 
     return NextResponse.json({
       success: true,

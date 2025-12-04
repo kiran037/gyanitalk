@@ -1,4 +1,4 @@
-// // app/api/support/contact/[id]/route.ts
+// app/api/support/contact/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -36,8 +36,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true, data: contact });
   } catch (error: any) {
+    console.error("Error fetching contact:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message ?? "Internal server error" },
       { status: 500 }
     );
   }
@@ -60,13 +61,22 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       );
     }
 
+    // Only update fields that are actually provided
+    const data: any = {};
+    if (body.contact_name !== undefined) data.contact_name = body.contact_name;
+    if (body.contact_email !== undefined) data.contact_email = body.contact_email;
+    if (body.contact_message !== undefined) data.contact_message = body.contact_message;
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { success: false, error: "No fields provided to update" },
+        { status: 400 }
+      );
+    }
+
     const contact = await prisma.contact_us.update({
       where: { id },
-      data: {
-        contact_name: body.contact_name,
-        contact_email: body.contact_email,
-        contact_message: body.contact_message,
-      },
+      data,
     });
 
     return NextResponse.json({
@@ -75,8 +85,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       message: "Contact updated successfully",
     });
   } catch (error: any) {
+    console.error("Error updating contact:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message ?? "Internal server error" },
       { status: 500 }
     );
   }
@@ -107,8 +118,9 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       message: "Contact deleted successfully",
     });
   } catch (error: any) {
+    console.error("Error deleting contact:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message ?? "Internal server error" },
       { status: 500 }
     );
   }

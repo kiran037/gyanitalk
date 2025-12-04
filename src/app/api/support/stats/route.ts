@@ -9,14 +9,19 @@ export async function GET(req: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    // Build date filter
-    const dateFilter: any = {};
-    if (startDate) dateFilter.gte = new Date(startDate);
-    if (endDate) dateFilter.lte = new Date(endDate);
+    // Build date filter for created_at
+    const createdAtFilter: Record<string, Date> = {};
+    if (startDate) createdAtFilter.gte = new Date(startDate);
+    if (endDate) createdAtFilter.lte = new Date(endDate);
 
+    const withDateFilter =
+      startDate || endDate ? { created_at: createdAtFilter } : {};
+
+    // -----------------------
     // Contact Us Stats
+    // -----------------------
     const contactStats = await prisma.contact_us.count({
-      where: startDate || endDate ? { created_at: dateFilter } : {},
+      where: withDateFilter,
     });
 
     const recentContacts = await prisma.contact_us.findMany({
@@ -30,45 +35,49 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // -----------------------
     // Ticket Stats
+    // -----------------------
     const ticketStats = {
       total: await prisma.tickets.count({
         where: {
           isDelete: false,
-          ...(startDate || endDate ? { created_at: dateFilter } : {}),
+          ...withDateFilter,
         },
       }),
       open: await prisma.tickets.count({
         where: {
           isDelete: false,
           ticketStatus: "Open",
-          ...(startDate || endDate ? { created_at: dateFilter } : {}),
+          ...withDateFilter,
         },
       }),
       inProgress: await prisma.tickets.count({
         where: {
           isDelete: false,
           ticketStatus: "In Progress",
-          ...(startDate || endDate ? { created_at: dateFilter } : {}),
+          ...withDateFilter,
         },
       }),
       resolved: await prisma.tickets.count({
         where: {
           isDelete: false,
           ticketStatus: "Resolved",
-          ...(startDate || endDate ? { created_at: dateFilter } : {}),
+          ...withDateFilter,
         },
       }),
       closed: await prisma.tickets.count({
         where: {
           isDelete: false,
           ticketStatus: "Closed",
-          ...(startDate || endDate ? { created_at: dateFilter } : {}),
+          ...withDateFilter,
         },
       }),
     };
 
+    // -----------------------
     // Recent Tickets
+    // -----------------------
     const recentTickets = await prisma.tickets.findMany({
       where: { isDelete: false },
       take: 5,
@@ -81,6 +90,7 @@ export async function GET(req: NextRequest) {
         created_at: true,
         user: {
           select: {
+            id: true,          // 👈 add id so we can serialize it
             name: true,
             email: true,
           },
@@ -88,17 +98,28 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const serializedRecentTickets = recentTickets.map((t) => ({
+      ...t,
+      id: t.id.toString(), // BigInt -> string
+      user: t.user
+        ? {
+            ...t.user,
+            id: t.user.id.toString(), // BigInt -> string
+          }
+        : null,
+    }));
+
+    // -----------------------
     // Ticket Reviews Stats
+    // -----------------------
     const reviewStats = await prisma.ticketreview.aggregate({
-      _avg: {
-        rating: true,
-      },
-      _count: {
-        rating: true,
-      },
+      _avg: { rating: true },
+      _count: { rating: true },
     });
 
+    // -----------------------
     // FAQ Stats
+    // -----------------------
     const faqStats = {
       categories: await prisma.help_supports.count({
         where: { isDelete: false },
@@ -117,12 +138,14 @@ export async function GET(req: NextRequest) {
       }),
     };
 
-    // Ticket by Category
+    // -----------------------
+    // Tickets by Category
+    // -----------------------
     const ticketsByCategory = await prisma.tickets.groupBy({
       by: ["helpSupportId"],
       where: {
         isDelete: false,
-        ...(startDate || endDate ? { created_at: dateFilter } : {}),
+        ...withDateFilter,
       },
       _count: {
         id: true,
@@ -135,7 +158,6 @@ export async function GET(req: NextRequest) {
       take: 10,
     });
 
-    // Get category names
     const categoryIds = ticketsByCategory.map((t) => t.helpSupportId);
     const categories = await prisma.help_supports.findMany({
       where: { id: { in: categoryIds } },
@@ -145,22 +167,15 @@ export async function GET(req: NextRequest) {
     const ticketsByCategoryWithNames = ticketsByCategory.map((t) => {
       const category = categories.find((c) => c.id === t.helpSupportId);
       return {
-        categoryId: t.helpSupportId.toString(),
+        categoryId: t.helpSupportId.toString(), // BigInt -> string
         categoryName: category?.name || "Unknown",
         count: t._count.id,
       };
     });
 
-    // Serialize BigInt in recent tickets
-    const serializedRecentTickets = recentTickets.map((t) => ({
-      ...t,
-      id: t.id.toString(),
-      user: t.user ? {
-        ...t.user,
-        id: t.user.id?.toString(),
-      } : null,
-    }));
-
+    // -----------------------
+    // Final response
+    // -----------------------
     return NextResponse.json({
       success: true,
       data: {

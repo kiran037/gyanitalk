@@ -1,4 +1,4 @@
-// app/api/support/faq/categories/route.ts
+// // app/api/support/faq/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -6,15 +6,17 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+
+    let page = parseInt(searchParams.get("page") || "1", 10);
+    let limit = parseInt(searchParams.get("limit") || "50", 10);
     const search = searchParams.get("search") || "";
     const isActive = searchParams.get("isActive");
 
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) limit = 50;
+
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       isDelete: false,
     };
@@ -27,10 +29,8 @@ export async function GET(req: NextRequest) {
       where.isActive = isActive === "true";
     }
 
-    // Get total count
     const total = await prisma.help_supports.count({ where });
 
-    // Get categories with question count
     const categories = await prisma.help_supports.findMany({
       where,
       skip,
@@ -46,7 +46,6 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedCategories = categories.map((cat) => ({
       ...cat,
       id: cat.id.toString(),
@@ -78,7 +77,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, isActive, createdBy } = body;
 
-    // Validation
     if (!name) {
       return NextResponse.json(
         { success: false, error: "Category name is required" },
@@ -86,7 +84,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if category already exists
     const existingCategory = await prisma.help_supports.findFirst({
       where: {
         name,
@@ -111,7 +108,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedCategory = {
       ...category,
       id: category.id.toString(),

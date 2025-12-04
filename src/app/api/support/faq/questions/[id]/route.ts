@@ -1,14 +1,30 @@
-// app/api/support/faq/questions/[id]/route.ts
+// // app/api/support/faq/questions/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET single question by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+function safeToBigInt(id: string): bigint {
   try {
-    const id = BigInt(params.id);
+    return BigInt(id);
+  } catch {
+    throw new Error(`Invalid question id: "${id}"`);
+  }
+}
+
+async function getQuestionId(context: RouteContext): Promise<bigint> {
+  const { params } = context;   // params is a Promise
+  const { id } = await params;  // unwrap
+  return safeToBigInt(id);
+}
+
+// GET single question by ID
+export async function GET(req: NextRequest, context: RouteContext) {
+  try {
+    const id = await getQuestionId(context);
 
     const question = await prisma.help_support_quations.findUnique({
       where: { id },
@@ -33,21 +49,24 @@ export async function GET(
       );
     }
 
-    // Serialize BigInt
     const serializedQuestion = {
       ...question,
       id: question.id.toString(),
       helpSupportId: question.helpSupportId.toString(),
-      support: question.support ? {
-        ...question.support,
-        id: question.support.id.toString(),
-      } : null,
-      help_support_quation_answers: question.help_support_quation_answers.map((a) => ({
-        ...a,
-        id: a.id.toString(),
-        helpSupportId: a.helpSupportId.toString(),
-        helpSupportQuationId: a.helpSupportQuationId.toString(),
-      })),
+      support: question.support
+        ? {
+            ...question.support,
+            id: question.support.id.toString(),
+          }
+        : null,
+      help_support_quation_answers: question.help_support_quation_answers.map(
+        (a) => ({
+          ...a,
+          id: a.id.toString(),
+          helpSupportId: a.helpSupportId.toString(),
+          helpSupportQuationId: a.helpSupportQuationId.toString(),
+        })
+      ),
     };
 
     return NextResponse.json({ success: true, data: serializedQuestion });
@@ -60,15 +79,11 @@ export async function GET(
 }
 
 // PATCH update question
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getQuestionId(context);
     const body = await req.json();
 
-    // Check if question exists
     const existingQuestion = await prisma.help_support_quations.findUnique({
       where: { id },
     });
@@ -80,18 +95,26 @@ export async function PATCH(
       );
     }
 
-    // Prepare update data
     const updateData: any = {
       modifiedBy: body.modifiedBy || 1,
     };
 
-    if (body.question) updateData.question = body.question;
+    if (body.question !== undefined) updateData.question = body.question;
     if (body.answer !== undefined) updateData.answer = body.answer;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
-    if (body.isChatWithus !== undefined) updateData.isChatWithus = body.isChatWithus;
-    if (body.helpSupportId) updateData.helpSupportId = BigInt(body.helpSupportId);
+    if (body.isChatWithus !== undefined)
+      updateData.isChatWithus = body.isChatWithus;
+    if (body.helpSupportId !== undefined) {
+      try {
+        updateData.helpSupportId = BigInt(body.helpSupportId);
+      } catch {
+        return NextResponse.json(
+          { success: false, error: "Invalid helpSupportId" },
+          { status: 400 }
+        );
+      }
+    }
 
-    // Update question
     const question = await prisma.help_support_quations.update({
       where: { id },
       data: updateData,
@@ -105,15 +128,16 @@ export async function PATCH(
       },
     });
 
-    // Serialize BigInt
     const serializedQuestion = {
       ...question,
       id: question.id.toString(),
       helpSupportId: question.helpSupportId.toString(),
-      support: question.support ? {
-        ...question.support,
-        id: question.support.id.toString(),
-      } : null,
+      support: question.support
+        ? {
+            ...question.support,
+            id: question.support.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json({
@@ -130,14 +154,10 @@ export async function PATCH(
 }
 
 // DELETE question (soft delete)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getQuestionId(context);
 
-    // Check if question exists
     const existingQuestion = await prisma.help_support_quations.findUnique({
       where: { id },
       include: {
@@ -154,7 +174,6 @@ export async function DELETE(
       );
     }
 
-    // Soft delete question
     await prisma.help_support_quations.update({
       where: { id },
       data: {
@@ -163,7 +182,6 @@ export async function DELETE(
       },
     });
 
-    // Also soft delete all related answers
     if (existingQuestion.help_support_quation_answers.length > 0) {
       await prisma.help_support_quation_answers.updateMany({
         where: {

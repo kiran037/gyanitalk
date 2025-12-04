@@ -1,14 +1,27 @@
-// app/api/support/tickets/[id]/route.ts
+// // app/api/support/tickets/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+// Helper to safely get BigInt ID from params
+async function getTicketId(context: RouteContext): Promise<bigint> {
+  const { params } = context;      // params is a Promise
+  const { id } = await params;     // unwrap it
+
+  if (!/^\d+$/.test(id)) {
+    throw new Error(`Invalid ticket id: "${id}"`);
+  }
+
+  return BigInt(id);
+}
+
 // GET single ticket by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getTicketId(context);
 
     const ticket = await prisma.tickets.findUnique({
       where: { id },
@@ -34,6 +47,7 @@ export async function GET(
             rating: true,
             review: true,
             userId: true,
+            ticketId: true,
             created_at: true,
           },
         },
@@ -47,28 +61,35 @@ export async function GET(
       );
     }
 
-    // Serialize BigInt
+    // Serialize BigInt-related fields
     const serializedTicket = {
       ...ticket,
       id: ticket.id.toString(),
       userId: ticket.userId.toString(),
       helpSupportId: ticket.helpSupportId.toString(),
-      user: ticket.user ? {
-        ...ticket.user,
-        id: ticket.user.id.toString(),
-      } : null,
-      help_support: ticket.help_support ? {
-        ...ticket.help_support,
-        id: ticket.help_support.id.toString(),
-      } : null,
-      ticketreview: ticket.ticketreview.map(review => ({
+      user: ticket.user
+        ? {
+            ...ticket.user,
+            id: ticket.user.id.toString(),
+          }
+        : null,
+      help_support: ticket.help_support
+        ? {
+            ...ticket.help_support,
+            id: ticket.help_support.id.toString(),
+          }
+        : null,
+      ticketreview: ticket.ticketreview.map((review) => ({
         ...review,
-        ticketId: ticket.id.toString(),
+        id: review.id.toString(),
+        userId: review.userId.toString(),
+        ticketId: review.ticketId.toString(),
       })),
     };
 
     return NextResponse.json({ success: true, data: serializedTicket });
   } catch (error: any) {
+    console.error("Error fetching ticket:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -77,12 +98,9 @@ export async function GET(
 }
 
 // PATCH update ticket
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getTicketId(context);
     const body = await req.json();
 
     // Check if ticket exists
@@ -136,14 +154,18 @@ export async function PATCH(
       id: ticket.id.toString(),
       userId: ticket.userId.toString(),
       helpSupportId: ticket.helpSupportId.toString(),
-      user: ticket.user ? {
-        ...ticket.user,
-        id: ticket.user.id.toString(),
-      } : null,
-      help_support: ticket.help_support ? {
-        ...ticket.help_support,
-        id: ticket.help_support.id.toString(),
-      } : null,
+      user: ticket.user
+        ? {
+            ...ticket.user,
+            id: ticket.user.id.toString(),
+          }
+        : null,
+      help_support: ticket.help_support
+        ? {
+            ...ticket.help_support,
+            id: ticket.help_support.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json({
@@ -152,6 +174,7 @@ export async function PATCH(
       message: "Ticket updated successfully",
     });
   } catch (error: any) {
+    console.error("Error updating ticket:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -160,12 +183,9 @@ export async function PATCH(
 }
 
 // DELETE ticket (soft delete)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getTicketId(context);
 
     // Check if ticket exists
     const existingTicket = await prisma.tickets.findUnique({
@@ -193,6 +213,7 @@ export async function DELETE(
       message: "Ticket deleted successfully",
     });
   } catch (error: any) {
+    console.error("Error deleting ticket:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

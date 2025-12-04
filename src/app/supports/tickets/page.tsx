@@ -11,35 +11,7 @@ import { CreateTicketModal } from "@/components/supports/CreateTicketModal";
 import { ActionModal } from "@/components/adminUI/ActionModal";
 import { Plus, Ticket, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface TicketData {
-  id: string;
-  ticketNumber: string;
-  subject: string;
-  description: string;
-  ticketStatus: string;
-  userId: string;
-  helpSupportId: string;
-  chatId: string | null;
-  created_at: string;
-  updated_at: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    contactNo: string;
-  } | null;
-  help_support: {
-    id: string;
-    name: string;
-  } | null;
-  ticketreview: Array<{
-    id: number;
-    rating: number | null;
-    review: string | null;
-    created_at: string;
-  }>;
-}
+import type { TicketData } from "@/types/support";
 
 interface Pagination {
   total: number;
@@ -198,15 +170,6 @@ export default function TicketsPage() {
             title="Tickets Management"
             subtitle="Track and manage customer support tickets"
             badge={{ text: "SUPPORT", variant: "orange" }}
-            actions={
-              <Button
-                variant="primary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={() => setShowCreateModal(true)}
-              >
-                New Ticket
-              </Button>
-            }
           />
         </motion.div>
 

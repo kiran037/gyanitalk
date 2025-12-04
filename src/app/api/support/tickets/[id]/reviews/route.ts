@@ -1,14 +1,27 @@
-// app/api/support/tickets/[id]/reviews/route.ts
+// // app/api/support/tickets/[id]/reviews/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+// Helper: safely get BigInt ticketId from context
+async function getTicketId(context: RouteContext): Promise<bigint> {
+  const { params } = context;      // params is a Promise
+  const { id } = await params;     // unwrap it
+
+  if (!/^\d+$/.test(id)) {
+    throw new Error(`Invalid ticket id: "${id}"`);
+  }
+
+  return BigInt(id);
+}
+
 // GET all reviews for a ticket
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const ticketId = BigInt(params.id);
+    const ticketId = await getTicketId(context);
 
     // Check if ticket exists
     const ticket = await prisma.tickets.findUnique({
@@ -28,21 +41,27 @@ export async function GET(
       orderBy: { created_at: "desc" },
     });
 
-    // Serialize
-    const serializedReviews = reviews.map(review => ({
+    // Serialize BigInt fields if needed
+    const serializedReviews = reviews.map((review) => ({
       ...review,
+      id: review.id.toString?.() ?? review.id,           // if id is bigint
+      userId: review.userId?.toString?.() ?? review.userId,
       ticketId: review.ticketId.toString(),
     }));
+
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+        : 0;
 
     return NextResponse.json({
       success: true,
       data: serializedReviews,
       count: reviews.length,
-      averageRating: reviews.length > 0 
-        ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length 
-        : 0,
+      averageRating,
     });
   } catch (error: any) {
+    console.error("Error fetching ticket reviews:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -51,12 +70,9 @@ export async function GET(
 }
 
 // POST create new review for ticket
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const ticketId = BigInt(params.id);
+    const ticketId = await getTicketId(context);
     const body = await req.json();
     const { userId, rating, review } = body;
 
@@ -87,11 +103,20 @@ export async function POST(
       );
     }
 
+    // If your ticketreview.userId column is BIGINT, switch this to BigInt(userId)
+    const userIdNum = parseInt(userId);
+    if (Number.isNaN(userIdNum)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid userId" },
+        { status: 400 }
+      );
+    }
+
     // Check if user already reviewed this ticket
     const existingReview = await prisma.ticketreview.findFirst({
       where: {
         ticketId,
-        userId: parseInt(userId),
+        userId: userIdNum,
       },
     });
 
@@ -106,7 +131,7 @@ export async function POST(
     const newReview = await prisma.ticketreview.create({
       data: {
         ticketId,
-        userId: parseInt(userId),
+        userId: userIdNum,
         rating: rating || null,
         review: review || null,
       },
@@ -115,6 +140,8 @@ export async function POST(
     // Serialize
     const serializedReview = {
       ...newReview,
+      id: newReview.id.toString?.() ?? newReview.id,
+      userId: newReview.userId?.toString?.() ?? newReview.userId,
       ticketId: newReview.ticketId.toString(),
     };
 
@@ -127,6 +154,7 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Error creating ticket review:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

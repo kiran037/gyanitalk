@@ -6,15 +6,17 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+
+    let page = parseInt(searchParams.get("page") || "1", 10);
+    let limit = parseInt(searchParams.get("limit") || "50", 10);
     const questionId = searchParams.get("questionId");
     const isActive = searchParams.get("isActive");
 
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) limit = 50;
+
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       isDelete: false,
     };
@@ -27,10 +29,8 @@ export async function GET(req: NextRequest) {
       where.isActive = isActive === "true";
     }
 
-    // Get total count
     const total = await prisma.help_support_quation_answers.count({ where });
 
-    // Get answers with question details
     const answers = await prisma.help_support_quation_answers.findMany({
       where,
       skip,
@@ -47,16 +47,17 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedAnswers = answers.map((a) => ({
       ...a,
       id: a.id.toString(),
       helpSupportId: a.helpSupportId.toString(),
       helpSupportQuationId: a.helpSupportQuationId.toString(),
-      question: a.question ? {
-        ...a.question,
-        id: a.question.id.toString(),
-      } : null,
+      question: a.question
+        ? {
+            ...a.question,
+            id: a.question.id.toString(),
+          }
+        : null,
     }));
 
     return NextResponse.json({
@@ -91,7 +92,6 @@ export async function POST(req: NextRequest) {
       createdBy,
     } = body;
 
-    // Validation
     if (!helpSupportId || !helpSupportQuationId) {
       return NextResponse.json(
         { success: false, error: "Category ID and Question ID are required" },
@@ -99,7 +99,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if question exists
     const question = await prisma.help_support_quations.findUnique({
       where: { id: BigInt(helpSupportQuationId) },
     });
@@ -133,16 +132,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Serialize BigInt
     const serializedAnswer = {
       ...newAnswer,
       id: newAnswer.id.toString(),
       helpSupportId: newAnswer.helpSupportId.toString(),
       helpSupportQuationId: newAnswer.helpSupportQuationId.toString(),
-      question: newAnswer.question ? {
-        ...newAnswer.question,
-        id: newAnswer.question.id.toString(),
-      } : null,
+      question: newAnswer.question
+        ? {
+            ...newAnswer.question,
+            id: newAnswer.question.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json(
