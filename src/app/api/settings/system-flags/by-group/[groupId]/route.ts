@@ -1,48 +1,58 @@
 // app/api/settings/system-flags/by-group/[groupId]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+// 🔹 Turbopack route context type
+type RouteContext = {
+  params: Promise<{ groupId: string }>;
+};
+
+// 🔹 Safe parser for groupId
+function parseGroupId(groupId: string): number {
+  if (!groupId) throw new Error("Missing groupId param");
+  const trimmed = groupId.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    throw new Error(`Invalid groupId param: ${groupId}`);
+  }
+  return parseInt(trimmed, 10);
+}
 
 // GET - Fetch all flags for a specific group
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { groupId: string } }
-) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
+    const { groupId } = await context.params; // ✅ await params
+    const groupIdNum = parseGroupId(groupId);
+
     const { searchParams } = new URL(req.url);
-    const activeOnly = searchParams.get('activeOnly') === 'true';
+    const activeOnly = searchParams.get("activeOnly") === "true";
 
     // First, verify the group exists
     const group = await prisma.flaggroup.findFirst({
       where: {
-        id: parseInt(params.groupId),
-        isDelete: '0',
+        id: groupIdNum,
+        isDelete: 0,
       },
     });
 
     if (!group) {
       return NextResponse.json(
-        { success: false, error: 'Flag group not found' },
+        { success: false, error: "Flag group not found" },
         { status: 404 }
       );
     }
 
     const where: any = {
-      flagGroupId: parseInt(params.groupId),
-      isDelete: '0',
+      flagGroupId: groupIdNum,
+      isDelete: "0",
     };
 
     if (activeOnly) {
-      where.isActive = '1';
+      where.isActive = "1";
     }
 
     const flags = await prisma.systemflag.findMany({
       where,
-      orderBy: [
-        { parent_id: 'asc' },
-        { displayName: 'asc' },
-      ],
+      orderBy: [{ parent_id: "asc" }, { displayName: "asc" }],
     });
 
     return NextResponse.json({
@@ -58,9 +68,9 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    console.error('Error fetching flags by group:', error);
+    console.error("Error fetching flags by group:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch flags by group' },
+      { success: false, error: "Failed to fetch flags by group" },
       { status: 500 }
     );
   }

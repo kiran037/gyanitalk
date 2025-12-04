@@ -1,8 +1,6 @@
 // app/api/pages/bulk/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // POST /api/pages/bulk - Bulk actions
 export async function POST(request: NextRequest) {

@@ -1,8 +1,6 @@
 // app/api/coupons/[id]/toggle-status/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // PATCH - Toggle coupon active status
 export async function PATCH(

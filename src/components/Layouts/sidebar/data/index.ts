@@ -10,20 +10,20 @@ import {
   Layers,
   BookOpen,
   BellRing,
-  FileSpreadsheet,
+Newspaper,
   Contact,
   PlayCircle,
   Smile,
   Video,
-  Image as ImageIcon,
+
   Rss,
   Edit,
-  Settings,
+
   Star,
   CreditCard,
   Folder,
   PocketKnife,
-  Gift,
+
   X,
   Bot,
   Ticket,
@@ -101,11 +101,6 @@ export const NAV_DATA = [
             title: "Reviews",
             url: "/review_astrologers",
             icon: Star,
-          },
-          { 
-            title: "Gifts",
-            url: "/gifts_astrologer",
-            icon: Gift,
           },
           {
             title: "Skills",
@@ -229,6 +224,13 @@ export const NAV_DATA = [
         items: [],
       },
       {
+        title: "Blogs",
+        url: "/blogs",
+        icon: Newspaper,
+        items: [],
+      },
+
+      {
         title: "Contact Form",
         url: "/contact",
         icon: Contact,
@@ -240,40 +242,9 @@ export const NAV_DATA = [
     label: "Settings",
     items: [
       {
-        title: "General Settings",
-        icon: Settings,
-        items: [
-          {
-            title: "Settings",
-            url: "/settings",
-            icon: Settings,
-          },
-          {
-            title: "Customer Profile",
-            url: "/customer-profile",
-            icon: User,
-          },
-          {
-            title: "HoroScope Signs",
-            url: "/horoscope-signs",
-            icon: Star,
-          },
-          {
-            title: "Recharge Amounts",
-            url: "/recharge-amounts",
-            icon: IndianRupee,
-          },
-        ],
-      },
-      {
         title: "Extras",
         icon: Layers,
         items: [
-          {
-            title: "Blogs",
-            url: "/blogs",
-            icon: Edit,
-          },
           {
             title: "Astroguru News",
             url: "/astrogurunews",
@@ -283,11 +254,6 @@ export const NAV_DATA = [
             title: "Videos",
             url: "/videos",
             icon: Video,
-          },
-          {
-            title: "Banner Management",
-            url: "/banners",
-            icon: ImageIcon,
           },
           {
             title: "Stories",

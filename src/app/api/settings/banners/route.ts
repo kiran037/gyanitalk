@@ -1,16 +1,16 @@
 // app/api/settings/banners/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
 
 // GET - Fetch all banners
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const activeOnly = searchParams.get('activeOnly') === 'true';
-    const bannerTypeId = searchParams.get('bannerTypeId');
-    const current = searchParams.get('current') === 'true'; // Active right now
+    const activeOnly = searchParams.get("activeOnly") === "true";
+    const bannerTypeId = searchParams.get("bannerTypeId");
+    const current = searchParams.get("current") === "true"; // Active right now
 
     const where: any = { isDelete: false };
 
@@ -41,11 +41,10 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: {
-        created_at: 'desc',
+        created_at: "desc",
       },
     });
 
-    // Convert BigInt to string for JSON
     const bannersData = banners.map((banner) => ({
       ...banner,
       id: banner.id.toString(),
@@ -65,9 +64,9 @@ export async function GET(req: NextRequest) {
       total: bannersData.length,
     });
   } catch (error: any) {
-    console.error('Error fetching banners:', error);
+    console.error("Error fetching banners:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch banners' },
+      { success: false, error: "Failed to fetch banners" },
       { status: 500 }
     );
   }
@@ -77,19 +76,31 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { bannerImage, fromDate, toDate, bannerTypeId, isActive, createdBy, modifiedBy } = body;
+    const {
+      bannerImage,
+      fromDate,
+      toDate,
+      bannerTypeId,
+      isActive,
+      createdBy,
+      modifiedBy,
+    } = body;
 
     // Validation
     if (!bannerImage || !fromDate || !toDate || !bannerTypeId) {
       return NextResponse.json(
-        { success: false, error: 'BannerImage, fromDate, toDate, and bannerTypeId are required' },
+        {
+          success: false,
+          error:
+            "BannerImage, fromDate, toDate, and bannerTypeId are required",
+        },
         { status: 400 }
       );
     }
 
     if (!createdBy || !modifiedBy) {
       return NextResponse.json(
-        { success: false, error: 'CreatedBy and ModifiedBy are required' },
+        { success: false, error: "CreatedBy and ModifiedBy are required" },
         { status: 400 }
       );
     }
@@ -100,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     if (from >= to) {
       return NextResponse.json(
-        { success: false, error: 'FromDate must be before ToDate' },
+        { success: false, error: "FromDate must be before ToDate" },
         { status: 400 }
       );
     }
@@ -137,15 +148,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Banner created successfully',
+        message: "Banner created successfully",
         data: bannerData,
       },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating banner:', error);
+    console.error("Error creating banner:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create banner' },
+      { success: false, error: "Failed to create banner" },
       { status: 500 }
     );
   }

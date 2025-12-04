@@ -1,33 +1,64 @@
 // app/api/settings/horoscope-signs/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
+
+// Helper: convert Prisma BigInt/Decimal/Date -> JSON-safe values
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") return obj.toString();
+
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return (obj as any).toString();
+  }
+
+  if (obj instanceof Date) {
+    return obj.toISOString();
+  }
+
+  if (typeof obj !== "object") return obj;
+
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
 // GET - Fetch all horoscope signs
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const activeOnly = searchParams.get('activeOnly') === 'true';
+    const activeOnly = searchParams.get("activeOnly") === "true";
 
-    const where = activeOnly ? { isActive: true, isDelete: false } : { isDelete: false };
+    const where = activeOnly
+      ? { isActive: true, isDelete: false }
+      : { isDelete: false };
 
     const signs = await prisma.hororscope_signs.findMany({
       where,
       orderBy: {
-        displayOrder: 'asc',
+        displayOrder: "asc",
       },
     });
 
     return NextResponse.json({
       success: true,
-      data: signs,
+      data: convertPrismaTypes(signs),
       total: signs.length,
     });
   } catch (error: any) {
-    console.error('Error fetching horoscope signs:', error);
+    console.error("Error fetching horoscope signs:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch horoscope signs' },
+      { success: false, error: "Failed to fetch horoscope signs" },
       { status: 500 }
     );
   }
@@ -42,29 +73,29 @@ export async function POST(req: NextRequest) {
     // Validation
     if (!name || !image) {
       return NextResponse.json(
-        { success: false, error: 'Name and image are required' },
+        { success: false, error: "Name and image are required" },
         { status: 400 }
       );
     }
 
     if (!createdBy || !modifiedBy) {
       return NextResponse.json(
-        { success: false, error: 'CreatedBy and ModifiedBy are required' },
+        { success: false, error: "CreatedBy and ModifiedBy are required" },
         { status: 400 }
       );
     }
 
     // Check for duplicate name
     const existing = await prisma.hororscope_signs.findFirst({
-      where: { 
+      where: {
         name: name.trim(),
-        isDelete: false 
+        isDelete: false,
       },
     });
 
     if (existing) {
       return NextResponse.json(
-        { success: false, error: 'This horoscope sign already exists' },
+        { success: false, error: "This horoscope sign already exists" },
         { status: 409 }
       );
     }
@@ -84,15 +115,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Horoscope sign created successfully',
-        data: newSign,
+        message: "Horoscope sign created successfully",
+        data: convertPrismaTypes(newSign),
       },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating horoscope sign:', error);
+    console.error("Error creating horoscope sign:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create horoscope sign' },
+      { success: false, error: "Failed to create horoscope sign" },
       { status: 500 }
     );
   }

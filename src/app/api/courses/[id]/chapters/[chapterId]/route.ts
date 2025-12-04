@@ -1,8 +1,6 @@
 // app/api/courses/[id]/chapters/[chapterId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET single chapter
 export async function GET(

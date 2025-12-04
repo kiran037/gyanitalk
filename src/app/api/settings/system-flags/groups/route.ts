@@ -12,11 +12,11 @@ export async function GET(req: NextRequest) {
     const withFlags = searchParams.get('withFlags') === 'true';
 
     const where: any = {
-      isDelete: '0',
+      isDelete: 0,
     };
 
     if (activeOnly) {
-      where.isActive = '1';
+      where.isActive = 1;
     }
 
     const groups = await prisma.flaggroup.findMany({
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.flaggroup.findFirst({
       where: {
         flagGroupName: flagGroupName.trim(),
-        isDelete: '0',
+        isDelete: 0,
       },
     });
 

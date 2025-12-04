@@ -1,8 +1,8 @@
 // app/api/pages/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import type { pages_type } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 // GET /api/pages - List all pages with filters
 export async function GET(request: NextRequest) {
@@ -42,10 +42,17 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get all possible page types
-    const allTypes = ['privacy', 'terms', 'aboutus'];
-    const existingTypes = pages.map(p => p.type).filter(Boolean);
-    const availableTypes = allTypes.filter(type => !existingTypes.includes(type));
+    // Get all possible page types (match Prisma enum)
+    const allTypes: pages_type[] = ['privacy', 'terms', 'aboutus'];
+
+    // Existing types from DB, filter out null safely
+    const existingTypes = pages
+      .map((p) => p.type)
+      .filter((t): t is pages_type => t !== null);
+
+    // Types that are not yet used
+    const availableTypes = allTypes.filter((type) => !existingTypes.includes(type));
+
 
     // Calculate stats
     const stats = {

@@ -1,18 +1,29 @@
 // app/api/settings/banners/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
 
-// GET - Fetch single banner
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+function safeToBigIntId(idStr: string): bigint {
+  const s = idStr.trim();
+  if (!/^\d+$/.test(s)) {
+    throw new Error("Invalid id");
+  }
+  return BigInt(s);
+}
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
   try {
+    const { id } = await ctx.params;
+    const bannerId = safeToBigIntId(id);
+
     const banner = await prisma.banners.findFirst({
       where: {
-        id: BigInt(params.id),
+        id: bannerId,
         isDelete: false,
       },
       include: {
@@ -22,7 +33,7 @@ export async function GET(
 
     if (!banner) {
       return NextResponse.json(
-        { success: false, error: 'Banner not found' },
+        { success: false, error: "Banner not found" },
         { status: 404 }
       );
     }
@@ -45,41 +56,41 @@ export async function GET(
       data: bannerData,
     });
   } catch (error: any) {
-    console.error('Error fetching banner:', error);
+    console.error("Error fetching banner:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch banner' },
+      { success: false, error: "Failed to fetch banner" },
       { status: 500 }
     );
   }
 }
 
-// PUT - Update banner
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+
+export async function PUT(req: NextRequest, ctx: RouteContext) {
   try {
+    const { id } = await ctx.params;
+    const bannerId = safeToBigIntId(id);
+
     const body = await req.json();
     const { bannerImage, fromDate, toDate, bannerTypeId, isActive, modifiedBy } = body;
 
     // Check if exists
     const existing = await prisma.banners.findFirst({
       where: {
-        id: BigInt(params.id),
+        id: bannerId,
         isDelete: false,
       },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: 'Banner not found' },
+        { success: false, error: "Banner not found" },
         { status: 404 }
       );
     }
 
     if (!modifiedBy) {
       return NextResponse.json(
-        { success: false, error: 'ModifiedBy is required' },
+        { success: false, error: "ModifiedBy is required" },
         { status: 400 }
       );
     }
@@ -91,7 +102,7 @@ export async function PUT(
 
       if (from >= to) {
         return NextResponse.json(
-          { success: false, error: 'FromDate must be before ToDate' },
+          { success: false, error: "FromDate must be before ToDate" },
           { status: 400 }
         );
       }
@@ -109,7 +120,7 @@ export async function PUT(
     if (isActive !== undefined) updateData.isActive = isActive;
 
     const updated = await prisma.banners.update({
-      where: { id: BigInt(params.id) },
+      where: { id: bannerId },
       data: updateData,
       include: {
         bannerType: true,
@@ -131,50 +142,49 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Banner updated successfully',
+      message: "Banner updated successfully",
       data: updatedData,
     });
   } catch (error: any) {
-    console.error('Error updating banner:', error);
+    console.error("Error updating banner:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update banner' },
+      { success: false, error: "Failed to update banner" },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Soft delete banner
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, ctx: RouteContext) {
   try {
+    const { id } = await ctx.params;
+    const bannerId = safeToBigIntId(id);
+
     const { searchParams } = new URL(req.url);
-    const modifiedBy = searchParams.get('modifiedBy');
+    const modifiedBy = searchParams.get("modifiedBy");
 
     if (!modifiedBy) {
       return NextResponse.json(
-        { success: false, error: 'ModifiedBy is required' },
+        { success: false, error: "ModifiedBy is required" },
         { status: 400 }
       );
     }
 
     const existing = await prisma.banners.findFirst({
       where: {
-        id: BigInt(params.id),
+        id: bannerId,
         isDelete: false,
       },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: 'Banner not found' },
+        { success: false, error: "Banner not found" },
         { status: 404 }
       );
     }
 
     await prisma.banners.update({
-      where: { id: BigInt(params.id) },
+      where: { id: bannerId },
       data: {
         isDelete: true,
         isActive: false,
@@ -185,12 +195,12 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Banner deleted successfully',
+      message: "Banner deleted successfully",
     });
   } catch (error: any) {
-    console.error('Error deleting banner:', error);
+    console.error("Error deleting banner:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to delete banner' },
+      { success: false, error: "Failed to delete banner" },
       { status: 500 }
     );
   }

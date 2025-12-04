@@ -1,30 +1,40 @@
 // app/api/settings/horoscope-signs/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
 
-// GET - Fetch single horoscope sign
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+function safeToBigIntId(idStr: string): bigint {
+  const s = idStr.trim();
+  if (!/^\d+$/.test(s)) {
+    throw new Error("Invalid id");
+  }
+  return BigInt(s);
+}
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
   try {
+    const { id } = await ctx.params;
+    const signId = safeToBigIntId(id);
+
     const sign = await prisma.hororscope_signs.findFirst({
-      where: { 
-        id: BigInt(params.id),
-        isDelete: false 
+      where: {
+        id: signId,
+        isDelete: false,
       },
     });
 
     if (!sign) {
       return NextResponse.json(
-        { success: false, error: 'Horoscope sign not found' },
+        { success: false, error: "Horoscope sign not found" },
         { status: 404 }
       );
     }
 
-    // Convert BigInt to string for JSON serialization
     const signData = {
       ...sign,
       id: sign.id.toString(),
@@ -35,47 +45,46 @@ export async function GET(
       data: signData,
     });
   } catch (error: any) {
-    console.error('Error fetching horoscope sign:', error);
+    console.error("Error fetching horoscope sign:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch horoscope sign' },
+      { success: false, error: "Failed to fetch horoscope sign" },
       { status: 500 }
     );
   }
 }
 
-// PUT - Update horoscope sign
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+
+export async function PUT(req: NextRequest, ctx: RouteContext) {
   try {
+    const { id } = await ctx.params;
+    const signId = safeToBigIntId(id);
+
     const body = await req.json();
     const { name, image, displayOrder, isActive, modifiedBy } = body;
 
-    // Check if exists
     const existing = await prisma.hororscope_signs.findFirst({
-      where: { 
-        id: BigInt(params.id),
-        isDelete: false 
+      where: {
+        id: signId,
+        isDelete: false,
       },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: 'Horoscope sign not found' },
+        { success: false, error: "Horoscope sign not found" },
         { status: 404 }
       );
     }
 
     if (!modifiedBy) {
       return NextResponse.json(
-        { success: false, error: 'ModifiedBy is required' },
+        { success: false, error: "ModifiedBy is required" },
         { status: 400 }
       );
     }
 
     const updated = await prisma.hororscope_signs.update({
-      where: { id: BigInt(params.id) },
+      where: { id: signId },
       data: {
         ...(name && { name: name.trim() }),
         ...(image && { image }),
@@ -93,66 +102,13 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Horoscope sign updated successfully',
+      message: "Horoscope sign updated successfully",
       data: updatedData,
     });
   } catch (error: any) {
-    console.error('Error updating horoscope sign:', error);
+    console.error("Error updating horoscope sign:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update horoscope sign' },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - Soft delete horoscope sign
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const modifiedBy = searchParams.get('modifiedBy');
-
-    if (!modifiedBy) {
-      return NextResponse.json(
-        { success: false, error: 'ModifiedBy is required' },
-        { status: 400 }
-      );
-    }
-
-    const existing = await prisma.hororscope_signs.findFirst({
-      where: { 
-        id: BigInt(params.id),
-        isDelete: false 
-      },
-    });
-
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: 'Horoscope sign not found' },
-        { status: 404 }
-      );
-    }
-
-    await prisma.hororscope_signs.update({
-      where: { id: BigInt(params.id) },
-      data: {
-        isDelete: true,
-        isActive: false,
-        modifiedBy: parseInt(modifiedBy),
-        updated_at: new Date(),
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Horoscope sign deleted successfully',
-    });
-  } catch (error: any) {
-    console.error('Error deleting horoscope sign:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete horoscope sign' },
+      { success: false, error: "Failed to update horoscope sign" },
       { status: 500 }
     );
   }

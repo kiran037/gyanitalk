@@ -88,18 +88,6 @@ export interface Language {
   language_sign: string | null;
 }
 
-export interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  isActive: boolean;
-  isDelete: boolean;
-  created_at: Date | null;
-  updated_at: Date | null;
-  createdBy: number;
-  modifiedBy: number;
-}
-
 export interface SystemFlag {
   id: number;
   valueType: string | null;
@@ -220,21 +208,6 @@ export interface UpdateLanguageRequest {
   language_sign?: string;
 }
 
-export interface CreateNotificationRequest {
-  title: string;
-  description: string;
-  isActive?: boolean;
-  createdBy: number;
-  modifiedBy: number;
-}
-
-export interface UpdateNotificationRequest {
-  title?: string;
-  description?: string;
-  isActive?: boolean;
-  modifiedBy: number;
-}
-
 export interface CreateSystemFlagRequest {
   name: string;
   displayName?: string;
@@ -340,11 +313,6 @@ export interface SettingsStatistics {
     icon: string;
   };
   languages: {
-    total: number;
-    label: string;
-    icon: string;
-  };
-  notifications: {
     total: number;
     label: string;
     icon: string;

@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
       activeBannersCount,
       giftsCount,
       languagesCount,
-      notificationsCount,
       systemFlagsCount,
       flagGroupsCount,
     ] = await Promise.all([
@@ -35,9 +34,8 @@ export async function GET(req: NextRequest) {
       }),
       prisma.gifts.count({ where: { isDelete: false } }),
       prisma.languages.count(),
-      prisma.notifications.count({ where: { isDelete: false } }),
       prisma.systemflag.count({ where: { isDelete: '0' } }),
-      prisma.flaggroup.count({ where: { isDelete: '0' } }),
+      prisma.flaggroup.count({ where: { isDelete: 0 } }),
     ]);
 
     // Fetch recent activity (last 10 updates across different tables)
@@ -73,11 +71,8 @@ export async function GET(req: NextRequest) {
 
     // Get flag groups with counts
     const flagGroupsWithCounts = await prisma.flaggroup.findMany({
-      where: { isDelete: '0' },
-      select: {
-        id: true,
-        flagGroupName: true,
-        description: true,
+      where: { isDelete: 0 },
+      include: {
         _count: {
           select: {
             systemflags: {
@@ -148,11 +143,6 @@ export async function GET(req: NextRequest) {
           total: languagesCount,
           label: 'Languages',
           icon: '🌐',
-        },
-        notifications: {
-          total: notificationsCount,
-          label: 'Notification Templates',
-          icon: '🔔',
         },
         systemFlags: {
           total: systemFlagsCount,

@@ -1,8 +1,6 @@
 // app/api/blogs/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET: Fetch single blog by ID
 export async function GET(

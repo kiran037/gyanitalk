@@ -1629,13 +1629,18 @@ model systemflag {
   created_at  DateTime? @default(now()) @db.Timestamp(0)
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
   displayName String?   @db.VarChar(100)
-  flagGroupId Int
+
+  // 👇 make this OPTIONAL
+  flagGroupId Int?
+
   description String    @db.LongText
   parent_id   Int       @default(0)
   viewenable  Boolean?  @default(true)
 
-  flagGroup flaggroup @relation(fields: [flagGroupId], references: [id])
+  // 👇 relation also OPTIONAL
+  flagGroup   flaggroup? @relation(fields: [flagGroupId], references: [id])
 }
+
 
 model teammember {
   id         Int       @id @default(autoincrement())

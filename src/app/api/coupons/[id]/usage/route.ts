@@ -1,8 +1,6 @@
 // app/api/coupons/[id]/usage/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET - Get usage analytics for a specific coupon
 export async function GET(

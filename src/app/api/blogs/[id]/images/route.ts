@@ -1,6 +1,6 @@
 // app/api/blogs/[id]/images/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/prismaClient';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,

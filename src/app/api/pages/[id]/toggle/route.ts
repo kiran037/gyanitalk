@@ -1,26 +1,27 @@
 // app/api/pages/[id]/toggle/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+async function getPageId(context: RouteContext): Promise<number> {
+  const { params } = context;       // params is a Promise
+  const { id } = await params;      // unwrap it
+
+  const pageId = Number(id);
+  if (!Number.isInteger(pageId)) {
+    throw new Error(`Invalid page ID: "${id}"`);
+  }
+
+  return pageId;
+}
 
 // PATCH /api/pages/[id]/toggle - Toggle isActive status
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const pageId = parseInt(params.id);
-
-    if (isNaN(pageId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid page ID',
-        },
-        { status: 400 }
-      );
-    }
+    const pageId = await getPageId(context);
 
     const page = await prisma.pages.findUnique({
       where: { id: pageId },
@@ -36,7 +37,6 @@ export async function PATCH(
       );
     }
 
-    // Toggle isActive
     const updatedPage = await prisma.pages.update({
       where: { id: pageId },
       data: {
@@ -62,7 +62,5 @@ export async function PATCH(
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
