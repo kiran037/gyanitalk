@@ -10,20 +10,20 @@ import {
   Layers,
   BookOpen,
   BellRing,
-  FileSpreadsheet,
+Newspaper,
   Contact,
   PlayCircle,
   Smile,
   Video,
-  Image as ImageIcon,
+
   Rss,
   Edit,
-  Settings,
+
   Star,
   CreditCard,
   Folder,
   PocketKnife,
-  Gift,
+
   X,
   Bot,
   Ticket,
@@ -41,7 +41,7 @@ export const NAV_DATA = [
     items: [
       {
         title: "Dashboard",
-        url: "/",
+        url: "/dashboard",
         icon: Home,
         items: [],
       },
@@ -57,17 +57,17 @@ export const NAV_DATA = [
         items: [
           {
             title: "Wallet Transactions",
-            url: "/wallet",
+            url: "/transaction/wallet",
             icon: IndianRupee,
           },
           {
             title: "Payment Transactions",
-            url: "/payments",
+            url: "/transaction/payment",
             icon: CreditCard,
           },
           {
             title: "Manual Transactions",
-            url: "/manual",
+            url: "/transaction/manual",
             icon: CreditCard,
           },
         ],
@@ -102,11 +102,6 @@ export const NAV_DATA = [
             url: "/review_astrologers",
             icon: Star,
           },
-          { 
-            title: "Gifts",
-            url: "/gifts_astrologer",
-            icon: Gift,
-          },
           {
             title: "Skills",
             url: "/skills_astrologer",
@@ -140,18 +135,13 @@ export const NAV_DATA = [
         items: [
           {
             title: "Category",
-            url: "/category",
+            url: "/courses/categories",
             icon: Layers,
           },
           {
             title: "Courses",
             url: "/courses",
             icon: FileText,
-          },
-          {
-            title: "Chapter",
-            url: "/chapter",
-            icon: FileSpreadsheet,
           },
         ],
       },
@@ -160,18 +150,24 @@ export const NAV_DATA = [
         icon:   ShoppingBag,
         items: [
           {
-            title: "Product Categories",
-            url: "/productCategories",
+            title: "Dashboard",
+            url: "/astroshop",
             icon: Folder,
           },
           {
-            title: "Products",
-            url: "/products",
+            title: "Products Categories",
+            url: "/astroshop/categories",
             icon: PackageSearch,
           },
+           {
+            title: "Products",
+            url: "/astroshop/products",
+            icon: PackageSearch,
+          },
+
           {
             title: "Orders",
-            url: "/orders",
+            url: "/astroshop/orders",
             icon: IndianRupee,
           },
         ],
@@ -228,8 +224,15 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Contact Form",
-        url: "/contact",
+        title: "Blogs",
+        url: "/blogs",
+        icon: Newspaper,
+        items: [],
+      },
+
+      {
+        title: "Contacts",
+        url: "/supports/contact",
         icon: Contact,
         items: [],
       },
@@ -239,40 +242,9 @@ export const NAV_DATA = [
     label: "Settings",
     items: [
       {
-        title: "General Settings",
-        icon: Settings,
-        items: [
-          {
-            title: "Settings",
-            url: "/settings",
-            icon: Settings,
-          },
-          {
-            title: "Customer Profile",
-            url: "/customer-profile",
-            icon: User,
-          },
-          {
-            title: "HoroScope Signs",
-            url: "/horoscope-signs",
-            icon: Star,
-          },
-          {
-            title: "Recharge Amounts",
-            url: "/recharge-amounts",
-            icon: IndianRupee,
-          },
-        ],
-      },
-      {
         title: "Extras",
         icon: Layers,
         items: [
-          {
-            title: "Blogs",
-            url: "/blogs",
-            icon: Edit,
-          },
           {
             title: "Astroguru News",
             url: "/astrogurunews",
@@ -282,11 +254,6 @@ export const NAV_DATA = [
             title: "Videos",
             url: "/videos",
             icon: Video,
-          },
-          {
-            title: "Banner Management",
-            url: "/banners",
-            icon: ImageIcon,
           },
           {
             title: "Stories",

@@ -441,9 +441,21 @@ model astrology_videos {
 model astromall_products {
   id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   name              String    @db.VarChar(255)
+  slug              String?   @db.VarChar(255)
+  metaTitle         String?   @db.VarChar(255)
+  metaDescription   String?   @db.VarChar(500)
+  metaKeywords      String?   @db.VarChar(500)
+  canonicalUrl      String?   @db.VarChar(255)
+  ogTitle           String?   @db.VarChar(255)
+  ogDescription     String?   @db.VarChar(500)
+  ogImage           String?   @db.VarChar(255)
+  twitterTitle      String?   @db.VarChar(255)
+  twitterDescription String?  @db.VarChar(500)
+  twitterImage      String?   @db.VarChar(255)
+  schemaJson        String?   @db.LongText
   features          String    @db.Text
   productImage      String    @db.VarChar(255)
-  gallery           String?    // ✅ nullable
+  gallery           String?
   productCategoryId BigInt    @db.UnsignedBigInt
   amount            Float
   is_feature        Boolean   @default(false)
@@ -458,8 +470,7 @@ model astromall_products {
 
   product_category  product_categories @relation(fields: [productCategoryId], references: [id])
   order_requests order_request[]
-// Relations
-  product_details product_details[]   // ✅ one-to-many relation
+  product_details product_details[]
 
   @@index([productCategoryId], map: "astromall_products_productcategoryid_foreign")
 }
@@ -822,20 +833,31 @@ model course_purchase {
 }
 
 model courses {
-  id            Int              @id @default(autoincrement())
-  name          String           @db.Text
-  price         Decimal?         @db.Decimal(10, 0)
-  offer_price   Decimal?         @db.Decimal(10, 0)
-  description   String?          @db.Text
-  image         String?          @db.Text
-  is_paid       Int?             @default(0)
-  category_id   Int?
-  created_at    DateTime         @default(now()) @db.Timestamp(0)
-  updated_at    DateTime         @default(now()) @db.Timestamp(0)
+  id                 Int              @id @default(autoincrement())
+  name               String           @db.Text
+  slug               String?          @db.VarChar(255)
+  metaTitle          String?          @db.VarChar(255)
+  metaDescription    String?          @db.VarChar(500)
+  metaKeywords       String?          @db.VarChar(500)
+  canonicalUrl       String?          @db.VarChar(255)
+  ogTitle            String?          @db.VarChar(255)
+  ogDescription      String?          @db.VarChar(500)
+  ogImage            String?          @db.VarChar(255)
+  twitterTitle       String?          @db.VarChar(255)
+  twitterDescription String?          @db.VarChar(500)
+  twitterImage       String?          @db.VarChar(255)
+  schemaJson         String?          @db.LongText
+  price              Decimal?         @db.Decimal(10, 0)
+  offer_price        Decimal?         @db.Decimal(10, 0)
+  description        String?          @db.Text
+  image              String?          @db.Text
+  is_paid            Int?             @default(0)
+  category_id        Int?
+  created_at         DateTime         @default(now()) @db.Timestamp(0)
+  updated_at         DateTime         @default(now()) @db.Timestamp(0)
 
   category       categories?      @relation(fields: [category_id], references: [id])
   course_purchase course_purchase[]
-  
   chapters chapters[]
 }
 
@@ -1376,7 +1398,6 @@ model order_request {
 }
 
 
-
 model pages {
   id                 Int         @id @default(autoincrement())
   title              String?     @db.Text
@@ -1608,13 +1629,18 @@ model systemflag {
   created_at  DateTime? @default(now()) @db.Timestamp(0)
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
   displayName String?   @db.VarChar(100)
-  flagGroupId Int
+
+  // 👇 make this OPTIONAL
+  flagGroupId Int?
+
   description String    @db.LongText
   parent_id   Int       @default(0)
   viewenable  Boolean?  @default(true)
 
-  flagGroup flaggroup @relation(fields: [flagGroupId], references: [id])
+  // 👇 relation also OPTIONAL
+  flagGroup   flaggroup? @relation(fields: [flagGroupId], references: [id])
 }
+
 
 model teammember {
   id         Int       @id @default(autoincrement())
@@ -2109,7 +2135,6 @@ enum pages_type {
   privacy
   terms
   aboutus
-  home
 }
 
 enum coupons_discount_type {

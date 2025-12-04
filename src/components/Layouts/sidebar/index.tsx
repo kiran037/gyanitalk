@@ -1,19 +1,20 @@
-// /src/components/Layouts/sidebar.tsx
+///Users/xeoren/gyanitallk-admin/src/components/Layouts/sidebar/index.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NAV_DATA } from "./data";
-import { ChevronRight, X, Search } from "lucide-react";
+import { ChevronRight, X, Search, Menu } from "lucide-react";
 import { useSidebarContext } from "./sidebar-context";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { setIsOpen, isOpen, isMobile, toggleSidebar } = useSidebarContext();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
@@ -49,75 +50,93 @@ export function Sidebar() {
       })).filter((section) => section.items.length > 0)
     : NAV_DATA;
 
+  const shouldExpand = isMobile ? isOpen : (isHovered || !isCollapsed);
+
   return (
     <>
       {/* Mobile overlay */}
       {isMobile && isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`relative transition-all duration-300 ease-in-out bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/30 shrink-0 flex-none ${
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
+        className={`relative transition-all duration-300 ease-in-out bg-white/60 dark:bg-white/5 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-700/60 shrink-0 flex-none h-screen ${
           isMobile 
             ? `fixed inset-y-0 left-0 z-50 shadow-2xl ${isOpen ? 'w-full max-w-[280px] translate-x-0' : 'w-0 -translate-x-full'}` 
-            : 'h-full w-[250px]'
+            : shouldExpand ? 'w-[250px]' : 'w-[72px]'
         }`}
         aria-label="Main navigation"
         aria-hidden={isMobile ? !isOpen : false}
       >
-        {/* Column (header + scroll area) */}
         <div className="relative flex h-full flex-col">
-          {/* Header row (close button for mobile) */}
-          <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-gray-700/30">
-            {isMobile && (
+          {/* Header */}
+          <div className={`flex items-center p-4 border-b border-gray-200/60 dark:border-gray-700/60 ${shouldExpand ? 'justify-between' : 'justify-center'}`}>
+            {shouldExpand ? (
               <>
                 <span className="text-lg font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
                   Menu
                 </span>
-                <button
-                  onClick={toggleSidebar}
-                  className="rounded-xl p-2 transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:text-gray-800 dark:hover:text-white"
-                  aria-label="Close menu"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                {isMobile ? (
+                  <button
+                    onClick={toggleSidebar}
+                    className="rounded-xl p-2 transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Close menu"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="rounded-xl p-2 transition-all duration-200 text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Toggle collapse"
+                  >
+                    <ChevronRight className={`h-5 w-5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+                  </button>
+                )}
               </>
+            ) : (
+              <Menu className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             )}
           </div>
 
           {/* Search Bar */}
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search menu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-gray-800/50 border border-white/20 dark:border-gray-600/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 transition-all"
-              />
+          {shouldExpand && (
+            <div className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-600/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 transition-all"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Scrollable nav area */}
           <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 no-scrollbar">
             <div className="space-y-8">
-              {filteredNavData.map((section, sectionIndex) => (
+              {filteredNavData.map((section) => (
                 <div key={section.label}>
-                  <h2 className="mb-4 px-3 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                    {section.label}
-                  </h2>
+                  {shouldExpand && (
+                    <h2 className="mb-4 px-3 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                      {section.label}
+                    </h2>
+                  )}
 
                   <nav role="navigation" aria-label={section.label}>
                     <ul className="space-y-1">
-                      {section.items.map((item, itemIndex) => {
+                      {section.items.map((item) => {
                         const hasChildren = (item.items?.length ?? 0) > 0;
                         const activeChild = item.items?.some(({ url }) => url === pathname);
-                        const itemKey = `${sectionIndex}-${itemIndex}`;
 
                         if (hasChildren) {
                           const expanded = expandedItems.includes(item.title);
@@ -125,13 +144,11 @@ export function Sidebar() {
                             <li key={item.title} className="space-y-1">
                               <button
                                 onClick={() => toggleExpanded(item.title)}
-                                onMouseEnter={() => setHoveredItem(itemKey)}
-                                onMouseLeave={() => setHoveredItem(null)}
                                 className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
                                   activeChild
                                     ? 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 text-[#FF6B35] dark:text-[#FF8C61] shadow-sm'
                                     : 'hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300'
-                                } ${hoveredItem === itemKey ? 'scale-[1.02] transform' : ''}`}
+                                } ${!shouldExpand ? 'justify-center' : ''}`}
                               >
                                 <div
                                   className={`rounded-lg p-1.5 transition-all duration-200 ${
@@ -148,37 +165,38 @@ export function Sidebar() {
                                     }`}
                                   />
                                 </div>
-                                <span className="flex-1 truncate">{item.title}</span>
-                                <ChevronRight
-                                  className={`h-4 w-4 shrink-0 transition-all duration-200 ${
-                                    expanded ? 'rotate-90' : 'rotate-0'
-                                  } ${
-                                    activeChild
-                                      ? 'text-[#FF6B35] dark:text-[#FF8C61]'
-                                      : 'text-gray-400 group-hover:text-[#FF6B35] dark:group-hover:text-[#FF8C61]'
-                                  }`}
-                                  aria-hidden="true"
-                                />
+                                {shouldExpand && (
+                                  <>
+                                    <span className="flex-1 truncate">{item.title}</span>
+                                    <ChevronRight
+                                      className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                                        expanded ? 'rotate-90' : 'rotate-0'
+                                      } ${
+                                        activeChild
+                                          ? 'text-[#FF6B35] dark:text-[#FF8C61]'
+                                          : 'text-gray-400 group-hover:text-[#FF6B35] dark:group-hover:text-[#FF8C61]'
+                                      }`}
+                                      aria-hidden="true"
+                                    />
+                                  </>
+                                )}
                               </button>
 
-                              {expanded && (
-                                <ul className="ml-6 space-y-1 overflow-hidden animate-in slide-in-from-top-2" role="menu">
-                                  {item.items!.map((sub, subIndex) => {
+                              {expanded && shouldExpand && (
+                                <ul className="ml-6 space-y-1 overflow-hidden" role="menu">
+                                  {item.items!.map((sub) => {
                                     const href = sub.url;
                                     const isActive = pathname === href;
-                                    const subItemKey = `${itemKey}-${subIndex}`;
                                     return (
                                       <li key={sub.title} role="none">
                                         <Link
                                           href={href}
                                           onClick={() => isMobile && toggleSidebar()}
-                                          onMouseEnter={() => setHoveredItem(subItemKey)}
-                                          onMouseLeave={() => setHoveredItem(null)}
                                           className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 ${
                                             isActive
                                               ? 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 text-[#FF6B35] dark:text-[#FF8C61] shadow-sm font-medium'
                                               : 'hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-600 dark:text-gray-400'
-                                          } ${hoveredItem === subItemKey ? 'scale-[1.02] transform' : ''}`}
+                                          }`}
                                           role="menuitem"
                                         >
                                           <div
@@ -212,13 +230,11 @@ export function Sidebar() {
                             <Link
                               href={href}
                               onClick={() => isMobile && toggleSidebar()}
-                              onMouseEnter={() => setHoveredItem(itemKey)}
-                              onMouseLeave={() => setHoveredItem(null)}
                               className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                                 isActive
                                   ? 'bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 text-[#FF6B35] dark:text-[#FF8C61] shadow-sm'
                                   : 'hover:bg-white/60 dark:hover:bg-gray-800/60 text-gray-700 dark:text-gray-300'
-                              } ${hoveredItem === itemKey ? 'scale-[1.02] transform' : ''}`}
+                              } ${!shouldExpand ? 'justify-center' : ''}`}
                             >
                               <div
                                 className={`rounded-lg p-1.5 transition-all duration-200 ${
@@ -235,7 +251,7 @@ export function Sidebar() {
                                   }`}
                                 />
                               </div>
-                              <span className="truncate">{item.title}</span>
+                              {shouldExpand && <span className="truncate">{item.title}</span>}
                             </Link>
                           </li>
                         );
@@ -247,7 +263,6 @@ export function Sidebar() {
             </div>
           </div>
 
-          {/* Hide scrollbar styles */}
           <style jsx global>{`
             .no-scrollbar {
               -ms-overflow-style: none;
