@@ -231,8 +231,8 @@ export const NAV_DATA = [
       },
 
       {
-        title: "Contact Form",
-        url: "/contact",
+        title: "Contacts",
+        url: "/supports/contact",
         icon: Contact,
         items: [],
       },

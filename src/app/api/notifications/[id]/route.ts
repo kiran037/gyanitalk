@@ -1,6 +1,4 @@
-// ===================================
-// FILE: app/api/notifications/[id]/route.ts
-// ===================================
+// app/api/notifications/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -12,12 +10,26 @@ function serializeBigInt(obj: any): any {
   );
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Next 15: params is a Promise now
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+async function getNotificationId(context: RouteContext): Promise<bigint> {
+  const { params } = context;     // params is a Promise
+  const { id } = await params;    // unwrap it
+
+  if (!/^\d+$/.test(id)) {
+    throw new Error(`Invalid notification id: "${id}"`);
+  }
+
+  return BigInt(id);
+}
+
+// ==================== GET ====================
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const notificationId = BigInt(params.id);
+    const notificationId = await getNotificationId(context);
 
     const notification = await prisma.notifications.findUnique({
       where: { id: notificationId },
@@ -49,15 +61,12 @@ export async function GET(
 
     const stats = {
       totalSent: notification.userNotifications.length,
-      readCount: notification.userNotifications.filter((un) => un.is_read)
-        .length,
-      unreadCount: notification.userNotifications.filter((un) => !un.is_read)
-        .length,
+      readCount: notification.userNotifications.filter((un) => un.is_read).length,
+      unreadCount: notification.userNotifications.filter((un) => !un.is_read).length,
       readRate:
         notification.userNotifications.length > 0
           ? (
-              (notification.userNotifications.filter((un) => un.is_read)
-                .length /
+              (notification.userNotifications.filter((un) => un.is_read).length /
                 notification.userNotifications.length) *
               100
             ).toFixed(2) + "%"
@@ -82,12 +91,10 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// ==================== PUT ====================
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const notificationId = BigInt(params.id);
+    const notificationId = await getNotificationId(context);
     const body = await request.json();
     const { title, description, isActive } = body;
 
@@ -121,12 +128,10 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// ==================== DELETE ====================
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const notificationId = BigInt(params.id);
+    const notificationId = await getNotificationId(context);
 
     await prisma.notifications.update({
       where: { id: notificationId },

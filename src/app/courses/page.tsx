@@ -157,7 +157,7 @@ export default function CoursesPage() {
   const activeFiltersCount = [selectedCategory, isPaidFilter].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
       <div className="max-w-[1600px] mx-auto space-y-8">
         {/* Header */}
         <PageHeader

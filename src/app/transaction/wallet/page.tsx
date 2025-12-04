@@ -139,7 +139,7 @@ export default function WalletTransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white-50/30 to-white-50/30 dark:from-black-900 dark:to-black-800">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
       <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         <PageHeader
           title="Wallet Transactions"
