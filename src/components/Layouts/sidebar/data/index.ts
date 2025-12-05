@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import {
   Home,
   User,
@@ -15,15 +16,12 @@ import {
   PlayCircle,
   Smile,
   Video,
-
   Rss,
   Edit,
-
   Star,
   CreditCard,
   Folder,
   PocketKnife,
-
   X,
   Bot,
   Ticket,
@@ -205,25 +203,10 @@ export const NAV_DATA = [
         ],
       },
       {
-        title: "Earning",
-        url: "/earning",
+        title: "Earnings",
         icon: IndianRupee,
+        url: "/earnings",
         items: [
-          {
-            title: "Withdrawal Requests",
-            url: "/withdrawal_requests",
-            icon: Check,
-          },
-          {
-            title: "Withdrawal Methods",
-            url: "/withdrawal_methods",
-            icon: Activity,
-          },
-          {
-            title: "Wallet History",
-            url: "/wallet_history",
-            icon: History,
-          },
         ],
       },
       {
