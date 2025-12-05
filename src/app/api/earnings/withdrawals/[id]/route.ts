@@ -86,7 +86,17 @@ export async function PATCH(
     // Build update data
     const updateData: any = { modifiedBy: parseInt(modifiedBy) };
     
-    if (status) updateData.status = status;
+   if (status) {
+  const allowed = ["Pending", "Reject", "Released"];
+  if (!allowed.includes(status)) {
+    return NextResponse.json(
+      { success: false, error: "Invalid status value" },
+      { status: 400 }
+    );
+  }
+  updateData.status = status;
+}
+
     if (upiId !== undefined) updateData.upiId = upiId;
     if (accountNumber !== undefined) updateData.accountNumber = accountNumber;
     if (ifscCode !== undefined) updateData.ifscCode = ifscCode;

@@ -4,7 +4,6 @@ import {
   User,
   IndianRupee,
   TicketPercent,
-  Calendar,
   Users,
   Brain,
   FileText,
@@ -26,9 +25,6 @@ import {
   Bot,
   Ticket,
   List,
-  Check,
-  Activity,
-  History,
   ShoppingBag,
   PackageSearch,
 } from "lucide-react";
@@ -109,11 +105,6 @@ export const NAV_DATA = [
             title: "Categories",
             url: "/astrologerCategories",
             icon: Folder,
-          },
-          {
-            title: "Commissionn rate for calls/chats",
-            url: "/commissions",
-            icon: IndianRupee,
           },
           {
             title: "Sorting Astrologers",
@@ -205,8 +196,22 @@ export const NAV_DATA = [
       {
         title: "Earnings",
         icon: IndianRupee,
-        url: "/earnings",
         items: [
+          {
+            title: "Dashboard",
+            url: "/earnings",
+          },
+          {
+            title: "Astrologer Earnings",
+            url: "/earnings/astrologer",
+          },
+          {
+            title: "Payment Methods",
+            url: "/earnings/payment-methods",
+          },
+          {  title: "Withdrawals", url: "/earnings/withdrawals" },
+          {  title: "Commissions", url: "/earnings/commissions" },
+          {  title: "Reports", url: "/earnings/reports" },
         ],
       },
       {

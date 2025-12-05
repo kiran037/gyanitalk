@@ -11,11 +11,20 @@ export async function GET(request: NextRequest) {
     const astrologerId = searchParams.get('astrologerId');
     const format = searchParams.get('format') || 'json'; // json or csv
 
-    // Build where clause
-    const where: any = {
-      isActive: 1,
-      isDelete: 0
-    };
+// Build where clause
+const where: any = {
+  isActive: 1,
+  isDelete: 0
+};
+
+if (status) {
+  const s = status.toLowerCase();
+
+  if (s === "pending") where.status = "Pending";
+  else if (s === "reject" || s === "rejected") where.status = "Reject";
+  else if (s === "released" || s === "approved") where.status = "Released";
+}
+
 
     if (status) where.status = status;
     if (astrologerId) where.astrologerId = BigInt(astrologerId);

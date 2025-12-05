@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum WithdrawStatus {
+  Pending
+  Reject
+  Released
+}
+
+
 model admin_get_commissions {
   id               BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
   commissionTypeId BigInt           @db.UnsignedBigInt
@@ -2048,7 +2056,7 @@ model withdrawrequest {
   id                Int       @id @default(autoincrement())
   astrologerId      BigInt?   @db.UnsignedBigInt
   withdrawAmount    Decimal?  @db.Decimal(10, 2)
-  status            String?   @db.VarChar(45)
+  status            WithdrawStatus @default(Pending)
   isActive          Int?      @default(1) @db.TinyInt
   isDelete          Int?      @default(0) @db.TinyInt
   created_at        DateTime? @default(now()) @db.Timestamp(0)
@@ -2061,11 +2069,12 @@ model withdrawrequest {
   ifscCode          String?   @db.VarChar(45)
   accountHolderName String?   @db.VarChar(100)
 
-  astrologer    astrologers?    @relation(fields: [astrologerId], references: [id])
+  astrologer     astrologers?     @relation(fields: [astrologerId], references: [id])
   withdrawmethod withdrawmethods? @relation(fields: [paymentMethod], references: [id])
 
   @@index([astrologerId], map: "withdrawrequest_astrologer_idx")
 }
+
 
 model withdraws {
   id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt

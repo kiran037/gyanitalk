@@ -31,12 +31,13 @@ interface DashboardStats {
   totalPlatformEarnings: number;
   adminCommissionEarned: number;
   topAstrologers: Array<{
-    id: string;
-    name: string;
+    astrologerId: string | null;
+    name: string | null;
     profileImage: string | null;
-    email: string;
+    email: string | null;
     totalEarnings: number;
   }>;
+
   earningsByServiceType: Array<{
     type: string;
     amount: number;
@@ -135,22 +136,6 @@ export default function EarningsDashboard() {
         title="Earnings Dashboard"
         subtitle="Overview of platform earnings and withdrawals"
         badge={{ text: "FINANCIAL", variant: "green" }}
-        actions={
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={dateRange.startDate}
-              onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-              className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
-            />
-            <input
-              type="date"
-              value={dateRange.endDate}
-              onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-              className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
-            />
-          </div>
-        }
       />
 
       {/* Stats Cards */}
@@ -182,7 +167,7 @@ export default function EarningsDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link href="/earnings/withdrawals">
           <motion.div
             className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 cursor-pointer"
@@ -194,6 +179,21 @@ export default function EarningsDashboard() {
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {stats?.pendingWithdrawals.count || 0} pending requests
+            </p>
+          </motion.div>
+        </Link>
+
+        <Link href="/earnings/astrologers">
+          <motion.div
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 cursor-pointer"
+            whileHover={{ scale: 1.02, borderColor: "rgba(255, 107, 53, 0.5)" }}
+          >
+            <Users className="w-8 h-8 text-[#FF6B35] mb-3" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+              Astrologer Balances
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              View & manage wallets
             </p>
           </motion.div>
         </Link>
@@ -253,7 +253,7 @@ export default function EarningsDashboard() {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {stats?.topAstrologers.map((astrologer, index) => (
                   <tr
-                    key={`${astrologer.id ?? 'no-id'}-${index}`}
+                    key={astrologer.astrologerId ?? `idx-${index}`}
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -265,7 +265,7 @@ export default function EarningsDashboard() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                           {astrologer.profileImage && (
-                            <img src={avatar(astrologer.profileImage)} alt={astrologer.name} className="w-full h-full object-cover" />
+                            <img src={avatar(astrologer.profileImage)} alt={astrologer.name || 'Astrologer'} className="w-full h-full object-cover" />
                           )}
                         </div>
                         <div>

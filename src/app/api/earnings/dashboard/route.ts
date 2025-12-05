@@ -23,28 +23,28 @@ export async function GET(request: NextRequest) {
     const withDateFilter =
       startDate || endDate ? { created_at: createdAtFilter } : {};
 
-    // 1. Total Pending Withdrawals
-    const pendingWithdrawals = await prisma.withdrawrequest.aggregate({
-      where: {
-        status: "pending",
-        isActive: 1,
-        isDelete: 0,
-      },
-      _sum: { withdrawAmount: true },
-      _count: true,
-    });
+const pendingWithdrawals = await prisma.withdrawrequest.aggregate({
+  where: {
+    status: "Pending", // ✅ enum value
+    isActive: 1,
+    isDelete: 0,
+  },
+  _sum: { withdrawAmount: true },
+  _count: true,
+});
 
-    // 2. Approved Withdrawals (in date range)
-    const approvedWithdrawals = await prisma.withdrawrequest.aggregate({
-      where: {
-        status: "approved",
-        isActive: 1,
-        isDelete: 0,
-        ...withDateFilter,
-      },
-      _sum: { withdrawAmount: true },
-      _count: true,
-    });
+
+const approvedWithdrawals = await prisma.withdrawrequest.aggregate({
+  where: {
+    status: "Released", // ✅ enum value for “approved”
+    isActive: 1,
+    isDelete: 0,
+    ...withDateFilter,
+  },
+  _sum: { withdrawAmount: true },
+  _count: true,
+});
+
 
     // 3. Total Platform Earnings (from orders)
     const totalOrders = await prisma.order_request.aggregate({

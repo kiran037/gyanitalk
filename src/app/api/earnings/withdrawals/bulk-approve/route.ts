@@ -33,10 +33,11 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        if (withdrawal.status !== 'pending') {
-          results.failed.push({ id, reason: `Status is ${withdrawal.status}` });
-          continue;
-        }
+      if (withdrawal.status !== "Pending") {
+  results.failed.push({ id, reason: `Status is ${withdrawal.status}` });
+  continue;
+}
+
 
         // Check balance
         const transactions = await prisma.wallettransaction.findMany({
@@ -54,14 +55,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Approve withdrawal
-        await prisma.withdrawrequest.update({
-          where: { id: parseInt(id) },
-          data: {
-            status: 'approved',
-            modifiedBy: parseInt(modifiedBy)
-          }
-        });
+      await prisma.withdrawrequest.update({
+  where: { id: parseInt(id) },
+  data: {
+    status: "Released", // ✅ enum
+    modifiedBy: parseInt(modifiedBy),
+  },
+});
+
 
         // Create debit transaction
         await prisma.wallettransaction.create({
