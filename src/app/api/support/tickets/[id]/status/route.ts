@@ -2,13 +2,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+async function getTicketId(context: RouteContext): Promise<bigint> {
+  const { params } = context;      // params is a Promise
+  const { id } = await params;     // unwrap it
+
+  if (!/^\d+$/.test(id)) {
+    throw new Error(`Invalid ticket id: "${id}"`);
+  }
+
+  return BigInt(id);
+}
+
 // PATCH update ticket status
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getTicketId(context);
     const body = await req.json();
     const { ticketStatus, modifiedBy } = body;
 
@@ -32,9 +44,9 @@ export async function PATCH(
 
     if (!allowedStatuses.includes(ticketStatus)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: `Invalid status. Allowed: ${allowedStatuses.join(", ")}` 
+        {
+          success: false,
+          error: `Invalid status. Allowed: ${allowedStatuses.join(", ")}`,
         },
         { status: 400 }
       );
@@ -76,10 +88,12 @@ export async function PATCH(
       id: ticket.id.toString(),
       userId: ticket.userId.toString(),
       helpSupportId: ticket.helpSupportId.toString(),
-      user: ticket.user ? {
-        ...ticket.user,
-        id: ticket.user.id.toString(),
-      } : null,
+      user: ticket.user
+        ? {
+            ...ticket.user,
+            id: ticket.user.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json({
@@ -88,6 +102,7 @@ export async function PATCH(
       message: `Ticket status updated to ${ticketStatus}`,
     });
   } catch (error: any) {
+    console.error("Error updating ticket status:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

@@ -1,14 +1,30 @@
-// app/api/support/faq/answers/[id]/route.ts
+// // app/api/support/faq/answers/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET single answer by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+function safeToBigInt(id: string): bigint {
   try {
-    const id = BigInt(params.id);
+    return BigInt(id);
+  } catch {
+    throw new Error(`Invalid answer id: "${id}"`);
+  }
+}
+
+async function getAnswerId(context: RouteContext): Promise<bigint> {
+  const { params } = context;      // params is a Promise
+  const { id } = await params;     // unwrap it
+  return safeToBigInt(id);
+}
+
+// GET single answer by ID
+export async function GET(req: NextRequest, context: RouteContext) {
+  try {
+    const id = await getAnswerId(context);
 
     const answer = await prisma.help_support_quation_answers.findUnique({
       where: { id },
@@ -30,16 +46,17 @@ export async function GET(
       );
     }
 
-    // Serialize BigInt
     const serializedAnswer = {
       ...answer,
       id: answer.id.toString(),
       helpSupportId: answer.helpSupportId.toString(),
       helpSupportQuationId: answer.helpSupportQuationId.toString(),
-      question: answer.question ? {
-        ...answer.question,
-        id: answer.question.id.toString(),
-      } : null,
+      question: answer.question
+        ? {
+            ...answer.question,
+            id: answer.question.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json({ success: true, data: serializedAnswer });
@@ -52,15 +69,11 @@ export async function GET(
 }
 
 // PATCH update answer
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getAnswerId(context);
     const body = await req.json();
 
-    // Check if answer exists
     const existingAnswer = await prisma.help_support_quation_answers.findUnique({
       where: { id },
     });
@@ -72,7 +85,6 @@ export async function PATCH(
       );
     }
 
-    // Prepare update data
     const updateData: any = {
       modifiedBy: body.modifiedBy || 1,
     };
@@ -82,7 +94,6 @@ export async function PATCH(
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.isChatWithus !== undefined) updateData.isChatWithus = body.isChatWithus;
 
-    // Update answer
     const answer = await prisma.help_support_quation_answers.update({
       where: { id },
       data: updateData,
@@ -96,16 +107,17 @@ export async function PATCH(
       },
     });
 
-    // Serialize BigInt
     const serializedAnswer = {
       ...answer,
       id: answer.id.toString(),
       helpSupportId: answer.helpSupportId.toString(),
       helpSupportQuationId: answer.helpSupportQuationId.toString(),
-      question: answer.question ? {
-        ...answer.question,
-        id: answer.question.id.toString(),
-      } : null,
+      question: answer.question
+        ? {
+            ...answer.question,
+            id: answer.question.id.toString(),
+          }
+        : null,
     };
 
     return NextResponse.json({
@@ -122,14 +134,10 @@ export async function PATCH(
 }
 
 // DELETE answer (soft delete)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getAnswerId(context);
 
-    // Check if answer exists
     const existingAnswer = await prisma.help_support_quation_answers.findUnique({
       where: { id },
     });
@@ -141,7 +149,6 @@ export async function DELETE(
       );
     }
 
-    // Soft delete
     await prisma.help_support_quation_answers.update({
       where: { id },
       data: {

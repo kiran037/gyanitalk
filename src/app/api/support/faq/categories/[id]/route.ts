@@ -1,14 +1,30 @@
-// app/api/support/faq/categories/[id]/route.ts
+// // app/api/support/faq/categories/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET single category by ID
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+function safeToBigInt(id: string): bigint {
   try {
-    const id = BigInt(params.id);
+    return BigInt(id);
+  } catch {
+    throw new Error(`Invalid category id: "${id}"`);
+  }
+}
+
+async function getCategoryId(context: RouteContext): Promise<bigint> {
+  const { params } = context;       // params: Promise<{id:string}>
+  const { id } = await params;      // unwrap
+  return safeToBigInt(id);
+}
+
+// GET single category by ID
+export async function GET(req: NextRequest, context: RouteContext) {
+  try {
+    const id = await getCategoryId(context);
 
     const category = await prisma.help_supports.findUnique({
       where: { id },
@@ -33,7 +49,6 @@ export async function GET(
       );
     }
 
-    // Serialize BigInt
     const serializedCategory = {
       ...category,
       id: category.id.toString(),
@@ -56,15 +71,11 @@ export async function GET(
 }
 
 // PATCH update category
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getCategoryId(context);
     const body = await req.json();
 
-    // Check if category exists
     const existingCategory = await prisma.help_supports.findUnique({
       where: { id },
     });
@@ -76,21 +87,18 @@ export async function PATCH(
       );
     }
 
-    // Prepare update data
     const updateData: any = {
       modifiedBy: body.modifiedBy || 1,
     };
 
-    if (body.name) updateData.name = body.name;
+    if (body.name !== undefined) updateData.name = body.name;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
 
-    // Update category
     const category = await prisma.help_supports.update({
       where: { id },
       data: updateData,
     });
 
-    // Serialize BigInt
     const serializedCategory = {
       ...category,
       id: category.id.toString(),
@@ -110,14 +118,10 @@ export async function PATCH(
 }
 
 // DELETE category (soft delete)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const id = BigInt(params.id);
+    const id = await getCategoryId(context);
 
-    // Check if category exists
     const existingCategory = await prisma.help_supports.findUnique({
       where: { id },
       include: {
@@ -137,18 +141,17 @@ export async function DELETE(
       );
     }
 
-    // Check if category has questions
     if (existingCategory._count.subCategory > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "Cannot delete category with existing questions. Please delete questions first.",
+          error:
+            "Cannot delete category with existing questions. Please delete questions first.",
         },
         { status: 400 }
       );
     }
 
-    // Soft delete
     await prisma.help_supports.update({
       where: { id },
       data: {

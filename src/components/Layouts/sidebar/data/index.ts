@@ -10,7 +10,7 @@ import {
   Layers,
   BookOpen,
   BellRing,
-Newspaper,
+  Newspaper,
   Contact,
   PlayCircle,
   Smile,
@@ -147,7 +147,7 @@ export const NAV_DATA = [
       },
       {
         title: "Astroshop",
-        icon:   ShoppingBag,
+        icon: ShoppingBag,
         items: [
           {
             title: "Dashboard",
@@ -159,7 +159,7 @@ export const NAV_DATA = [
             url: "/astroshop/categories",
             icon: PackageSearch,
           },
-           {
+          {
             title: "Products",
             url: "/astroshop/products",
             icon: PackageSearch,
@@ -180,18 +180,27 @@ export const NAV_DATA = [
       },
       {
         title: "Support Management",
-        url: "/support_management",
         icon: Bot,
         items: [
           {
+            title: "Dashboard",
+            url: "/supports/dashboard",
+            icon: Ticket,
+          },
+          {
             title: "Tickets",
-            url: "/tickets",
+            url: "/supports/tickets",
             icon: Ticket,
           },
           {
             title: "FAQs",
-            url: "/helpSupport",
+            url: "/supports/faq",
             icon: List,
+          },
+          {
+            title: "Contacts",
+            url: "/supports/contact",
+            icon: Contact,
           },
         ],
       },
@@ -229,13 +238,6 @@ export const NAV_DATA = [
         icon: Newspaper,
         items: [],
       },
-
-      {
-        title: "Contacts",
-        url: "/supports/contact",
-        icon: Contact,
-        items: [],
-      },
     ],
   },
   {
@@ -267,7 +269,7 @@ export const NAV_DATA = [
           },
         ],
       },
-       {
+      {
         title: "Analytics",
         icon: Layers,
         items: [
