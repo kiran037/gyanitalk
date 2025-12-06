@@ -87,7 +87,7 @@ export const NAV_DATA = [
           },
           {
             title: "Block Astrologer",
-            url: "/astro/block",
+            url: "/astro/block-astro",
             icon: X,
           },
           {
@@ -98,11 +98,6 @@ export const NAV_DATA = [
           {
             title: "Categories",
             url: "/astro/categories",
-            icon: Folder,
-          },
-          {
-            title: "Sorting Astrologers",
-            url: "/astro/sorting",
             icon: Folder,
           },
           {

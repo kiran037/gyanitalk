@@ -1,25 +1,62 @@
 // app/api/astrologers/[id]/gallery/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+// JSON-safe converter
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+// GET – list gallery items
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const astrologerId = parseInt(params.id);
-    const searchParams = request.nextUrl.searchParams;
+    const { id } = await context.params;
 
-    // Pagination
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Astrologer ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // gallery.astrologerId is an Int → use number
+    const astrologerId = parseInt(id, 10);
+    if (Number.isNaN(astrologerId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid astrologer ID" },
+        { status: 400 }
+      );
+    }
+
+    const searchParams = req.nextUrl.searchParams;
+
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
     const skip = (page - 1) * limit;
 
     const where = {
-      astrologerId: astrologerId,
-      status: 1, // Active status
+      astrologerId,
+      status: 1, // active
     };
 
     const [gallery, total] = await Promise.all([
@@ -27,14 +64,12 @@ export async function GET(
         where,
         skip,
         take: limit,
-        orderBy: {
-          created_at: 'desc',
-        },
+        orderBy: { created_at: "desc" },
       }),
       prisma.astrologers_gallery.count({ where }),
     ]);
 
-    return NextResponse.json({
+    const safe = convertPrismaTypes({
       success: true,
       data: gallery,
       pagination: {
@@ -44,101 +79,106 @@ export async function GET(
         totalPages: Math.ceil(total / limit),
       },
     });
+
+    return NextResponse.json(safe);
   } catch (error: any) {
-    console.error('Error fetching gallery:', error);
+    console.error("Error fetching gallery:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch gallery',
+        error: "Failed to fetch gallery",
         message: error.message,
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// POST – add gallery item
+export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const astrologerId = parseInt(params.id);
-    const body = await request.json();
-    
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Astrologer ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // astrologers_gallery.astrologerId is Int
+    const astrologerId = parseInt(id, 10);
+    if (Number.isNaN(astrologerId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid astrologer ID" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
     const { image, userId, createdBy, modifiedBy } = body;
 
     if (!image || !userId) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Image and userId are required',
+          error: "Image and userId are required",
         },
         { status: 400 }
       );
     }
 
+    const userIdNum =
+      typeof userId === "string" ? parseInt(userId, 10) : Number(userId);
+
+    if (Number.isNaN(userIdNum)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid userId" },
+        { status: 400 }
+      );
+    }
+
+    const createdByNum =
+      createdBy !== undefined
+        ? typeof createdBy === "string"
+          ? parseInt(createdBy, 10)
+          : Number(createdBy)
+        : userIdNum;
+
+    const modifiedByNum =
+      modifiedBy !== undefined
+        ? typeof modifiedBy === "string"
+          ? parseInt(modifiedBy, 10)
+          : Number(modifiedBy)
+        : userIdNum;
+
     const newGalleryItem = await prisma.astrologers_gallery.create({
       data: {
         astrologerId,
-        userId,
+        userId: userIdNum,
         image,
         status: 1,
-        createdBy: createdBy || userId,
-        modifiedBy: modifiedBy || userId,
+        createdBy: createdByNum,
+        modifiedBy: modifiedByNum,
       },
     });
 
-    return NextResponse.json({
+    const safe = convertPrismaTypes({
       success: true,
-      message: 'Gallery item added successfully',
+      message: "Gallery item added successfully",
       data: newGalleryItem,
     });
+
+    return NextResponse.json(safe);
   } catch (error: any) {
-    console.error('Error adding gallery item:', error);
+    console.error("Error adding gallery item:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to add gallery item',
+        error: "Failed to add gallery item",
         message: error.message,
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
-  }
-}
-
-// app/api/astrologers/[id]/gallery/[galleryId]/route.ts
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string; galleryId: string } }
-) {
-  try {
-    const galleryId = parseInt(params.galleryId);
-
-    const deletedItem = await prisma.astrologers_gallery.update({
-      where: { id: galleryId },
-      data: { status: 0 }, // Soft delete by setting status to 0
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Gallery item deleted successfully',
-      data: deletedItem,
-    });
-  } catch (error: any) {
-    console.error('Error deleting gallery item:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to delete gallery item',
-        message: error.message,
-      },
-      { status: 500 }
-    );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -1,44 +1,66 @@
 // app/api/astrologers/[id]/reviews/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const astrologerId = BigInt(params.id);
-    const searchParams = request.nextUrl.searchParams;
+    const { id } = await context.params;
 
-    // Pagination
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Astrologer ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const astrologerId = BigInt(id);
+    const searchParams = req.nextUrl.searchParams;
+
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
 
-    // Filters
-    const minRating = searchParams.get('minRating');
-    const maxRating = searchParams.get('maxRating');
-    const isPublic = searchParams.get('isPublic');
+    const minRating = searchParams.get("minRating");
+    const maxRating = searchParams.get("maxRating");
+    const isPublic = searchParams.get("isPublic");
 
     const where: any = {
-      astrologerId: astrologerId,
+      astrologerId,
       isDelete: false,
     };
 
     if (minRating || maxRating) {
       where.rating = {};
-      if (minRating) {
-        where.rating.gte = parseFloat(minRating);
-      }
-      if (maxRating) {
-        where.rating.lte = parseFloat(maxRating);
-      }
+      if (minRating) where.rating.gte = parseFloat(minRating);
+      if (maxRating) where.rating.lte = parseFloat(maxRating);
     }
 
-    if (isPublic !== null && isPublic !== undefined) {
-      where.isPublic = isPublic === 'true';
+    if (isPublic !== null && isPublic !== undefined && isPublic !== "") {
+      where.isPublic = isPublic === "true";
     }
 
     const [reviews, total] = await Promise.all([
@@ -56,29 +78,20 @@ export async function GET(
             },
           },
         },
-        orderBy: {
-          created_at: 'desc',
-        },
+        orderBy: { created_at: "desc" },
       }),
       prisma.user_reviews.count({ where }),
     ]);
 
-    // Calculate average rating and rating distribution
     const allReviews = await prisma.user_reviews.findMany({
-      where: {
-        astrologerId: astrologerId,
-        isDelete: false,
-      },
-      select: {
-        rating: true,
-      },
+      where: { astrologerId, isDelete: false },
+      select: { rating: true },
     });
 
     const averageRating = allReviews.length
       ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
       : 0;
 
-    // Rating distribution
     const ratingDistribution = {
       5: allReviews.filter((r) => r.rating === 5).length,
       4: allReviews.filter((r) => r.rating === 4).length,
@@ -87,7 +100,7 @@ export async function GET(
       1: allReviews.filter((r) => r.rating === 1).length,
     };
 
-    return NextResponse.json({
+    const safe = convertPrismaTypes({
       success: true,
       data: reviews,
       pagination: {
@@ -102,17 +115,17 @@ export async function GET(
         ratingDistribution,
       },
     });
+
+    return NextResponse.json(safe);
   } catch (error: any) {
-    console.error('Error fetching reviews:', error);
+    console.error("Error fetching reviews:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch reviews',
+        error: "Failed to fetch reviews",
         message: error.message,
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

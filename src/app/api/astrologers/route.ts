@@ -185,15 +185,25 @@ export async function GET(request: NextRequest) {
       return bDate - aDate;
     });
 
+    // Calculate stats from ALL filtered astrologers (before pagination)
+    const stats = {
+      totalVerified: sortedAstrologers.filter((a) => a.isVerified).length,
+      totalActive: sortedAstrologers.filter((a) => a.isActive).length,
+      totalOnline: sortedAstrologers.filter((a) => a.chatStatus === "online").length,
+      totalCallOnline: sortedAstrologers.filter((a) => a.callStatus === "online").length,
+    };
+
     // Apply pagination AFTER sorting
     const paginatedAstrologers = sortedAstrologers.slice(skip, skip + limit);
 
     // Convert all BigInt/Decimal/Date before sending
     const safeData = convertPrismaTypes(paginatedAstrologers);
+    const safeStats = convertPrismaTypes(stats);
 
     return NextResponse.json({
       success: true,
       data: safeData,
+      stats: safeStats,
       pagination: {
         page,
         limit,

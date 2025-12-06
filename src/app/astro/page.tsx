@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -49,12 +49,25 @@ interface Pagination {
   totalPages: number;
 }
 
+interface Stats {
+  totalVerified: number;
+  totalActive: number;
+  totalOnline: number;
+  totalCallOnline: number;
+}
+
 export default function AstrologersPage() {
   const router = useRouter();
   const addToast = useToast();
   
   const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats>({
+    totalVerified: 0,
+    totalActive: 0,
+    totalOnline: 0,
+    totalCallOnline: 0,
+  });
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 12,
@@ -96,6 +109,7 @@ export default function AstrologersPage() {
       if (data.success) {
         setAstrologers(data.data);
         setPagination(data.pagination);
+        setStats(data.stats); // Update stats from API
       } else {
         addToast("error", "Error", data.error || "Failed to fetch astrologers");
       }
@@ -245,19 +259,19 @@ export default function AstrologersPage() {
             },
             {
               label: "Verified",
-              value: astrologers.filter((a) => a.isVerified).length,
+              value: stats.totalVerified,
               icon: Verified,
               color: "from-green-500 to-green-600",
             },
             {
               label: "Online",
-              value: astrologers.filter((a) => a.chatStatus === "online").length,
+              value: stats.totalOnline,
               icon: MessageSquare,
               color: "from-[#FF6B35] to-[#FFB347]",
             },
             {
               label: "Active",
-              value: astrologers.filter((a) => a.isActive).length,
+              value: stats.totalActive,
               icon: Star,
               color: "from-purple-500 to-purple-600",
             },

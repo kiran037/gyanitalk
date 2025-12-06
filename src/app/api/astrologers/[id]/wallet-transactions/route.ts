@@ -1,30 +1,58 @@
 // app/api/astrologers/[id]/wallet-transactions/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const astrologerId = BigInt(params.id);
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Astrologer ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const astrologerId = BigInt(id);
     const searchParams = request.nextUrl.searchParams;
 
     // Pagination
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
 
     // Filters
-    const transactionType = searchParams.get('transactionType');
-    const fromDate = searchParams.get('fromDate');
-    const toDate = searchParams.get('toDate');
-    const isCredit = searchParams.get('isCredit');
+    const transactionType = searchParams.get("transactionType");
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
+    const isCredit = searchParams.get("isCredit");
 
     const where: any = {
-      astrologerId: astrologerId,
+      astrologerId,
     };
 
     if (transactionType) {
@@ -32,7 +60,7 @@ export async function GET(
     }
 
     if (isCredit !== null && isCredit !== undefined) {
-      where.isCredit = isCredit === 'true';
+      where.isCredit = isCredit === "true";
     }
 
     if (fromDate || toDate) {
@@ -69,28 +97,26 @@ export async function GET(
           },
         },
         orderBy: {
-          created_at: 'desc',
+          created_at: "desc",
         },
       }),
       prisma.wallettransaction.count({ where }),
     ]);
 
-    // Calculate wallet balance
     const allTransactions = await prisma.wallettransaction.findMany({
-      where: { astrologerId: astrologerId },
+      where: { astrologerId },
       select: {
         amount: true,
         isCredit: true,
       },
     });
 
-    const walletBalance = allTransactions.reduce((sum: number, transaction: any) => {
-      return transaction.isCredit
-        ? sum + (transaction.amount || 0)
-        : sum - (transaction.amount || 0);
-    }, 0);
+    const walletBalance = allTransactions.reduce(
+      (sum: number, t: any) =>
+        t.isCredit ? sum + (t.amount || 0) : sum - (t.amount || 0),
+      0
+    );
 
-    // Calculate total credit and debit
     const totalCredit = allTransactions
       .filter((t: any) => t.isCredit)
       .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
@@ -99,7 +125,7 @@ export async function GET(
       .filter((t: any) => !t.isCredit)
       .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
 
-    return NextResponse.json({
+    const safe = convertPrismaTypes({
       success: true,
       data: transactions,
       pagination: {
@@ -114,17 +140,17 @@ export async function GET(
         totalDebit: totalDebit.toFixed(2),
       },
     });
+
+    return NextResponse.json(safe);
   } catch (error: any) {
-    console.error('Error fetching wallet transactions:', error);
+    console.error("Error fetching wallet transactions:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch wallet transactions',
+        error: "Failed to fetch wallet transactions",
         message: error.message,
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
