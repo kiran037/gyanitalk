@@ -235,6 +235,10 @@ export function Sidebar() {
 
   const transitionClass = prefersReducedMotion ? '' : 'transition-all duration-300 ease-in-out';
 
+    if (isMobile && !isOpen) {
+    return null;
+  }
+
   return (
     <>
       {/* Mobile overlay */}

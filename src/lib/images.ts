@@ -1,6 +1,6 @@
 
 ///Users/xeoren/gyanitallk-admin/src/lib/images.ts
-export function ensureAbs(p?: string | null, fallback = "/placeholder-avatar.png"): string {
+export function ensureAbs(p?: string | null, fallback = "/default-avatar.svg"): string {
   if (!p || typeof p !== "string") return fallback;
 
   // Already a full URL → return as-is
@@ -28,6 +28,6 @@ export function ensureAbs(p?: string | null, fallback = "/placeholder-avatar.png
 }
 
 export function avatar(p?: string | null) {
-  const fallback = "https://gyanitalk.com/build/assets/images/person.png";
+  const fallback = "/default-avatar.svg";
   return ensureAbs(p, fallback);
 }
