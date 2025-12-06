@@ -16,8 +16,6 @@ import {
   Smile,
   Video,
   Rss,
-  Edit,
-  Star,
   CreditCard,
   Folder,
   PocketKnife,
@@ -79,42 +77,37 @@ export const NAV_DATA = [
         items: [
           {
             title: "Astrologers",
-            url: "/astrologers",
+            url: "/astro",
             icon: Users,
           },
           {
             title: "AI Astrologers",
-            url: "/ai-astrologers",
+            url: "/astro/ai",
             icon: Brain,
           },
           {
             title: "Block Astrologer",
-            url: "/block_astrologer",
+            url: "/astro/block",
             icon: X,
           },
           {
-            title: "Reviews",
-            url: "/review_astrologers",
-            icon: Star,
-          },
-          {
             title: "Skills",
-            url: "/skills_astrologer",
+            url: "/astro/skills",
             icon: PocketKnife,
           },
           {
             title: "Categories",
-            url: "/astrologerCategories",
+            url: "/astro/categories",
             icon: Folder,
           },
           {
             title: "Sorting Astrologers",
-            url: "/sorting_astrologers",
+            url: "/astro/sorting",
             icon: Folder,
           },
           {
             title: "Groups",
-            url: "/astrologer_group",
+            url: "/astro/groups",
             icon: Folder,
           },
         ],
