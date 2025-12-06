@@ -242,23 +242,23 @@ export const NAV_DATA = [
         icon: Layers,
         items: [
           {
-            title: "Astroguru News",
-            url: "/astrogurunews",
+            title: "News",
+            url: "/extras/news",
             icon: Rss,
           },
           {
             title: "Videos",
-            url: "/videos",
+            url: "/extras/videos",
             icon: Video,
           },
           {
             title: "Stories",
-            url: "/stories",
+            url: "/extras/stories",
             icon: PlayCircle,
           },
           {
             title: "Feedback",
-            url: "/feedback",
+            url: "/extras/feedback",
             icon: Smile,
           },
         ],

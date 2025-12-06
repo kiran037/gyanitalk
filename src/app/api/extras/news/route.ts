@@ -1,14 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+// app/api/extras/news/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+// Helper: convert BigInt / Decimal / Date -> JSON-safe
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === "bigint") return obj.toString();
+
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+
+  if (obj instanceof Date) return obj.toISOString();
+
+  if (typeof obj !== "object") return obj;
+
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
 // GET all news with pagination and filters
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const isActive = searchParams.get('isActive');
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search") || "";
+    const isActive = searchParams.get("isActive");
 
     const skip = (page - 1) * limit;
 
@@ -16,8 +44,8 @@ export async function GET(request: NextRequest) {
       isDelete: false,
     };
 
-    if (isActive !== null && isActive !== undefined && isActive !== '') {
-      where.isActive = isActive === 'true';
+    if (isActive !== null && isActive !== undefined && isActive !== "") {
+      where.isActive = isActive === "true";
     }
 
     if (search) {
@@ -32,14 +60,14 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { created_at: 'desc' },
+        orderBy: { created_at: "desc" },
       }),
       prisma.astrotalk_in_news.count({ where }),
     ]);
 
     return NextResponse.json({
       success: true,
-      data: news,
+      data: convertPrismaTypes(news),
       pagination: {
         total,
         page,
@@ -48,8 +76,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("Error fetching news list:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || "Failed to fetch news" },
       { status: 500 }
     );
   }
@@ -59,12 +88,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { newsDate, channel, link, bannerImage, description, createdBy } = body;
+    const { newsDate, channel, link, bannerImage, description, createdBy } =
+      body;
 
     // Validation
-    if (!newsDate || !channel || !link || !bannerImage || !description || !createdBy) {
+    if (
+      !newsDate ||
+      !channel ||
+      !link ||
+      !bannerImage ||
+      !description ||
+      !createdBy
+    ) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -83,14 +120,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'News created successfully',
-      data: news,
-    }, { status: 201 });
-  } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      {
+        success: true,
+        message: "News created successfully",
+        data: convertPrismaTypes(news),
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating news:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to create news" },
       { status: 500 }
     );
   }
