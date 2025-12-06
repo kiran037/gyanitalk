@@ -184,15 +184,15 @@ export function Header() {
 
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative w-9 h-9 rounded-xl overflow-hidden ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                <div className="absolute inset-0 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-white dark:ring-gray-900 ">
                   <Image
                     src="https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png"
                     alt="Gyani Talk"
-                    width={36}
-                    height={36}
+                    width={40}
+                    height={40}
                     priority
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export function Header() {
                     className="absolute right-0 mt-2 w-72 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl z-50 overflow-hidden"
                   >
                     {/* Profile Header */}
-                    <div className="p-4 bg-gradient-to-r from-[#FF6B35] to-[#FFB347]">
+                    <div className="p-4 bg-black/5 dark:bg-white/5">
                       <div className="flex items-center gap-3">
                         <Image
                           src={avatarSrc}
@@ -283,10 +283,10 @@ export function Header() {
                           unoptimized
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-white truncate">
+                          <p className="text-sm font-bold text-black dark:text-white truncate">
                             {me?.name || "Guest"}
                           </p>
-                          <p className="text-xs text-white/80 truncate">
+                          <p className="text-xs text-black/80 dark:text-white/80 truncate">
                             {me?.email || ""}
                           </p>
                         </div>
@@ -297,9 +297,9 @@ export function Header() {
                     <div className="p-2">
                       <Link
                         href="/settings"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 transition-all group"
                       >
-                        <Settings className="h-4 w-4 text-gray-500 group-hover:text-[#FF6B35] transition-colors" />
+                        <Settings className="h-4 w-4 text-[#FF6B35] group-hover:text-[#FF6B35] transition-colors" />
                         <span>Settings</span>
                         <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>

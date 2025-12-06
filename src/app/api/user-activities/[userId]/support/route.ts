@@ -1,13 +1,25 @@
-// app/api/user-activities/[userId]/support/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ userId: string }>;
+};
+
+async function getUserId(context: RouteContext): Promise<bigint> {
+  const { userId } = await context.params; // unwrap params Promise
+
+  const trimmed = userId?.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    throw new Error(`Invalid userId: "${userId}"`);
+  }
+
+  return BigInt(trimmed);
+}
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const userId = BigInt(params.userId);
+    const userId = await getUserId(context); // ✅ unwrap params, get bigint
 
     const [tickets, ticketReviews, appReviews] = await Promise.all([
       // Support tickets with category details
@@ -95,9 +107,9 @@ export async function GET(
           total: ticketReviews.length,
           averageRating:
             ticketReviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
-              (ticketReviews.length || 1),
+            (ticketReviews.length || 1),
           recent: ticketReviews.map((r) => ({
-            id: r.id,
+            id: r.id.toString(), // ✅ safer if id is BigInt
             ticketNumber: r.ticket.ticketNumber,
             subject: r.ticket.subject,
             rating: r.rating,

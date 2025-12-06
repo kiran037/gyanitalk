@@ -2,14 +2,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
-  try {
-    const userId = BigInt(params.userId);
 
-    // Run all queries in parallel for performance
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ userId: string }>;
+};
+
+async function getUserId(context: RouteContext): Promise<bigint> {
+  const { userId } = await context.params; // unwrap the Promise
+
+  const trimmed = userId?.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    throw new Error(`Invalid userId: "${userId}"`);
+  }
+
+  return BigInt(trimmed);
+}
+
+
+export async function GET(req: NextRequest, context: RouteContext) {
+  try {
+    const userId = await getUserId(context);   
+    const userIdNumber = Number(userId);         
+
+
     const [
       user,
       chatStats,
@@ -23,7 +39,7 @@ export async function GET(
       horoscopeFeedback,
       storyViews,
     ] = await Promise.all([
-      // Basic user info
+      // Basic user info (id is BigInt in DB)
       prisma.users.findUnique({
         where: { id: userId },
         select: {
@@ -36,7 +52,7 @@ export async function GET(
         },
       }),
 
-      // Chat statistics
+      // Chat statistics (userId is BigInt)
       prisma.chatrequest.aggregate({
         where: { userId },
         _count: { id: true },
@@ -45,7 +61,7 @@ export async function GET(
         },
       }),
 
-      // Call statistics  
+      // Call statistics (userId is BigInt)
       prisma.callrequest.aggregate({
         where: { userId },
         _count: { id: true },
@@ -54,16 +70,16 @@ export async function GET(
         },
       }),
 
-      // Order statistics
+
       prisma.order_request.aggregate({
-        where: { userId: Number(userId) },
+        where: { userId: userIdNumber },
         _count: { id: true },
         _sum: {
           totalPayable: true,
         },
       }),
 
-      // Wallet statistics
+
       prisma.wallettransaction.aggregate({
         where: { userId },
         _count: { id: true },
@@ -72,7 +88,7 @@ export async function GET(
         },
       }),
 
-      // Review statistics
+
       prisma.user_reviews.aggregate({
         where: { userId },
         _count: { id: true },
@@ -81,19 +97,19 @@ export async function GET(
         },
       }),
 
-      // Follow statistics
+
       prisma.astrologer_followers.count({
         where: { userId },
       }),
 
-      // Ticket statistics
+
       prisma.tickets.groupBy({
         by: ["ticketStatus"],
         where: { userId },
         _count: { id: true },
       }),
 
-      // Latest device info
+
       prisma.user_device_details.findFirst({
         where: { userId },
         orderBy: { updated_at: "desc" },
@@ -105,16 +121,19 @@ export async function GET(
         },
       }),
 
-      // Horoscope feedback count
+
       prisma.horoscopefeedback.count({
-        where: { userId: Number(userId) },
+        where: { userId: userIdNumber },
       }),
 
-      // Story views count
+
       prisma.story_view_counts.count({
-        where: { userId: Number(userId) },
+        where: { userId: userIdNumber },
       }),
     ]);
+
+
+
 
     if (!user) {
       return NextResponse.json(

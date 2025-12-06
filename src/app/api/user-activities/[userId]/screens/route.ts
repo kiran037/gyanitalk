@@ -11,14 +11,16 @@ type Activity = {
   timestamp: Date | null;
 };
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+// 💡 Next 15: params is a Promise now
+type RouteContext = {
+  params: Promise<{ userId: string }>;
+};
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const date = searchParams.get("date") || moment().format(DATE_FMT);
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
 
     // Validate date format
     const dateM = moment(date, DATE_FMT, true);
@@ -29,7 +31,10 @@ export async function GET(
       );
     }
 
-    const userId = params.userId.trim();
+    // ⬇️ unwrap params Promise and validate userId
+    const { userId: rawUserId } = await context.params;
+    const userId = rawUserId?.trim();
+
     if (!userId || userId === "null" || userId === "undefined") {
       return NextResponse.json(
         { error: "Invalid user ID" },
@@ -43,10 +48,26 @@ export async function GET(
       .doc(date)
       .collection(userId);
 
-    const snap = await colRef
-      .orderBy("timestamp", "desc")
-      .limit(limit)
-      .get();
+    // Main query with quota handling
+    let snap;
+    try {
+      snap = await colRef
+        .orderBy("timestamp", "desc")
+        .limit(limit)
+        .get();
+    } catch (err: any) {
+      if (err?.code === 8 || err?.details?.includes?.("Quota exceeded")) {
+        console.error("Firestore quota exceeded for screen activities:", err);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Activity logs quota exceeded. Please try again later.",
+          },
+          { status: 429 }
+        );
+      }
+      throw err;
+    }
 
     const activities: Activity[] = snap.docs.map((d) => {
       const data = d.data() as any;
@@ -58,12 +79,13 @@ export async function GET(
       };
     });
 
-    // Get total count
+    // Get total count (best-effort, ignore failures)
     let totalCount: number | undefined;
     try {
       const countSnap = await colRef.count().get();
       totalCount = countSnap.data().count;
-    } catch {
+    } catch (err) {
+      console.warn("Failed to fetch total count for activities:", err);
       totalCount = undefined;
     }
 
@@ -83,7 +105,7 @@ export async function GET(
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    // Calculate session duration (time between first and last activity)
+    // Calculate session duration
     const timestamps = activities
       .map((a) => a.timestamp)
       .filter((t): t is Date => t !== null)
@@ -94,8 +116,8 @@ export async function GET(
         ? Math.max(...timestamps) - Math.min(...timestamps)
         : 0;
 
-    // Get last 7 days of activity counts
-    const last7Days = [];
+    // Get last 7 days of activity counts (also quota-safe)
+    const last7Days: { date: string; count: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const dayDate = moment().subtract(i, "days").format(DATE_FMT);
       try {
@@ -103,12 +125,23 @@ export async function GET(
           .collection("user_activity_logs")
           .doc(dayDate)
           .collection(userId);
+
         const dayCountSnap = await dayColRef.count().get();
         last7Days.push({
           date: dayDate,
-          count: dayCountSnap.data().count,
+          count: dayCountSnap.data().count ?? 0,
         });
-      } catch {
+      } catch (err: any) {
+        if (err?.code === 8 || err?.details?.includes?.("Quota exceeded")) {
+          console.error("Firestore quota exceeded in weeklyTrend:", err);
+          // Push 0 for this day and stop trying further to avoid more quota hits
+          last7Days.push({
+            date: dayDate,
+            count: 0,
+          });
+          break;
+        }
+
         last7Days.push({
           date: dayDate,
           count: 0,

@@ -27,6 +27,7 @@ import {
   List,
   ShoppingBag,
   PackageSearch,
+  Activity,
 } from "lucide-react";
 
 export const NAV_DATA = [
@@ -209,16 +210,10 @@ export const NAV_DATA = [
             title: "Payment Methods",
             url: "/earnings/payment-methods",
           },
-          {  title: "Withdrawals", url: "/earnings/withdrawals" },
-          {  title: "Commissions", url: "/earnings/commissions" },
-          {  title: "Reports", url: "/earnings/reports" },
+          { title: "Withdrawals", url: "/earnings/withdrawals" },
+          { title: "Commissions", url: "/earnings/commissions" },
+          { title: "Reports", url: "/earnings/reports" },
         ],
-      },
-      {
-        title: "Page Management",
-        url: "/pages",
-        icon: FileText,
-        items: [],
       },
       {
         title: "Blogs",
@@ -231,6 +226,17 @@ export const NAV_DATA = [
   {
     label: "Settings",
     items: [
+      {
+        title: "Page Management",
+        url: "/pages",
+        icon: FileText,
+        items: [],
+      },
+      {
+        title: "User Analytics",
+        icon: Activity,
+        url: "/user-activities",
+      },
       {
         title: "Extras",
         icon: Layers,
@@ -255,17 +261,6 @@ export const NAV_DATA = [
             url: "/feedback",
             icon: Smile,
           },
-        ],
-      },
-      {
-        title: "Analytics",
-        icon: Layers,
-        items: [
-          {
-            title: "User Activity",
-            url: "/user-activity",
-            icon: Edit,
-          }
         ],
       },
     ],

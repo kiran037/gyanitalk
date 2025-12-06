@@ -2,12 +2,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ userId: string }>;
+};
+
+async function getUserId(context: RouteContext): Promise<bigint> {
+  const { userId } = await context.params; // unwrap params Promise
+
+  const trimmed = userId?.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    throw new Error(`Invalid userId: "${userId}"`);
+  }
+
+  return BigInt(trimmed);
+}
+
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const userId = BigInt(params.userId);
+    const userId = await getUserId(context); // bigint
 
     // Get activity patterns over time
     const [
@@ -44,7 +58,7 @@ export async function GET(
         ORDER BY month DESC
       `,
 
-      // Orders grouped by month
+      // Orders grouped by month (userId is Int in this table → use Number)
       prisma.$queryRaw<Array<{ month: string; count: bigint; total: number }>>`
         SELECT 
           DATE_FORMAT(created_at, '%Y-%m') as month,
@@ -107,7 +121,7 @@ export async function GET(
         LIMIT 5
       `,
 
-      // Preferred product categories
+      // Preferred product categories (userId is Int here)
       prisma.$queryRaw<
         Array<{ categoryId: bigint; categoryName: string; count: bigint }>
       >`
@@ -157,19 +171,22 @@ export async function GET(
           orders: ordersByMonth.map((m) => ({
             month: m.month,
             count: Number(m.count),
-            total: m.total,
+            total: Number(m.total ?? 0),
           })),
+
         },
         rechargePattern: {
           total: rechargeHistory.length,
           last6Months: rechargeHistory.map((r) => ({
-            amount: r.amount,
+            amount: Number(r.amount) || 0,
             date: r.created_at,
             type: r.transactionType,
           })),
           averageRecharge:
-            rechargeHistory.reduce((sum, r) => sum + (Number(r.amount) || 0), 0) /
-            (rechargeHistory.length || 1),
+            rechargeHistory.reduce(
+              (sum, r) => sum + (Number(r.amount) || 0),
+              0
+            ) / (rechargeHistory.length || 1),
         },
         preferences: {
           topChattedAstrologers: mostChattedAstrologers.map((a) => ({

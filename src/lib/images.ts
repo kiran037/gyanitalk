@@ -1,5 +1,5 @@
 
-
+///Users/xeoren/gyanitallk-admin/src/lib/images.ts
 export function ensureAbs(p?: string | null, fallback = "/placeholder-avatar.png"): string {
   if (!p || typeof p !== "string") return fallback;
 

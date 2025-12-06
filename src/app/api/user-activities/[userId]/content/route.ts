@@ -2,12 +2,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+// Next 15: params is a Promise
+type RouteContext = {
+  params: Promise<{ userId: string }>;
+};
+
+async function getUserId(context: RouteContext): Promise<bigint> {
+  const { userId } = await context.params; // unwrap Promise
+
+  const trimmed = userId?.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    throw new Error(`Invalid userId: "${userId}"`);
+  }
+
+  return BigInt(trimmed);
+}
+
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const userId = BigInt(params.userId);
+    const userId = await getUserId(context); // ✅ unwrap params + validate
 
     const [
       horoscopeFeedback,

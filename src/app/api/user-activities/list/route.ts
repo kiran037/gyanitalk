@@ -95,27 +95,40 @@ export async function GET(req: NextRequest) {
       walletBalances.map((w) => [w.userId.toString(), w.amount])
     );
 
-    // Combine data
-    const usersWithStats = users.map((user) => {
-      const userId = user.id.toString();
-      return {
-        id: userId,
-        name: user.name,
-        email: user.email,
-        contactNo: user.contactNo,
-        profile: user.profile,
-        gender: user.gender,
-        joinedAt: user.created_at,
-        isActive: user.isActive,
-        stats: {
-          totalChats: chatMap.get(userId) || 0,
-          totalCalls: callMap.get(userId) || 0,
-          totalOrders: orderMap.get(userId)?.count || 0,
-          totalSpent: orderMap.get(userId)?.total || 0,
-          walletBalance: walletMap.get(userId) || 0,
-        },
-      };
-    });
+// Combine + calculate activity score
+const usersWithStats = users
+  .map((user) => {
+    const userId = user.id.toString();
+
+    const totalChats = chatMap.get(userId) || 0;
+    const totalCalls = callMap.get(userId) || 0;
+    const totalOrders = orderMap.get(userId)?.count || 0;
+
+    // Activity Score (you can change formula)
+    const activityScore = totalChats + totalCalls + totalOrders;
+
+    return {
+      id: userId,
+      name: user.name,
+      email: user.email,
+      contactNo: user.contactNo,
+      profile: user.profile,
+      gender: user.gender,
+      joinedAt: user.created_at,
+      isActive: user.isActive,
+      stats: {
+        totalChats,
+        totalCalls,
+        totalOrders,
+        totalSpent: orderMap.get(userId)?.total || 0,
+        walletBalance: walletMap.get(userId) || 0,
+        activityScore,
+      },
+    };
+  })
+  // Sort: highest activity → lowest
+  .sort((a, b) => b.stats.activityScore - a.stats.activityScore);
+
 
     return NextResponse.json({
       success: true,
