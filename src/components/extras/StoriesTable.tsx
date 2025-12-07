@@ -113,13 +113,13 @@ export default function StoriesTable({ stories, loading, onDelete }: StoriesTabl
                   <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                     {story.mediaType === "video" ? (
                       <video
-                        src={story.media || ""}
+                        src={avatar(story.media) || ""}
                         className="w-full h-full object-cover"
                         muted
                       />
                     ) : (
                       <img
-                        src={story.media || ""}
+                        src={avatar(story.media) || ""}
                         alt="Story"
                         className="w-full h-full object-cover"
                       />

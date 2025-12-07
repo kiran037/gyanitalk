@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const pendingWithdrawals = await prisma.withdrawrequest.aggregate({
       where: {
         astrologerId,
-        status: "pending",
+        status: "Pending",
         isActive: 1,
         isDelete: 0,
       },
