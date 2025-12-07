@@ -1,10 +1,19 @@
 "use client";
 
 import { Package, Star, Sparkles, ArrowRight } from "lucide-react";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { avatar } from "@/lib/images";
+
+const stripHtml = (html: string | null | undefined): string => {
+    if (!html) return "";
+    return html
+        .replace(/<[^>]+>/g, " ")     // remove tags
+        .replace(/&nbsp;/gi, " ")     // replace &nbsp; with space
+        .replace(/\s+/g, " ")         // collapse extra spaces
+        .trim();
+};
 
 interface Product {
     id: string;
@@ -27,113 +36,146 @@ interface Product {
 export default function ProductCarousel() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
-        fetch('/api/landing/mall/featured')
-            .then(res => res.json())
-            .then(data => {
-                setProducts(data.data || []);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Failed to fetch products:', err);
-                setLoading(false);
-            });
+        let cancelled = false;
+
+        const fetchProducts = async () => {
+            try {
+                const res = await fetch("/api/landing/mall/featured");
+                const data = await res.json();
+
+                if (!cancelled) {
+                    setProducts(data?.data || []);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    console.error("Failed to fetch products:", err);
+                }
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        fetchProducts();
+        return () => {
+            cancelled = true;
+        };
     }, []);
+
+    // ✅ Hooks must be BEFORE any early return
+
+    // Duplicate list once for seamless loop
+    const trackProducts = useMemo(
+        () => (products.length ? [...products, ...products] : []),
+        [products]
+    );
+
+    // Slower, smoother scroll – scales with product count
+    const baseDuration = useMemo(
+        () => Math.max(20, Math.min(45, products.length * 3)),
+        [products]
+    );
 
     if (loading) {
         return (
-            <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <div className="h-6 w-48 bg-gray-200 dark:bg-neutral-950 rounded mx-auto mb-4 animate-pulse" />
-                        <div className="h-12 w-96 bg-gray-200 dark:bg-neutral-950 rounded mx-auto animate-pulse" />
+            <section className="relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-8">
+                        <div className="h-5 w-40 max-w-full bg-gray-200 dark:bg-neutral-950 rounded mx-auto mb-3 animate-pulse" />
+                        <div className="h-8 w-60 max-w-full bg-gray-200 dark:bg-neutral-950 rounded mx-auto animate-pulse" />
                     </div>
                 </div>
             </section>
         );
     }
 
-    if (products.length === 0) return null;
+    if (!products.length) return null;
 
     return (
-        <section className="relative py-16 sm:py-24 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
-
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
+            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
-                    className="text-center mb-12 sm:mb-16"
-                    initial={{ opacity: 0, y: 20 }}
+                    className="text-center mb-10 sm:mb-14"
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.5 }}
                 >
-                    <div className="inline-block mb-4 sm:mb-6">
-                        <span className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-[#FF6B35]">
+                    <div className="inline-block mb-3 sm:mb-4">
+                        <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-[#FF6B35]">
                             FEATURED PRODUCTS
                         </span>
                     </div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">
                         <span className="text-gray-900 dark:text-white">Shop from </span>
                         <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
                             AstroMall
                         </span>
                     </h2>
-                    <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-4">
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto px-2">
                         Discover premium astrology products & spiritual items handpicked for you
                     </p>
                 </motion.div>
             </div>
 
-            {/* Scrolling Container - Full Width - LEFT TO RIGHT */}
+            {/* Marquee container */}
             <div className="relative w-full overflow-hidden">
-
-                {/* Scrolling Track - Seamless loop animation */}
                 <motion.div
-                    className="inline-flex gap-4 sm:gap-6 py-2 whitespace-nowrap will-change-transform"
-                    animate={{
-                        x: ["-50%", "0%"]
-                    }}
-                    transition={{
-                        x: {
-                            repeat: Infinity,
-                            repeatType: "loop",
-                            duration: Math.max(15, products.length * 2.5),
-                            ease: "linear",
-                        },
-                    }}
+                    className="inline-flex gap-3 sm:gap-4 md:gap-5 py-2 whitespace-nowrap will-change-transform"
+                    animate={
+                        shouldReduceMotion
+                            ? {}
+                            : {
+                                x: ["-50%", "0%"], // left → right
+                            }
+                    }
+                    transition={
+                        shouldReduceMotion
+                            ? undefined
+                            : {
+                                x: {
+                                    repeat: Infinity,
+                                    repeatType: "loop",
+                                    duration: baseDuration,
+                                    ease: "linear",
+                                },
+                            }
+                    }
                 >
-                    {/* Triple duplicate for seamless loop with no gaps */}
-                    {[...products, ...products, ...products].map((product, index) => (
+                    {trackProducts.map((product, index) => (
                         <div
                             key={`${product.id}-${index}`}
-                            className="flex-shrink-0 w-[320px] sm:w-[380px] group inline-block"
+                            className="flex-shrink-0 w-[260px] xs:w-[280px] sm:w-[320px] md:w-[360px] group inline-block"
                         >
                             <motion.div
                                 whileHover={{ scale: 1.02, y: -4 }}
-                                transition={{ duration: 0.3 }}
+                                transition={{ duration: 0.2 }}
                                 className="h-full"
                             >
-                                <div className="bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black rounded-2xl overflow-hidden h-full shadow-xl hover:shadow-2xl border-2 border-gray-100 dark:border-gray-700 hover:border-[#FF6B35]/50 dark:hover:border-[#FF6B35]/50 transition-all">
+                                <div className="bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black rounded-2xl overflow-hidden h-full shadow-md sm:shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-700 hover:border-[#FF6B35]/50 dark:hover:border-[#FF6B35]/50 transition-all">
                                     {/* Product Image */}
                                     <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                                         <img
                                             src={avatar(product.productImage)}
                                             alt={product.name}
+                                            loading="lazy"
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                         />
-                                        
+
                                         {/* Gradient Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                        
+
                                         {/* Badges - Top Left */}
-                                        <div className="absolute top-3 left-3 flex flex-col gap-2">
+                                        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
                                             {product.isBestseller && (
                                                 <motion.div
                                                     initial={{ scale: 0, rotate: -180 }}
                                                     animate={{ scale: 1, rotate: 0 }}
-                                                    transition={{ delay: 0.2 }}
-                                                    className="px-3 py-1.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg"
+                                                    transition={{ delay: 0.15 }}
+                                                    className="px-2.5 py-1 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
                                                 >
                                                     <Star className="w-3 h-3 fill-white" />
                                                     <span>BESTSELLER</span>
@@ -143,8 +185,8 @@ export default function ProductCarousel() {
                                                 <motion.div
                                                     initial={{ scale: 0, rotate: 180 }}
                                                     animate={{ scale: 1, rotate: 0 }}
-                                                    transition={{ delay: 0.3 }}
-                                                    className="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-lg"
+                                                    transition={{ delay: 0.2 }}
+                                                    className="px-2.5 py-1 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
                                                 >
                                                     <Sparkles className="w-3 h-3" />
                                                     <span>FEATURED</span>
@@ -154,23 +196,23 @@ export default function ProductCarousel() {
 
                                         {/* Category Badge - Top Right */}
                                         {product.category && (
-                                            <div className="absolute top-3 right-3 px-3 py-1.5 bg-black/60 backdrop-blur-md text-white text-xs font-semibold rounded-full border border-white/20">
+                                            <div className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white rounded-full border border-white/20">
                                                 {product.category.name}
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Product Info */}
-                                    <div className="p-5">
-                                        {/* Product Name */}
-                                        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white line-clamp-2 mb-3 group-hover:text-[#FF6B35] transition-colors min-h-[3rem]">
+                                    <div className="p-4 sm:p-5">
+                                        {/* Name */}
+                                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white line-clamp-2 mb-2.5 group-hover:text-[#FF6B35] transition-colors min-h-[2.5rem]">
                                             {product.name}
                                         </h3>
 
                                         {/* Description */}
                                         {product.description && (
-                                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3 leading-relaxed">
-                                                {product.description}
+                                            <p className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2.5 leading-relaxed">
+                                                {stripHtml(product.description).slice(0, 100)}…
                                             </p>
                                         )}
 
@@ -179,7 +221,7 @@ export default function ProductCarousel() {
                                             <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-500">
                                                 <Package className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#FF6B35]" />
                                                 <p className="line-clamp-2 leading-relaxed">
-                                                    {product.features.substring(0, 100)}...
+                                                    {stripHtml(product.features).slice(0, 100)}…
                                                 </p>
                                             </div>
                                         )}
@@ -193,15 +235,15 @@ export default function ProductCarousel() {
 
             {/* CTA Button */}
             <motion.div
-                className="relative z-20 text-center mt-8 sm:mt-12 px-4"
-                initial={{ opacity: 0, y: 20 }}
+                className="relative z-20 text-center mt-8 sm:mt-10 px-4"
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.5 }}
             >
                 <Link href="/landing/mall">
                     <motion.button
-                        className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"
+                        className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2.5 sm:py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
