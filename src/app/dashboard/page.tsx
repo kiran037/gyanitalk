@@ -11,11 +11,12 @@ import {
   DollarSign,
   Users,
   Star,
-  Phone,
+  Video,
   MessageSquare,
   ShoppingBag,
   TrendingUp,
   ArrowRight,
+  Funnel,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
@@ -340,9 +341,9 @@ export default function DashboardPage() {
         {/* Quick Links */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: "Revenue Analytics", href: "/dashboard/revenue", icon: DollarSign },
-            { title: "User Analytics", href: "/dashboard/users", icon: Users },
-            { title: "Astrologers", href: "/dashboard/astrologers", icon: Star },
+            { title: "Content Analytics", href: "/dashboard/content", icon: Video },
+            { title: "Financial Analytics", href: "/dashboard/financials", icon: DollarSign },
+            { title: "Marketing", href: "/dashboard/marketing", icon: Funnel },
             { title: "Support Tickets", href: "/dashboard/support", icon: MessageSquare },
           ].map((link) => (
             <Link key={link.href} href={link.href}>

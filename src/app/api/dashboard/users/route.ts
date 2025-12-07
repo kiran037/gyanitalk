@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
   getDateRange,
   getPreviousDateRange,
@@ -7,7 +7,40 @@ import {
 } from "../utils/dateFilter";
 import { DashboardResponse } from "../utils/types";
 
-const prisma = new PrismaClient();
+
+// 🔹 Helper: convert BigInt / Decimal / Date → JSON-safe primitives
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+
+  // bigint → string
+  if (typeof obj === "bigint") return obj.toString();
+
+  // Prisma Decimal (runtime class name "Decimal") → number
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+
+  // Date → ISO string
+  if (obj instanceof Date) return obj.toISOString();
+
+  // primitives
+  if (typeof obj !== "object") return obj;
+
+  // arrays
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
+  // objects: recurse
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -207,17 +240,18 @@ export async function GET(request: NextRequest) {
       select: { id: true, name: true, profile: true, email: true },
     });
 
-    const topSpendersWithDetails = topSpenders.map((spender) => {
-      const details = topSpenderDetails.find((d) => d.id === spender.userId);
-      return {
-        userId: spender.userId,
-        name: details?.name || "Unknown",
-        profile: details?.profile,
-        email: details?.email,
-        totalSpent: Number(spender._sum.totalPayable || 0),
-        orderCount: spender._count,
-      };
-    });
+const topSpendersWithDetails = topSpenders.map((spender) => {
+  const details = topSpenderDetails.find((d) => d.id === spender.userId);
+  return {
+    // 🔹 ensure this isn’t a BigInt
+    userId: spender.userId?.toString(),
+    name: details?.name || "Unknown",
+    profile: details?.profile,
+    email: details?.email,
+    totalSpent: Number(spender._sum.totalPayable || 0),
+    orderCount: spender._count,
+  };
+});
 
     // User Lifecycle Funnel
     const [registered, firstConsultation, repeatUser, premiumUser] = await Promise.all([
@@ -308,7 +342,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(convertPrismaTypes(response));
   } catch (error) {
     console.error("Users dashboard error:", error);
     return NextResponse.json(
@@ -319,7 +353,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
   getDateRange,
   getPreviousDateRange,
@@ -7,7 +7,38 @@ import {
 } from "../utils/dateFilter";
 import { DashboardResponse } from "../utils/types";
 
-const prisma = new PrismaClient();
+// 🔹 Helper: convert BigInt / Decimal / Date → JSON-safe values
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+
+  // bigint → string
+  if (typeof obj === "bigint") return obj.toString();
+
+  // Prisma Decimal (runtime class name "Decimal") → number
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+
+  // Date → ISO string
+  if (obj instanceof Date) return obj.toISOString();
+
+  // primitives
+  if (typeof obj !== "object") return obj;
+
+  // arrays
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
+  // objects: recurse
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -151,43 +182,40 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format top astrologers by revenue
-    const topRevenueAstrologers = topByRevenue.map((astro) => {
-      const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
-      return {
-        id: astro.astrologerId,
-        name: details?.name || "Unknown",
-        profileImage: details?.profileImage,
-        experience: details?.experienceInYears,
-        primarySkill: details?.primarySkill,
-        revenue: Number(astro._sum.totalPayable || 0),
-        consultations: astro._count,
-      };
-    });
+const topRevenueAstrologers = topByRevenue.map((astro) => {
+  const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
+  return {
+    id: astro.astrologerId?.toString(),   // 👈 stringify ID
+    name: details?.name || "Unknown",
+    profileImage: details?.profileImage,
+    experience: details?.experienceInYears,
+    primarySkill: details?.primarySkill,
+    revenue: Number(astro._sum.totalPayable || 0),
+    consultations: astro._count,
+  };
+});
 
-    // Format top astrologers by rating
-    const topRatingAstrologers = topByRating.map((astro) => {
-      const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
-      return {
-        id: astro.astrologerId,
-        name: details?.name || "Unknown",
-        profileImage: details?.profileImage,
-        experience: details?.experienceInYears,
-        avgRating: Number(astro._avg.rating || 0),
-        reviewCount: astro._count,
-      };
-    });
+const topRatingAstrologers = topByRating.map((astro) => {
+  const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
+  return {
+    id: astro.astrologerId?.toString(),   // 👈 stringify ID
+    name: details?.name || "Unknown",
+    profileImage: details?.profileImage,
+    experience: details?.experienceInYears,
+    avgRating: Number(astro._avg.rating || 0),
+    reviewCount: astro._count,
+  };
+});
 
-    // Format top astrologers by consultations
-    const topConsultationAstrologers = topByConsultations.map((astro) => {
-      const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
-      return {
-        id: astro.astrologerId,
-        name: details?.name || "Unknown",
-        profileImage: details?.profileImage,
-        consultations: Number(astro.consultations),
-      };
-    });
+const topConsultationAstrologers = topByConsultations.map((astro) => {
+  const details = astrologerDetails.find((d) => d.id === astro.astrologerId);
+  return {
+    id: astro.astrologerId?.toString(),   // 👈 stringify ID
+    name: details?.name || "Unknown",
+    profileImage: details?.profileImage,
+    consultations: Number(astro.consultations),
+  };
+});
 
     // Average Rating Trend
     const ratingTrend = await prisma.$queryRaw<
@@ -368,7 +396,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(convertPrismaTypes(response));
   } catch (error) {
     console.error("Astrologers dashboard error:", error);
     return NextResponse.json(
@@ -379,7 +407,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

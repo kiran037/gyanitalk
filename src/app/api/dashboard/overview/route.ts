@@ -1,6 +1,6 @@
 // app/api/dashboard/overview/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
   getDateRange,
   getPreviousDateRange,
@@ -8,7 +8,7 @@ import {
 } from "../utils/dateFilter";
 import { DashboardResponse } from "../utils/types";
 
-const prisma = new PrismaClient();
+
 
 // 🔹 Helper: convert BigInt / Decimal / Date → JSON-safe
 function convertPrismaTypes(obj: unknown): any {
@@ -366,7 +366,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

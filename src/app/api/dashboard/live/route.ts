@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { DashboardResponse } from "../utils/types";
 
-const prisma = new PrismaClient();
+// 👇 ADD THIS HELPER
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+
+  // BigInt → string
+  if (typeof obj === "bigint") return obj.toString();
+
+  // Prisma Decimal → number
+  if (
+    typeof obj === "object" &&
+    (obj as any).constructor &&
+    (obj as any).constructor.name === "Decimal"
+  ) {
+    return Number((obj as any).toString());
+  }
+
+  // Date → ISO string
+  if (obj instanceof Date) return obj.toISOString();
+
+  // primitives
+  if (typeof obj !== "object") return obj;
+
+  // arrays
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
+  // objects: recurse
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -361,7 +392,8 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    // 👇 IMPORTANT: make it JSON-safe
+    return NextResponse.json(convertPrismaTypes(response));
   } catch (error) {
     console.error("Live dashboard error:", error);
     return NextResponse.json(
@@ -372,7 +404,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

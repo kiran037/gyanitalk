@@ -12,15 +12,28 @@ import {
   TrendingUp,
   PieChart as PieChartIcon,
   CreditCard,
+  ArrowLeft
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
+import { useRouter } from "next/navigation";
 
 export default function RevenueDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
+
+    const router = useRouter();
+
+  const BackButton = () => (
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+    </button>
+  );
 
   useEffect(() => {
     fetchData();
@@ -63,6 +76,7 @@ export default function RevenueDashboardPage() {
           title="Revenue Analytics"
           subtitle="Track revenue streams and financial performance"
           badge={{ text: "FINANCIAL", variant: "green" }}
+          leftActions={<BackButton />}
         />
 
         <DateFilterButtons
