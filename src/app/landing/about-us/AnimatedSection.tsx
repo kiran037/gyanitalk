@@ -2,7 +2,12 @@
 "use client";
 
 import React, { ReactNode, CSSProperties, useEffect, useRef } from "react";
-import { motion, useAnimation, Variants } from "framer-motion";
+import {
+  motion,
+  useAnimation,
+  Variants,
+  useReducedMotion,
+} from "framer-motion";
 
 type AnimType =
   | "fadeInUp"
@@ -42,18 +47,12 @@ const createVariants = (type: AnimType, delay = 0): Variants => {
         hidden: { opacity: 0, scale: 0.8 },
         visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay } },
       };
-    // For particle & orb types we only provide a simple visible/hidden state in variants,
-    // actual continuous animation will be provided via a separate animate object.
     case "particle":
       return {
         hidden: { opacity: 0, scale: 0 },
         visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
       };
     case "orb1":
-      return {
-        hidden: { opacity: 0.9, scale: 1 },
-        visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
-      };
     case "orb2":
       return {
         hidden: { opacity: 0.9, scale: 1 },
@@ -67,13 +66,21 @@ const createVariants = (type: AnimType, delay = 0): Variants => {
   }
 };
 
-const getLoopAnimate = (type: AnimType, delay = 0) => {
+// deterministic pseudo-random based on key-ish number so particles don't jump
+const pseudoRandom = (seed: number) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+};
+
+const getLoopAnimate = (type: AnimType, seed: number, delay = 0) => {
   if (type === "particle") {
+    const randX = pseudoRandom(seed) * 60 - 30;
+    const randY = pseudoRandom(seed + 42) * 60 - 30;
     return {
       opacity: [0.15, 0.4, 0.15],
       scale: [1, 1.8, 1],
-      x: [0, (Math.random() * 60 - 30), 0],
-      y: [0, (Math.random() * 60 - 30), 0],
+      x: [0, randX, 0],
+      y: [0, randY, 0],
       transition: {
         duration: 12 + delay,
         repeat: Infinity,
@@ -125,32 +132,53 @@ export default function AnimatedSection({
 }: AnimatedSectionProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const controls = useAnimation();
-  const variants = createVariants(type, delay);
-  const loopAnim = getLoopAnimate(type, delay);
-  const hasLoop = Boolean(loopAnim);
+  const shouldReduceMotion = useReducedMotion();
 
+const variants = createVariants(type, delay);
+const seedRef = useRef<number>(Date.now() + Math.random()); // stable per instance
+const seed = seedRef.current;
+const isLoopType = type === "particle" || type === "orb1" || type === "orb2";
+
+  // If user prefers reduced motion: no fancy anim, just show content
+  if (shouldReduceMotion) {
+    return (
+      <div style={{ display: "contents" }}>
+        <div style={style}>{children}</div>
+      </div>
+    );
+  }
+
+  // Looping background types: no intersection observer needed
+// Looping background types: no intersection observer needed
+if (isLoopType) {
+  const loopAnim = getLoopAnimate(type, seed, delay);
+  return (
+    <div ref={ref} style={{ display: "contents" }}>
+      <motion.div
+        initial="hidden"
+        animate={loopAnim}
+        variants={variants}
+        style={style}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+  // Normal one-time scroll-into-view animations
   useEffect(() => {
     const el = ref.current;
     if (!el) {
-      // fallback: show immediately
       controls.start("visible").catch(() => {});
       return;
     }
 
-    // if already visible on mount, trigger immediately
     if (isInViewport(el)) {
-      if (hasLoop) {
-        // start looped animation by setting animate to the loop object
-        controls.start("visible").then(() => {
-          // nothing else required — the component will apply loop animate prop
-        }).catch(() => {});
-      } else {
-        controls.start("visible").catch(() => {});
-      }
+      controls.start("visible").catch(() => {});
       return;
     }
 
-    // observe for entry
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -161,12 +189,11 @@ export default function AnimatedSection({
           }
         }
       },
-      { root: null, rootMargin: "0px", threshold: 0.03 }
+      { root: null, rootMargin: "0px", threshold: 0.05 }
     );
 
     observer.observe(el);
 
-    // fallback safety: show after a few seconds
     const fallback = window.setTimeout(() => {
       controls.start("visible").catch(() => {});
     }, 4000 + delay * 1000);
@@ -175,14 +202,13 @@ export default function AnimatedSection({
       observer.disconnect();
       clearTimeout(fallback);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [delay, controls, hasLoop]);
+  }, [controls, delay]);
 
   return (
     <div ref={ref} style={{ display: "contents" }}>
       <motion.div
         initial="hidden"
-        animate={hasLoop ? loopAnim : controls}
+        animate={controls}
         variants={variants}
         style={style}
       >

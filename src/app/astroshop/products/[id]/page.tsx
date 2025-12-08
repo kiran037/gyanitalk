@@ -44,6 +44,8 @@ export default function ProductForm() {
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<"basic" | "details" | "seo">("basic");
 
+
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -69,6 +71,15 @@ export default function ProductForm() {
     });
 
     const addToast = useToast();
+
+    const BackButton = () => (
+        <button
+            onClick={() => router.back()}
+            className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+        >
+            <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+        </button>
+    );
 
     useEffect(() => {
         fetchCategories();
@@ -286,15 +297,9 @@ export default function ProductForm() {
                     <PageHeader
                         title={isEdit ? "Edit Product" : "Create Product"}
                         subtitle={isEdit ? "Update product details" : "Add a new product to your catalog"}
+                        leftActions={<BackButton />}
                         actions={
                             <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    icon={<ArrowLeft className="w-4 h-4" />}
-                                    onClick={() => router.back()}
-                                >
-                                    Back
-                                </Button>
                                 <Button
                                     icon={<Save className="w-4 h-4" />}
                                     onClick={handleSubmit}

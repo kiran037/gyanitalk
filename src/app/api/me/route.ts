@@ -37,7 +37,7 @@ export async function GET() {
       id: Number(user.id),
       name: user.name ?? "User",
       email: user.email ?? "",
-      avatarUrl: user.profile || null,
+      profile: user.profile || null,  // ✅ Changed from avatarUrl to profile
       loginAt: claims.loginAt || user.created_at?.toISOString() || null,
     });
   } catch (err) {

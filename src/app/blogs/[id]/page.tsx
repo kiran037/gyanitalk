@@ -10,10 +10,10 @@ import { useToast } from "@/components/Toast/ToastProvider";
 import { RichTextEditor } from "@/components/courses/RichTextEditor";
 import { BlogImageGallery } from "@/components/blogs/BlogImageGallery";
 import { BlogSEOSection } from "@/components/blogs/BlogSEOSection";
-import { 
-  Save, 
-  ArrowLeft, 
-  Eye, 
+import {
+  Save,
+  ArrowLeft,
+  Eye,
   Upload,
   Calendar,
   User,
@@ -40,6 +40,15 @@ export default function BlogDetailPage() {
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
+  const BackButton = () => (
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+    </button>
+  );
+
   // Form state
   const [formData, setFormData] = useState({
     title: "",
@@ -52,7 +61,7 @@ export default function BlogDetailPage() {
     blogCategoryId: "",
     extension: "",
     isActive: true,
-    
+
     // SEO fields
     metaTitle: "",
     metaDescription: "",
@@ -221,19 +230,14 @@ export default function BlogDetailPage() {
     <div className="p-6 space-y-6">
       <div className="w-full mx-auto">
         {/* Header */}
+        <div className="mb-3">
         <PageHeader
           title={isNewBlog ? "Create New Blog" : "Edit Blog"}
           subtitle={isNewBlog ? "Create and publish a new blog post" : `Editing: ${formData.title}`}
           badge={{ text: isNewBlog ? "New" : "Edit", variant: "blue" }}
+           leftActions={<BackButton />}
           actions={
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                icon={<ArrowLeft className="w-4 h-4" />}
-                onClick={() => router.push("/blogs")}
-              >
-                Back
-              </Button>
               {!isNewBlog && (
                 <Button
                   variant="outline"
@@ -254,6 +258,7 @@ export default function BlogDetailPage() {
             </div>
           }
         />
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}

@@ -12,10 +12,13 @@ import {
   Sun,
   Settings,
   ChevronRight,
-  Zap
+  Zap,
+  User,
+  LogOut
 } from "lucide-react";
 import { useSidebarContext } from "../sidebar/sidebar-context";
 import LogoutButton from "@/components/Auth/LogoutButton";
+import { avatar } from "@/lib/images";
 
 type Me = {
   id: number;
@@ -165,7 +168,7 @@ export function Header() {
     setTheme(newTheme);
   }, [theme, resolvedTheme, setTheme]);
 
-  const avatarSrc = me?.profile || "/default-avatar.svg";
+  const avatarSrc = avatar(me?.profile);
   const isDark = (resolvedTheme || theme) === "dark";
 
   return (
@@ -184,15 +187,15 @@ export function Header() {
 
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative w-9 h-9 rounded-xl overflow-hidden ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                <div className="absolute inset-0 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-white dark:ring-gray-900 ">
                   <Image
                     src="https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png"
                     alt="Gyani Talk"
-                    width={36}
-                    height={36}
+                    width={40}
+                    height={40}
                     priority
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
                   />
                 </div>
               </div>
@@ -233,7 +236,7 @@ export function Header() {
               <button
                 ref={buttonRef}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:shadow-lg hover:shadow-gray-900/5 transition-all border border-gray-200 dark:border-gray-700"
+                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:shadow-lg hover:shadow-[#FF6B35]/10 transition-all border border-gray-200 dark:border-gray-700 hover:border-[#FF6B35]/30"
                 aria-label="User menu"
               >
                 <div className="relative">
@@ -260,7 +263,6 @@ export function Header() {
                     <Zap className="h-3 w-3 text-emerald-500" />
                     {mounted && loginAge ? `Active · ${loginAge}` : "Active"}
                   </span>
-
                 </div>
               </button>
 
@@ -272,21 +274,24 @@ export function Header() {
                     className="absolute right-0 mt-2 w-72 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl z-50 overflow-hidden"
                   >
                     {/* Profile Header */}
-                    <div className="p-4 bg-gradient-to-r from-[#FF6B35] to-[#FFB347]">
+                    <div className="p-4 bg-gradient-to-br from-[#FF6B35]/5 to-[#FFB347]/5 dark:from-[#FF6B35]/10 dark:to-[#FFB347]/10">
                       <div className="flex items-center gap-3">
-                        <Image
-                          src={avatarSrc}
-                          alt={me?.name || "User"}
-                          width={48}
-                          height={48}
-                          className="rounded-full ring-2 ring-white/50"
-                          unoptimized
-                        />
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] rounded-full blur-md opacity-50" />
+                          <Image
+                            src={avatarSrc}
+                            alt={me?.name || "User"}
+                            width={48}
+                            height={48}
+                            className="relative rounded-full ring-2 ring-white/50 dark:ring-gray-700/50 object-cover"
+                            unoptimized
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-white truncate">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                             {me?.name || "Guest"}
                           </p>
-                          <p className="text-xs text-white/80 truncate">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                             {me?.email || ""}
                           </p>
                         </div>
@@ -295,18 +300,39 @@ export function Header() {
 
                     {/* Menu Items */}
                     <div className="p-2">
+                      {/* View Profile */}
+                      <Link
+                        href="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-[#FF6B35]/5 dark:hover:bg-[#FF6B35]/10 transition-all group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FFB347] flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">View Profile</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Manage your account</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-[#FF6B35]" />
+                      </Link>
+
+                      {/* Settings */}
                       <Link
                         href="/settings"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group"
                       >
-                        <Settings className="h-4 w-4 text-gray-500 group-hover:text-[#FF6B35] transition-colors" />
-                        <span>Settings</span>
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center group-hover:bg-[#FF6B35]/10 transition-colors">
+                          <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400 group-hover:text-[#FF6B35] transition-colors" />
+                        </div>
+                        <span className="flex-1">Settings</span>
                         <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>
 
                       <div className="my-2 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent" />
 
-                      <LogoutButton className="w-full" onLogoutClick={() => { }} />
+                      {/* Logout */}
+                      <LogoutButton className="w-full" onLogoutClick={() => {}} />
                     </div>
                   </div>
                 </>

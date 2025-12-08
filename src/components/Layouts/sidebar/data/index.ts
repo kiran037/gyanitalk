@@ -1,9 +1,9 @@
+import { url } from "inspector";
 import {
   Home,
   User,
   IndianRupee,
   TicketPercent,
-  Calendar,
   Users,
   Brain,
   FileText,
@@ -15,24 +15,17 @@ import {
   PlayCircle,
   Smile,
   Video,
-
   Rss,
-  Edit,
-
-  Star,
   CreditCard,
   Folder,
   PocketKnife,
-
   X,
   Bot,
   Ticket,
   List,
-  Check,
-  Activity,
-  History,
   ShoppingBag,
   PackageSearch,
+  Activity,
 } from "lucide-react";
 
 export const NAV_DATA = [
@@ -84,47 +77,32 @@ export const NAV_DATA = [
         items: [
           {
             title: "Astrologers",
-            url: "/astrologers",
+            url: "/astro",
             icon: Users,
           },
           {
             title: "AI Astrologers",
-            url: "/ai-astrologers",
+            url: "/astro/ai",
             icon: Brain,
           },
           {
             title: "Block Astrologer",
-            url: "/block_astrologer",
+            url: "/astro/block-astro",
             icon: X,
           },
           {
-            title: "Reviews",
-            url: "/review_astrologers",
-            icon: Star,
-          },
-          {
             title: "Skills",
-            url: "/skills_astrologer",
+            url: "/astro/skills",
             icon: PocketKnife,
           },
           {
             title: "Categories",
-            url: "/astrologerCategories",
-            icon: Folder,
-          },
-          {
-            title: "Commissionn rate for calls/chats",
-            url: "/commissions",
-            icon: IndianRupee,
-          },
-          {
-            title: "Sorting Astrologers",
-            url: "/sorting_astrologers",
+            url: "/astro/categories",
             icon: Folder,
           },
           {
             title: "Groups",
-            url: "/astrologer_group",
+            url: "/astro/groups",
             icon: Folder,
           },
         ],
@@ -205,32 +183,25 @@ export const NAV_DATA = [
         ],
       },
       {
-        title: "Earning",
-        url: "/earning",
+        title: "Earnings",
         icon: IndianRupee,
         items: [
           {
-            title: "Withdrawal Requests",
-            url: "/withdrawal_requests",
-            icon: Check,
+            title: "Dashboard",
+            url: "/earnings",
           },
           {
-            title: "Withdrawal Methods",
-            url: "/withdrawal_methods",
-            icon: Activity,
+            title: "Astrologer Earnings",
+            url: "/earnings/astrologer",
           },
           {
-            title: "Wallet History",
-            url: "/wallet_history",
-            icon: History,
+            title: "Payment Methods",
+            url: "/earnings/payment-methods",
           },
+          { title: "Withdrawals", url: "/earnings/withdrawals" },
+          { title: "Commissions", url: "/earnings/commissions" },
+          { title: "Reports", url: "/earnings/reports" },
         ],
-      },
-      {
-        title: "Page Management",
-        url: "/pages",
-        icon: FileText,
-        items: [],
       },
       {
         title: "Blogs",
@@ -244,40 +215,40 @@ export const NAV_DATA = [
     label: "Settings",
     items: [
       {
+        title: "Page Management",
+        url: "/pages",
+        icon: FileText,
+        items: [],
+      },
+      {
+        title: "User Analytics",
+        icon: Activity,
+        url: "/user-activities",
+      },
+      {
         title: "Extras",
         icon: Layers,
         items: [
           {
-            title: "Astroguru News",
-            url: "/astrogurunews",
+            title: "News",
+            url: "/extras/news",
             icon: Rss,
           },
           {
             title: "Videos",
-            url: "/videos",
+            url: "/extras/videos",
             icon: Video,
           },
           {
             title: "Stories",
-            url: "/stories",
+            url: "/extras/stories",
             icon: PlayCircle,
           },
           {
             title: "Feedback",
-            url: "/feedback",
+            url: "/extras/feedback",
             icon: Smile,
           },
-        ],
-      },
-      {
-        title: "Analytics",
-        icon: Layers,
-        items: [
-          {
-            title: "User Activity",
-            url: "/user-activity",
-            icon: Edit,
-          }
         ],
       },
     ],

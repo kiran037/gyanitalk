@@ -84,6 +84,16 @@ export default function OrderDetailPage() {
   const [newStatus, setNewStatus] = useState("");
   const addToast = useToast();
 
+
+      const BackButton = () => (
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+    </button>
+  );
+
   useEffect(() => {
     if (orderId) {
       fetchOrder();
@@ -204,15 +214,9 @@ export default function OrderDetailPage() {
           <PageHeader
             title={`Order #${order.id.slice(0, 8)}`}
             subtitle={`Placed on ${new Date(order.created_at).toLocaleString()}`}
+            leftActions={<BackButton />}
             actions={
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  icon={<ArrowLeft className="w-4 h-4" />}
-                  onClick={() => router.back()}
-                >
-                  Back
-                </Button>
                 <Button
                   icon={<Download className="w-4 h-4" />}
                   onClick={handleDownloadInvoice}
