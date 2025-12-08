@@ -14,6 +14,7 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import HomeMain from "@/components/landing/HomeMain";
+import { useSecretGyani } from "./useSecretGyani";
 
 // Lazy-load heavy/animated sections for performance
 const AppDownloadPopup = dynamic(
@@ -37,6 +38,7 @@ const PlaystoreReviewCarousel = dynamic(
 );
 
 export default function HomeClient() {
+  useSecretGyani();
   const prefersReducedMotion = useReducedMotion();
 
   return (

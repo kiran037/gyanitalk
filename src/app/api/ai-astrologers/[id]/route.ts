@@ -1,4 +1,4 @@
-// app/api/ai-astrologers/route.ts
+// app/api/ai-astrologers/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +9,7 @@ function convertPrismaTypes(obj: unknown): any {
   // bigint → string
   if (typeof obj === "bigint") return obj.toString();
 
-  // Prisma Decimal (runtime class name "Decimal") → number
+  // Prisma Decimal → number
   if (
     typeof obj === "object" &&
     (obj as any).constructor &&
@@ -35,182 +35,143 @@ function convertPrismaTypes(obj: unknown): any {
   return out;
 }
 
-// GET - List all AI Astrologers
-export async function GET(request: NextRequest) {
+// GET - Get AI Astrologer Details
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { id } = await context.params;
+    const aiAstrologerId = BigInt(id);
 
-    // Pagination
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
-    const skip = (page - 1) * limit;
-
-    // Filters
-    const search = searchParams.get("search") || "";
-    const type = searchParams.get("type");
-    const aiType = searchParams.get("aiType");
-    const featured = searchParams.get("featured");
-
-    const where: any = {};
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { slug: { contains: search } },
-      ];
-    }
-
-    if (type) {
-      where.type = type;
-    }
-
-    if (aiType) {
-      where.aiType = aiType;
-    }
-
-    if (featured !== null && featured !== undefined) {
-      // e.g. "0" | "1"
-      where.featured = parseInt(featured, 10);
-    }
-
-    const [aiAstrologers, total] = await Promise.all([
-      prisma.aiastrologers.findMany({
-        where,
-        skip,
-        take: limit,
-        include: {
-          aiChatHistories: {
-            select: { id: true },
-          },
-          wallettransactions: {
-            select: {
-              amount: true,
-              isCredit: true,
+    const aiAstrologer = await prisma.aiastrologers.findUnique({
+      where: { id: aiAstrologerId },
+      include: {
+        aiChatHistories: {
+          orderBy: { created_at: "desc" },
+          take: 10,
+        },
+        wallettransactions: {
+          orderBy: { created_at: "desc" },
+          take: 10,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                profile: true,
+              },
             },
           },
-          aiFollowers: {
-            select: { id: true },
+        },
+        aiFollowers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                profile: true,
+              },
+            },
           },
-          order_requests: {
-            select: { id: true },
-          },
         },
-        orderBy: {
-          created_at: "desc",
+        order_requests: {
+          orderBy: { created_at: "desc" },
+          take: 10,
         },
-      }),
-      prisma.aiastrologers.count({ where }),
-    ]);
-
-    // 🔹 Collect ALL skill IDs across all AI astrologers (to query skills once)
-    const rawSkillStrings = aiAstrologers.flatMap((ai) =>
-      (ai.all_skills || "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    );
-
-    const flattenedSkillStrings = rawSkillStrings.flatMap((id) =>
-      id.includes(",") ? id.split(",") : id
-    );
-
-    const cleanSkillIdStrings = flattenedSkillStrings
-      .map((id) => id.replace(/[^\d]/g, "")) // keep only digits
-      .filter((clean) => clean.length > 0);
-
-    const uniqueCleanSkillIdStrings = Array.from(new Set(cleanSkillIdStrings));
-    const skillIds =
-      uniqueCleanSkillIdStrings.length > 0
-        ? uniqueCleanSkillIdStrings.map((s) => BigInt(s))
-        : [];
-
-    // 🔹 Fetch all skills once
-    const skills = skillIds.length
-      ? await prisma.skills.findMany({
-          where: { id: { in: skillIds }, isDelete: false },
-          select: { id: true, name: true },
-        })
-      : [];
-
-    const skillsById = new Map<string, string>(
-      skills.map((s) => [s.id.toString(), s.name])
-    );
-
-    // 🔹 Calculate stats + attach readable skill names
-    const aiAstrologersWithStats = aiAstrologers.map((ai) => {
-      // Wallet balance
-      const walletBalance = ai.wallettransactions.reduce(
-        (sum: number, transaction: any) => {
-          const amt =
-            transaction.amount != null ? Number(transaction.amount) : 0;
-          return transaction.isCredit ? sum + amt : sum - amt;
-        },
-        0
-      );
-
-      // All skills → names
-      let allSkillNames: string[] = [];
-      if (ai.all_skills) {
-        const ownRawIds = ai.all_skills
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-        const ownCleanIds = ownRawIds
-          .flatMap((id) => (id.includes(",") ? id.split(",") : id))
-          .map((id) => id.replace(/[^\d]/g, ""))
-          .filter((clean) => clean.length > 0);
-
-        allSkillNames = ownCleanIds.map(
-          (cleanId) => skillsById.get(cleanId) ?? cleanId
-        );
-      }
-
-      // Primary skill → name
-      let primarySkillName: string | null = null;
-      if (ai.primary_skill != null) {
-        const cleanPrimary = String(ai.primary_skill).replace(/[^\d]/g, "");
-        primarySkillName =
-          skillsById.get(cleanPrimary) ?? String(ai.primary_skill);
-      }
-
-      return {
-        ...ai,
-        totalChats: ai.aiChatHistories.length,
-        totalOrders: ai.order_requests.length,
-        followerCount: ai.aiFollowers.length,
-        walletBalance: walletBalance.toFixed(2),
-
-        // ✅ human readable skills for frontend
-        primarySkillName,
-        allSkillNames,
-
-        // Don't expose raw relations in list
-        aiChatHistories: undefined,
-        wallettransactions: undefined,
-        aiFollowers: undefined,
-        order_requests: undefined,
-      };
-    });
-
-    const safe = convertPrismaTypes({
-      success: true,
-      data: aiAstrologersWithStats,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
       },
     });
 
-    return NextResponse.json(safe);
+    if (!aiAstrologer) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "AI Astrologer not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    // 🔹 Fetch ALL available skills for dropdowns
+    const availableSkills = await prisma.skills.findMany({
+      where: { isDelete: false, isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    const skillsMap = new Map<string, string>(
+      availableSkills.map((s) => [s.id.toString(), s.name])
+    );
+
+    // 🔹 Parse all_skills (stored as IDs) → names
+    const rawSkillIdStrings: string[] = aiAstrologer.all_skills
+      ? aiAstrologer.all_skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    // Clean to numeric string IDs (in case something like "id:12")
+    const cleanSkillIdStrings = rawSkillIdStrings
+      .map((id) => id.replace(/[^\d]/g, ""))
+      .filter((clean) => clean.length > 0);
+
+    const allSkillNames = cleanSkillIdStrings.map(
+      (id) => skillsMap.get(id) ?? id // fallback to the id string if not found
+    );
+
+    // 🔹 Primary Skill: stored as ID, resolve to name
+    let primarySkillName: string | null = null;
+    if (aiAstrologer.primary_skill != null) {
+      const rawPrimary = String(aiAstrologer.primary_skill);
+      const cleanPrimary = rawPrimary.replace(/[^\d]/g, "");
+      primarySkillName =
+        skillsMap.get(cleanPrimary) ??
+        rawPrimary; // fallback to whatever is stored if not found
+    }
+
+    // 🔹 Calculate wallet balance safely
+    const walletBalance = aiAstrologer.wallettransactions.reduce(
+      (sum, transaction) => {
+        const amt =
+          transaction.amount != null ? Number(transaction.amount) : 0;
+        return transaction.isCredit ? sum + amt : sum - amt;
+      },
+      0 as number
+    );
+
+    const payload = {
+      ...aiAstrologer,
+      walletBalance: walletBalance.toFixed(2),
+      totalChats: aiAstrologer.aiChatHistories.length,
+      totalOrders: aiAstrologer.order_requests.length,
+      followerCount: aiAstrologer.aiFollowers.length,
+
+      // ✅ Human-readable skill info for cards/detail UI
+      primarySkillName,
+      allSkillNames,
+
+      // ✅ Options for dropdowns on the frontend
+      availableSkills: availableSkills.map((s) => ({
+        id: s.id.toString(),
+        name: s.name,
+      })),
+    };
+
+    return NextResponse.json(
+      convertPrismaTypes({
+        success: true,
+        data: payload,
+      })
+    );
   } catch (error: any) {
-    console.error("Error fetching AI astrologers:", error);
+    console.error("Error fetching AI astrologer details:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch AI astrologers",
+        error: "Failed to fetch AI astrologer details",
         message: error.message,
       },
       { status: 500 }
@@ -218,72 +179,69 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new AI Astrologer
-export async function POST(request: NextRequest) {
+// PATCH - Update AI Astrologer
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await context.params;
+    const aiAstrologerId = BigInt(id);
     const body = await request.json();
 
-    const {
-      name,
-      image,
-      about,
-      astrologerCategoryId,
-      primary_skill,
-      all_skills,
-      chat_charge,
-      chat_charge_usd,
-      experience,
-      system_intruction,
-      slug,
-      type,
-      aiType,
-      referral_code,
-      featured,
-    } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Name is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    const newAiAstrologer = await prisma.aiastrologers.create({
+    const updatedAiAstrologer = await prisma.aiastrologers.update({
+      where: { id: aiAstrologerId },
       data: {
-        name,
-        image,
-        about,
-        astrologerCategoryId,
-        primary_skill,
-        all_skills,
-        chat_charge,
-        chat_charge_usd,
-        experience,
-        system_intruction,
-        slug,
-        type,
-        aiType,
-        referral_code,
-        featured: featured ?? 0,
+        ...body,
+        updated_at: new Date(),
       },
     });
 
-    const safe = convertPrismaTypes({
-      success: true,
-      message: "AI Astrologer created successfully",
-      data: newAiAstrologer,
-    });
-
-    return NextResponse.json(safe);
+    return NextResponse.json(
+      convertPrismaTypes({
+        success: true,
+        message: "AI Astrologer updated successfully",
+        data: updatedAiAstrologer,
+      })
+    );
   } catch (error: any) {
-    console.error("Error creating AI astrologer:", error);
+    console.error("Error updating AI astrologer:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to create AI astrologer",
+        error: "Failed to update AI astrologer",
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete AI Astrologer
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const aiAstrologerId = BigInt(id);
+
+    await prisma.aiastrologers.delete({
+      where: { id: aiAstrologerId },
+    });
+
+    return NextResponse.json(
+      convertPrismaTypes({
+        success: true,
+        message: "AI Astrologer deleted successfully",
+      })
+    );
+  } catch (error: any) {
+    console.error("Error deleting AI astrologer:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to delete AI astrologer",
         message: error.message,
       },
       { status: 500 }

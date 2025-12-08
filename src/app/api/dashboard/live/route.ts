@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DashboardResponse } from "../utils/types";
 
-// 👇 ADD THIS HELPER
+// 👇 Helper: convert BigInt / Decimal / Date → JSON-safe primitives
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
 
@@ -166,24 +166,30 @@ export async function GET(request: NextRequest) {
         orderStatus: { not: "cancelled" },
       },
       _sum: { totalPayable: true },
-      _count: true,
+      _count: { _all: true },
     });
 
     // Active Users by Location (currently online)
-    const liveUsersByLocation = await prisma.user_device_details.groupBy({
+    const rawLiveUsersByLocation = await prisma.user_device_details.groupBy({
       by: ["deviceLocation"],
       where: {
         isActive: true,
         updated_at: { gte: last5Minutes },
       },
-      _count: true,
-      orderBy: { _count: { deviceLocation: "desc" } },
-      take: 10,
+      _count: { _all: true },
     });
+
+    // sort by count desc and take top 10 in JS (keeps TS happy)
+    const liveUsersByLocation = rawLiveUsersByLocation
+      .sort(
+        (a, b) =>
+          (b._count?._all ?? 0) - (a._count?._all ?? 0)
+      )
+      .slice(0, 10);
 
     // Busiest Astrologers (most active sessions right now)
     const busiestAstrologers = await prisma.$queryRaw<
-      Array<{ astrologerId: bigint; activeSessions: number }>
+      Array<{ astrologerId: bigint; activeSessions: number | bigint }>
     >`
       SELECT astrologerId, COUNT(*) as activeSessions
       FROM (
@@ -254,22 +260,26 @@ export async function GET(request: NextRequest) {
         : 0;
 
     // System Load Indicators
+    const totalSessions = activeChats + activeCalls;
+    const sessionsPerAstrologer =
+      onlineAstrologers > 0 ? totalSessions / onlineAstrologers : 0;
+
     const systemLoad = {
-      totalActiveSessions: activeChats + activeCalls,
-      sessionsPerAstrologer:
-        onlineAstrologers > 0 ? (activeChats + activeCalls) / onlineAstrologers : 0,
-      waitlistRatio: onlineAstrologers > 0 ? waitlistCount / onlineAstrologers : 0,
+      totalActiveSessions: totalSessions,
+      sessionsPerAstrologer,
+      waitlistRatio:
+        onlineAstrologers > 0 ? waitlistCount / onlineAstrologers : 0,
       loadStatus:
-        (activeChats + activeCalls) / Math.max(onlineAstrologers, 1) > 2
+        sessionsPerAstrologer > 2
           ? "high"
-          : (activeChats + activeCalls) / Math.max(onlineAstrologers, 1) > 1
+          : sessionsPerAstrologer > 1
           ? "medium"
           : "low",
     };
 
     // Activity Timeline (minute-by-minute for last 30 minutes)
     const activityTimeline = await prisma.$queryRaw<
-      Array<{ minute: Date; chats: number; calls: number }>
+      Array<{ minute: string; chats: number | bigint; calls: number | bigint }>
     >`
       SELECT 
         DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00') as minute,
@@ -354,7 +364,7 @@ export async function GET(request: NextRequest) {
           byType: revenueByType.map((r) => ({
             type: r.orderType || "Unknown",
             amount: Number(r._sum.totalPayable || 0),
-            count: r._count,
+            count: r._count?._all ?? 0,
           })),
           recentTransactions: recentTransactions.map((t) => ({
             id: t.id,
@@ -371,7 +381,7 @@ export async function GET(request: NextRequest) {
         busiestAstrologers: busiestAstrologersWithDetails,
         usersByLocation: liveUsersByLocation.map((l) => ({
           location: l.deviceLocation || "Unknown",
-          count: l._count,
+          count: l._count?._all ?? 0,
         })),
         systemLoad,
         activityTimeline: activityTimeline.map((a) => ({
@@ -392,7 +402,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // 👇 IMPORTANT: make it JSON-safe
+    // 👇 make everything JSON-safe before sending
     return NextResponse.json(convertPrismaTypes(response));
   } catch (error) {
     console.error("Live dashboard error:", error);
