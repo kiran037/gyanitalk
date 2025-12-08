@@ -11,6 +11,7 @@ import { Star, Users, TrendingUp, Clock, Award, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 
 export default function AstrologersDashboardPage() {
@@ -19,7 +20,22 @@ export default function AstrologersDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
   const [activeTab, setActiveTab] = useState<"revenue" | "rating" | "consultations">("revenue");
-  
+
+  const { resolvedTheme } = useTheme();            // 👈 theme
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
+
   const router = useRouter();
 
   const BackButton = () => (
@@ -185,6 +201,13 @@ export default function AstrologersDashboardPage() {
               }}
               title="Rating Trend"
               height={250}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -201,8 +224,8 @@ export default function AstrologersDashboardPage() {
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab
-                      ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                     }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -281,6 +304,12 @@ export default function AstrologersDashboardPage() {
               }}
               title="Skill Distribution"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -297,6 +326,13 @@ export default function AstrologersDashboardPage() {
               }}
               title="Experience Distribution"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>

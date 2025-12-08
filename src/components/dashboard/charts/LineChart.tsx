@@ -36,9 +36,29 @@ interface LineChartProps {
   };
   title?: string;
   height?: number;
+
+  // 👇 new optional styling props
+  titleColor?: string;
+  textColor?: string;
+  gridColor?: string;
+  tooltipBgColor?: string;
+  tooltipTitleColor?: string;
+  tooltipBodyColor?: string;
+  tooltipBorderColor?: string;
 }
 
-export function LineChart({ data, title, height = 300 }: LineChartProps) {
+export function LineChart({
+  data,
+  title,
+  height = 300,
+  titleColor = "rgb(17, 24, 39)", // default: gray-900
+  textColor = "rgb(75, 85, 99)", // default: gray-600
+  gridColor = "rgba(209, 213, 219, 0.6)", // default: gray-300
+  tooltipBgColor = "rgba(0, 0, 0, 0.8)",
+  tooltipTitleColor = "rgb(243, 244, 246)",
+  tooltipBodyColor = "rgb(209, 213, 219)",
+  tooltipBorderColor = "rgba(255, 107, 53, 0.5)",
+}: LineChartProps) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -47,7 +67,7 @@ export function LineChart({ data, title, height = 300 }: LineChartProps) {
         display: true,
         position: "top" as const,
         labels: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
           usePointStyle: true,
           padding: 15,
         },
@@ -55,7 +75,7 @@ export function LineChart({ data, title, height = 300 }: LineChartProps) {
       title: {
         display: !!title,
         text: title,
-        color: "rgb(243, 244, 246)",
+        color: titleColor,
         font: {
           size: 16,
           weight: "bold" as const,
@@ -64,10 +84,10 @@ export function LineChart({ data, title, height = 300 }: LineChartProps) {
       tooltip: {
         mode: "index" as const,
         intersect: false,
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "rgb(243, 244, 246)",
-        bodyColor: "rgb(209, 213, 219)",
-        borderColor: "rgba(255, 107, 53, 0.5)",
+        backgroundColor: tooltipBgColor,
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        borderColor: tooltipBorderColor,
         borderWidth: 1,
         padding: 12,
         displayColors: true,
@@ -76,20 +96,20 @@ export function LineChart({ data, title, height = 300 }: LineChartProps) {
     scales: {
       x: {
         grid: {
-          color: "rgba(75, 85, 99, 0.2)",
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
         },
       },
       y: {
         grid: {
-          color: "rgba(75, 85, 99, 0.2)",
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
         },
       },
     },
@@ -104,8 +124,12 @@ export function LineChart({ data, title, height = 300 }: LineChartProps) {
     labels: data.labels,
     datasets: data.datasets.map((dataset, index) => ({
       ...dataset,
-      borderColor: dataset.borderColor || `rgba(255, ${107 + index * 50}, ${53 + index * 30}, 1)`,
-      backgroundColor: dataset.backgroundColor || `rgba(255, ${107 + index * 50}, ${53 + index * 30}, 0.1)`,
+      borderColor:
+        dataset.borderColor ||
+        `rgba(255, ${107 + index * 50}, ${53 + index * 30}, 1)`,
+      backgroundColor:
+        dataset.backgroundColor ||
+        `rgba(255, ${107 + index * 50}, ${53 + index * 30}, 0.1)`,
       borderWidth: 2,
       fill: true,
       tension: 0.4,

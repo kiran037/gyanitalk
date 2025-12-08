@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function SupportDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -29,8 +30,23 @@ export default function SupportDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
-    
+
   const router = useRouter();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -98,9 +114,9 @@ export default function SupportDashboardPage() {
               trend={
                 data?.tickets.summary.comparison
                   ? {
-                      value: data.tickets.summary.comparison.changePercent,
-                      isPositive: data.tickets.summary.comparison.isIncrease,
-                    }
+                    value: data.tickets.summary.comparison.changePercent,
+                    isPositive: data.tickets.summary.comparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -158,6 +174,13 @@ export default function SupportDashboardPage() {
               }}
               title="Daily Ticket Trend"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -169,6 +192,12 @@ export default function SupportDashboardPage() {
               }}
               title="Tickets by Status"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -188,6 +217,13 @@ export default function SupportDashboardPage() {
             title="Tickets by Category"
             height={350}
             horizontal
+            titleColor={chartTitleColor}
+            textColor={chartTextColor}
+            gridColor={chartGridColor}
+            tooltipBgColor={tooltipBgColor}
+            tooltipTitleColor={tooltipTitleColor}
+            tooltipBodyColor={tooltipBodyColor}
+            tooltipBorderColor={tooltipBorderColor}
           />
         )}
 
@@ -205,9 +241,9 @@ export default function SupportDashboardPage() {
               trend={
                 data?.userReviews.summary.comparison
                   ? {
-                      value: data.userReviews.summary.comparison.changePercent,
-                      isPositive: data.userReviews.summary.comparison.isIncrease,
-                    }
+                    value: data.userReviews.summary.comparison.changePercent,
+                    isPositive: data.userReviews.summary.comparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -287,11 +323,10 @@ export default function SupportDashboardPage() {
                     <div
                       className="bg-green-500 h-2 rounded-full"
                       style={{
-                        width: `${
-                          (data.userReviews.sentiment.positive /
+                        width: `${(data.userReviews.sentiment.positive /
                             data.userReviews.summary.total) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -310,11 +345,10 @@ export default function SupportDashboardPage() {
                     <div
                       className="bg-yellow-500 h-2 rounded-full"
                       style={{
-                        width: `${
-                          (data.userReviews.sentiment.neutral /
+                        width: `${(data.userReviews.sentiment.neutral /
                             data.userReviews.summary.total) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -333,11 +367,10 @@ export default function SupportDashboardPage() {
                     <div
                       className="bg-red-500 h-2 rounded-full"
                       style={{
-                        width: `${
-                          (data.userReviews.sentiment.negative /
+                        width: `${(data.userReviews.sentiment.negative /
                             data.userReviews.summary.total) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -470,9 +503,8 @@ export default function SupportDashboardPage() {
                       <div
                         className="bg-yellow-400 h-2 rounded-full"
                         style={{
-                          width: `${
-                            (rating.count / data.ticketReviews.totalReviews) * 100
-                          }%`,
+                          width: `${(rating.count / data.ticketReviews.totalReviews) * 100
+                            }%`,
                         }}
                       />
                     </div>

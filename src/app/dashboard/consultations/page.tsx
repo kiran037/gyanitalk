@@ -9,6 +9,7 @@ import { BarChart } from "@/components/dashboard/charts/BarChart";
 import { PieChart } from "@/components/dashboard/charts/PieChart";
 import { MessageSquare, Phone, Video, Clock, TrendingUp, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function ConsultationsDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,22 @@ export default function ConsultationsDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
-    const router = useRouter();
+  const router = useRouter();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -87,9 +103,9 @@ export default function ConsultationsDashboardPage() {
             trend={
               data?.summary.comparison
                 ? {
-                    value: data.summary.comparison.changePercent,
-                    isPositive: data.summary.comparison.isIncrease,
-                  }
+                  value: data.summary.comparison.changePercent,
+                  isPositive: data.summary.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -101,9 +117,9 @@ export default function ConsultationsDashboardPage() {
             trend={
               data?.summary.chats.comparison
                 ? {
-                    value: data.summary.chats.comparison.changePercent,
-                    isPositive: data.summary.chats.comparison.isIncrease,
-                  }
+                  value: data.summary.chats.comparison.changePercent,
+                  isPositive: data.summary.chats.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -158,6 +174,13 @@ export default function ConsultationsDashboardPage() {
             }}
             title="Daily Consultation Trend"
             height={350}
+            titleColor={chartTitleColor}
+            textColor={chartTextColor}
+            gridColor={chartGridColor}
+            tooltipBgColor={tooltipBgColor}
+            tooltipTitleColor={tooltipTitleColor}
+            tooltipBodyColor={tooltipBodyColor}
+            tooltipBorderColor={tooltipBorderColor}
           />
         )}
 
@@ -182,6 +205,13 @@ export default function ConsultationsDashboardPage() {
               }}
               title="Peak Hours Analysis"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -204,6 +234,13 @@ export default function ConsultationsDashboardPage() {
               }}
               title="Peak Days Analysis"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -219,10 +256,15 @@ export default function ConsultationsDashboardPage() {
               }}
               title="Chat Status Distribution"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
-          {/* Call Status */}
           {!loading && data?.statusBreakdown.call && (
             <PieChart
               data={{
@@ -231,6 +273,12 @@ export default function ConsultationsDashboardPage() {
               }}
               title="Call Status Distribution"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -262,14 +310,13 @@ export default function ConsultationsDashboardPage() {
                         <div
                           className="bg-[#FF6B35] h-2 rounded-full"
                           style={{
-                            width: `${
-                              ((values.chats /
+                            width: `${((values.chats /
                                 Object.values(data.duration.distribution).reduce(
                                   (sum: number, v: any) => sum + v.chats,
                                   0
                                 )) *
                                 100) || 0
-                            }%`,
+                              }%`,
                           }}
                         />
                       </div>
@@ -299,14 +346,13 @@ export default function ConsultationsDashboardPage() {
                         <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{
-                            width: `${
-                              ((values.calls /
+                            width: `${((values.calls /
                                 Object.values(data.duration.distribution).reduce(
                                   (sum: number, v: any) => sum + v.calls,
                                   0
                                 )) *
                                 100) || 0
-                            }%`,
+                              }%`,
                           }}
                         />
                       </div>

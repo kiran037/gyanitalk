@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/adminUI/PageHeader";
 import { StatCard } from "@/components/adminUI/StatCard";
 import { DateFilterButtons } from "@/components/adminUI/DateFilterButtons";
 import { LineChart } from "@/components/dashboard/charts/LineChart";
-import { BarChart } from "@/components/dashboard/charts/BarChart";
+import { useTheme } from "next-themes";
 import { PieChart } from "@/components/dashboard/charts/PieChart";
 import {
   DollarSign,
@@ -60,6 +60,23 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
+
+  const { resolvedTheme } = useTheme();                 // 👈 read theme
+  const isDark = resolvedTheme === "dark";
+
+  // 👇 define colors for charts based on theme
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";   // gray-50 / gray-900
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";    // gray-400 / gray-600
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"                                  // gray-600/opacity
+    : "rgba(209,213,219,0.6)";                              // gray-300/opacity
+
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";                             // gray-50
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   useEffect(() => {
     fetchDashboardData();
@@ -139,9 +156,9 @@ export default function DashboardPage() {
             trend={
               data?.cards.revenue.comparison
                 ? {
-                    value: data.cards.revenue.comparison.changePercent,
-                    isPositive: data.cards.revenue.comparison.isIncrease,
-                  }
+                  value: data.cards.revenue.comparison.changePercent,
+                  isPositive: data.cards.revenue.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -155,9 +172,9 @@ export default function DashboardPage() {
             trend={
               data?.cards.users.comparison
                 ? {
-                    value: data.cards.users.comparison.changePercent,
-                    isPositive: data.cards.users.comparison.isIncrease,
-                  }
+                  value: data.cards.users.comparison.changePercent,
+                  isPositive: data.cards.users.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -179,9 +196,9 @@ export default function DashboardPage() {
             trend={
               data?.cards.consultations.comparison
                 ? {
-                    value: data.cards.consultations.comparison.changePercent,
-                    isPositive: data.cards.consultations.comparison.isIncrease,
-                  }
+                  value: data.cards.consultations.comparison.changePercent,
+                  isPositive: data.cards.consultations.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -195,9 +212,9 @@ export default function DashboardPage() {
             trend={
               data?.cards.orders.comparison
                 ? {
-                    value: data.cards.orders.comparison.changePercent,
-                    isPositive: data.cards.orders.comparison.isIncrease,
-                  }
+                  value: data.cards.orders.comparison.changePercent,
+                  isPositive: data.cards.orders.comparison.isIncrease,
+                }
                 : undefined
             }
             loading={loading}
@@ -226,10 +243,16 @@ export default function DashboardPage() {
               }}
               title="Revenue Trend"
               height={300}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
-          {/* Consultation Types */}
           {!loading && data?.cards.consultations && (
             <PieChart
               data={{
@@ -241,6 +264,12 @@ export default function DashboardPage() {
               }}
               title="Consultations by Type"
               height={300}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>

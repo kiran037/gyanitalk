@@ -12,9 +12,27 @@ interface PieChartProps {
   };
   title?: string;
   height?: number;
+
+  // new styling props
+  titleColor?: string;
+  textColor?: string;
+  tooltipBgColor?: string;
+  tooltipTitleColor?: string;
+  tooltipBodyColor?: string;
+  tooltipBorderColor?: string;
 }
 
-export function PieChart({ data, title, height = 300 }: PieChartProps) {
+export function PieChart({
+  data,
+  title,
+  height = 300,
+  titleColor = "rgb(17, 24, 39)",
+  textColor = "rgb(75, 85, 99)",
+  tooltipBgColor = "rgba(0, 0, 0, 0.8)",
+  tooltipTitleColor = "rgb(243, 244, 246)",
+  tooltipBodyColor = "rgb(209, 213, 219)",
+  tooltipBorderColor = "rgba(255, 107, 53, 0.5)",
+}: PieChartProps) {
   const colors = [
     "rgba(255, 107, 53, 0.8)",
     "rgba(255, 179, 71, 0.8)",
@@ -32,7 +50,7 @@ export function PieChart({ data, title, height = 300 }: PieChartProps) {
         display: true,
         position: "right" as const,
         labels: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
           usePointStyle: true,
           padding: 15,
         },
@@ -40,24 +58,27 @@ export function PieChart({ data, title, height = 300 }: PieChartProps) {
       title: {
         display: !!title,
         text: title,
-        color: "rgb(243, 244, 246)",
+        color: titleColor,
         font: {
           size: 16,
           weight: "bold" as const,
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "rgb(243, 244, 246)",
-        bodyColor: "rgb(209, 213, 219)",
-        borderColor: "rgba(255, 107, 53, 0.5)",
+        backgroundColor: tooltipBgColor,
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        borderColor: tooltipBorderColor,
         borderWidth: 1,
         padding: 12,
         callbacks: {
           label: function (context: any) {
             const label = context.label || "";
             const value = context.parsed || 0;
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const total = context.dataset.data.reduce(
+              (a: number, b: number) => a + b,
+              0
+            );
             const percentage = ((value / total) * 100).toFixed(1);
             return `${label}: ${value} (${percentage}%)`;
           },

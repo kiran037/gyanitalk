@@ -21,6 +21,7 @@ import {
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function ContentDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -28,16 +29,31 @@ export default function ContentDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
-    const router = useRouter();
-  
-    const BackButton = () => (
-      <button
-        onClick={() => router.back()}
-        className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-      >
-        <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-      </button>
-    );
+  const router = useRouter();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
+
+  const BackButton = () => (
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+    </button>
+  );
 
   useEffect(() => {
     fetchData();
@@ -108,9 +124,9 @@ export default function ContentDashboardPage() {
               trend={
                 data?.blogs.summary.viewsComparison
                   ? {
-                      value: data.blogs.summary.viewsComparison.changePercent,
-                      isPositive: data.blogs.summary.viewsComparison.isIncrease,
-                    }
+                    value: data.blogs.summary.viewsComparison.changePercent,
+                    isPositive: data.blogs.summary.viewsComparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -122,9 +138,9 @@ export default function ContentDashboardPage() {
               trend={
                 data?.blogs.summary.readersComparison
                   ? {
-                      value: data.blogs.summary.readersComparison.changePercent,
-                      isPositive: data.blogs.summary.readersComparison.isIncrease,
-                    }
+                    value: data.blogs.summary.readersComparison.changePercent,
+                    isPositive: data.blogs.summary.readersComparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -187,6 +203,12 @@ export default function ContentDashboardPage() {
               }}
               title="Blog Views by Category"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -273,6 +295,13 @@ export default function ContentDashboardPage() {
               }}
               title="Horoscopes by Zodiac Sign"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -285,6 +314,12 @@ export default function ContentDashboardPage() {
               }}
               title="Horoscope Feedback Types"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -445,6 +480,13 @@ export default function ContentDashboardPage() {
             }}
             title="Daily Content Creation Trend"
             height={350}
+            titleColor={chartTitleColor}
+            textColor={chartTextColor}
+            gridColor={chartGridColor}
+            tooltipBgColor={tooltipBgColor}
+            tooltipTitleColor={tooltipTitleColor}
+            tooltipBodyColor={tooltipBodyColor}
+            tooltipBorderColor={tooltipBorderColor}
           />
         )}
 

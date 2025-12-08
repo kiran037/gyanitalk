@@ -10,6 +10,7 @@ import { Tag, Users, Star, TrendingUp, Gift, Heart, ArrowLeft } from "lucide-rea
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function MarketingDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -17,7 +18,22 @@ export default function MarketingDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
-    const router = useRouter();
+  const router = useRouter();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -98,9 +114,9 @@ export default function MarketingDashboardPage() {
               trend={
                 data?.coupons.summary.usageComparison
                   ? {
-                      value: data.coupons.summary.usageComparison.changePercent,
-                      isPositive: data.coupons.summary.usageComparison.isIncrease,
-                    }
+                    value: data.coupons.summary.usageComparison.changePercent,
+                    isPositive: data.coupons.summary.usageComparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -133,9 +149,9 @@ export default function MarketingDashboardPage() {
               trend={
                 data?.referrals.summary.comparison
                   ? {
-                      value: data.referrals.summary.comparison.changePercent,
-                      isPositive: data.referrals.summary.comparison.isIncrease,
-                    }
+                    value: data.referrals.summary.comparison.changePercent,
+                    isPositive: data.referrals.summary.comparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -147,9 +163,9 @@ export default function MarketingDashboardPage() {
               trend={
                 data?.referrals.summary.revenueComparison
                   ? {
-                      value: data.referrals.summary.revenueComparison.changePercent,
-                      isPositive: data.referrals.summary.revenueComparison.isIncrease,
-                    }
+                    value: data.referrals.summary.revenueComparison.changePercent,
+                    isPositive: data.referrals.summary.revenueComparison.isIncrease,
+                  }
                   : undefined
               }
               loading={loading}
@@ -287,6 +303,12 @@ export default function MarketingDashboardPage() {
               }}
               title={`Reviews Distribution (Avg: ${data.reviews.averageRating.toFixed(1)})`}
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
         </div>
@@ -364,11 +386,10 @@ export default function MarketingDashboardPage() {
                   </div>
                   {data?.followers.comparison && (
                     <div
-                      className={`text-sm font-medium ${
-                        data.followers.comparison.isIncrease
+                      className={`text-sm font-medium ${data.followers.comparison.isIncrease
                           ? "text-green-600"
                           : "text-red-600"
-                      }`}
+                        }`}
                     >
                       {data.followers.comparison.isIncrease ? "+" : ""}
                       {data.followers.comparison.changePercent.toFixed(1)}%

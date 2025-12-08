@@ -11,6 +11,7 @@ import { Wallet, TrendingDown, CreditCard, DollarSign, AlertCircle, ArrowLeft } 
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function FinancialsDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,20 @@ export default function FinancialsDashboardPage() {
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
     const router = useRouter();
+      const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -266,31 +281,38 @@ export default function FinancialsDashboardPage() {
 
           {/* Daily Wallet Trend */}
           {!loading && data?.wallet.charts.dailyTrend && (
-            <LineChart
-              data={{
-                labels: data.wallet.charts.dailyTrend.map((item: any) =>
-                  new Date(item.date).toLocaleDateString("en-IN", {
-                    month: "short",
-                    day: "numeric",
-                  })
-                ),
-                datasets: [
-                  {
-                    label: "Credits",
-                    data: data.wallet.charts.dailyTrend.map((item: any) => item.credits),
-                    borderColor: "rgba(16, 185, 129, 1)",
-                  },
-                  {
-                    label: "Debits",
-                    data: data.wallet.charts.dailyTrend.map((item: any) => item.debits),
-                    borderColor: "rgba(239, 68, 68, 1)",
-                  },
-                ],
-              }}
-              title="Daily Wallet Activity"
-              height={250}
-            />
-          )}
+  <LineChart
+    data={{
+      labels: data.wallet.charts.dailyTrend.map((item: any) =>
+        new Date(item.date).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+        })
+      ),
+      datasets: [
+        {
+          label: "Credits",
+          data: data.wallet.charts.dailyTrend.map((item: any) => item.credits),
+          borderColor: "rgba(16, 185, 129, 1)",
+        },
+        {
+          label: "Debits",
+          data: data.wallet.charts.dailyTrend.map((item: any) => item.debits),
+          borderColor: "rgba(239, 68, 68, 1)",
+        },
+      ],
+    }}
+    title="Daily Wallet Activity"
+    height={250}
+    titleColor={chartTitleColor}
+    textColor={chartTextColor}
+    gridColor={chartGridColor}
+    tooltipBgColor={tooltipBgColor}
+    tooltipTitleColor={tooltipTitleColor}
+    tooltipBodyColor={tooltipBodyColor}
+    tooltipBorderColor={tooltipBorderColor}
+  />
+)}
         </div>
 
         {/* Payment Gateway & Withdrawal Methods */}
@@ -337,21 +359,28 @@ export default function FinancialsDashboardPage() {
           )}
 
           {/* Withdrawal by Method */}
-          {!loading && data?.withdrawals.byMethod && (
-            <BarChart
-              data={{
-                labels: data.withdrawals.byMethod.map((m: any) => m.method),
-                datasets: [
-                  {
-                    label: "Amount",
-                    data: data.withdrawals.byMethod.map((m: any) => m.amount),
-                  },
-                ],
-              }}
-              title="Withdrawals by Payment Method"
-              height={320}
-            />
-          )}
+         {!loading && data?.withdrawals.byMethod && (
+  <BarChart
+    data={{
+      labels: data.withdrawals.byMethod.map((m: any) => m.method),
+      datasets: [
+        {
+          label: "Amount",
+          data: data.withdrawals.byMethod.map((m: any) => m.amount),
+        },
+      ],
+    }}
+    title="Withdrawals by Payment Method"
+    height={320}
+    titleColor={chartTitleColor}
+    textColor={chartTextColor}
+    gridColor={chartGridColor}
+    tooltipBgColor={tooltipBgColor}
+    tooltipTitleColor={tooltipTitleColor}
+    tooltipBodyColor={tooltipBodyColor}
+    tooltipBorderColor={tooltipBorderColor}
+  />
+)}
         </div>
 
         {/* Top Withdrawal Requests */}

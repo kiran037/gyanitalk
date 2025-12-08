@@ -32,9 +32,30 @@ interface BarChartProps {
   title?: string;
   height?: number;
   horizontal?: boolean;
+
+  // new styling props
+  titleColor?: string;
+  textColor?: string;
+  gridColor?: string;
+  tooltipBgColor?: string;
+  tooltipTitleColor?: string;
+  tooltipBodyColor?: string;
+  tooltipBorderColor?: string;
 }
 
-export function BarChart({ data, title, height = 300, horizontal = false }: BarChartProps) {
+export function BarChart({
+  data,
+  title,
+  height = 300,
+  horizontal = false,
+  titleColor = "rgb(17, 24, 39)",
+  textColor = "rgb(75, 85, 99)",
+  gridColor = "rgba(209, 213, 219, 0.6)",
+  tooltipBgColor = "rgba(0, 0, 0, 0.8)",
+  tooltipTitleColor = "rgb(243, 244, 246)",
+  tooltipBodyColor = "rgb(209, 213, 219)",
+  tooltipBorderColor = "rgba(255, 107, 53, 0.5)",
+}: BarChartProps) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -44,7 +65,7 @@ export function BarChart({ data, title, height = 300, horizontal = false }: BarC
         display: true,
         position: "top" as const,
         labels: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
           usePointStyle: true,
           padding: 15,
         },
@@ -52,17 +73,17 @@ export function BarChart({ data, title, height = 300, horizontal = false }: BarC
       title: {
         display: !!title,
         text: title,
-        color: "rgb(243, 244, 246)",
+        color: titleColor,
         font: {
           size: 16,
           weight: "bold" as const,
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "rgb(243, 244, 246)",
-        bodyColor: "rgb(209, 213, 219)",
-        borderColor: "rgba(255, 107, 53, 0.5)",
+        backgroundColor: tooltipBgColor,
+        titleColor: tooltipTitleColor,
+        bodyColor: tooltipBodyColor,
+        borderColor: tooltipBorderColor,
         borderWidth: 1,
         padding: 12,
       },
@@ -70,20 +91,20 @@ export function BarChart({ data, title, height = 300, horizontal = false }: BarC
     scales: {
       x: {
         grid: {
-          color: "rgba(75, 85, 99, 0.2)",
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
         },
       },
       y: {
         grid: {
-          color: "rgba(75, 85, 99, 0.2)",
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: "rgb(156, 163, 175)",
+          color: textColor,
         },
       },
     },

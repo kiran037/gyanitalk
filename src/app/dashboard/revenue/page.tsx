@@ -17,6 +17,7 @@ import {
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function RevenueDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,21 @@ export default function RevenueDashboardPage() {
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
     const router = useRouter();
+
+    const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -125,60 +141,73 @@ export default function RevenueDashboardPage() {
         {/* Charts */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Daily Revenue Trend */}
-          {!loading && data?.charts.dailyTrend && (
-            <LineChart
-              data={{
-                labels: data.charts.dailyTrend.map((item: any) =>
-                  new Date(item.date).toLocaleDateString("en-IN", {
-                    month: "short",
-                    day: "numeric",
-                  })
-                ),
-                datasets: [
-                  {
-                    label: "Chat",
-                    data: data.charts.dailyTrend.map((item: any) => item.chat),
-                    borderColor: "rgba(255, 107, 53, 1)",
-                  },
-                  {
-                    label: "Call",
-                    data: data.charts.dailyTrend.map((item: any) => item.call),
-                    borderColor: "rgba(59, 130, 246, 1)",
-                  },
-                  {
-                    label: "Product",
-                    data: data.charts.dailyTrend.map((item: any) => item.product),
-                    borderColor: "rgba(16, 185, 129, 1)",
-                  },
-                  {
-                    label: "Report",
-                    data: data.charts.dailyTrend.map((item: any) => item.report),
-                    borderColor: "rgba(139, 92, 246, 1)",
-                  },
-                ],
-              }}
-              title="Revenue by Service Type"
-              height={350}
-            />
-          )}
+{!loading && data?.charts.dailyTrend && (
+  <LineChart
+    data={{
+      labels: data.charts.dailyTrend.map((item: any) =>
+        new Date(item.date).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+        })
+      ),
+      datasets: [
+        {
+          label: "Chat",
+          data: data.charts.dailyTrend.map((item: any) => item.chat),
+          borderColor: "rgba(255, 107, 53, 1)",
+        },
+        {
+          label: "Call",
+          data: data.charts.dailyTrend.map((item: any) => item.call),
+          borderColor: "rgba(59, 130, 246, 1)",
+        },
+        {
+          label: "Product",
+          data: data.charts.dailyTrend.map((item: any) => item.product),
+          borderColor: "rgba(16, 185, 129, 1)",
+        },
+        {
+          label: "Report",
+          data: data.charts.dailyTrend.map((item: any) => item.report),
+          borderColor: "rgba(139, 92, 246, 1)",
+        },
+      ],
+    }}
+    title="Revenue by Service Type"
+    height={350}
+    titleColor={chartTitleColor}
+    textColor={chartTextColor}
+    gridColor={chartGridColor}
+    tooltipBgColor={tooltipBgColor}
+    tooltipTitleColor={tooltipTitleColor}
+    tooltipBodyColor={tooltipBodyColor}
+    tooltipBorderColor={tooltipBorderColor}
+  />
+)}
 
           {/* Revenue by Service */}
-          {!loading && data?.revenueByService && (
-            <PieChart
-              data={{
-                labels: ["Chat", "Call", "Product", "Report", "Course"],
-                data: [
-                  data.revenueByService.chat.revenue,
-                  data.revenueByService.call.revenue,
-                  data.revenueByService.product.revenue,
-                  data.revenueByService.report.revenue,
-                  data.revenueByService.course.revenue,
-                ],
-              }}
-              title="Revenue Distribution"
-              height={350}
-            />
-          )}
+ {!loading && data?.revenueByService && (
+  <PieChart
+    data={{
+      labels: ["Chat", "Call", "Product", "Report", "Course"],
+      data: [
+        data.revenueByService.chat.revenue,
+        data.revenueByService.call.revenue,
+        data.revenueByService.product.revenue,
+        data.revenueByService.report.revenue,
+        data.revenueByService.course.revenue,
+      ],
+    }}
+    title="Revenue Distribution"
+    height={350}
+    titleColor={chartTitleColor}
+    textColor={chartTextColor}
+    tooltipBgColor={tooltipBgColor}
+    tooltipTitleColor={tooltipTitleColor}
+    tooltipBodyColor={tooltipBodyColor}
+    tooltipBorderColor={tooltipBorderColor}
+  />
+)}
         </div>
 
         {/* Top Astrologers & Payment Methods */}
@@ -228,21 +257,28 @@ export default function RevenueDashboardPage() {
           )}
 
           {/* Payment Methods */}
-          {!loading && data?.charts.paymentMethods && (
-            <BarChart
-              data={{
-                labels: data.charts.paymentMethods.map((pm: any) => pm.method),
-                datasets: [
-                  {
-                    label: "Amount",
-                    data: data.charts.paymentMethods.map((pm: any) => pm.amount),
-                  },
-                ],
-              }}
-              title="Payment Methods Distribution"
-              height={350}
-            />
-          )}
+      {!loading && data?.charts.paymentMethods && (
+  <BarChart
+    data={{
+      labels: data.charts.paymentMethods.map((pm: any) => pm.method),
+      datasets: [
+        {
+          label: "Amount",
+          data: data.charts.paymentMethods.map((pm: any) => pm.amount),
+        },
+      ],
+    }}
+    title="Payment Methods Distribution"
+    height={350}
+    titleColor={chartTitleColor}
+    textColor={chartTextColor}
+    gridColor={chartGridColor}
+    tooltipBgColor={tooltipBgColor}
+    tooltipTitleColor={tooltipTitleColor}
+    tooltipBodyColor={tooltipBodyColor}
+    tooltipBorderColor={tooltipBorderColor}
+  />
+)}
         </div>
 
         {/* Service Breakdown Table */}

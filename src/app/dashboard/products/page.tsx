@@ -11,6 +11,7 @@ import { ShoppingBag, Package, TrendingUp, BookOpen, Star, ArrowLeft } from "luc
 import { motion } from "framer-motion";
 import { avatar } from "@/lib/images";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 export default function ProductsDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,21 @@ export default function ProductsDashboardPage() {
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
   const router = useRouter();
+
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const chartTextColor = isDark ? "#9CA3AF" : "#4B5563";
+  const chartGridColor = isDark
+    ? "rgba(75,85,99,0.2)"
+    : "rgba(209,213,219,0.6)";
+  const tooltipBgColor = isDark
+    ? "rgba(0,0,0,0.85)"
+    : "rgba(249,250,251,0.98)";
+  const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
+  const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
+  const tooltipBorderColor = "rgba(255,107,53,0.5)";
 
   const BackButton = () => (
     <button
@@ -200,6 +216,13 @@ export default function ProductsDashboardPage() {
               }}
               title="Daily Product Sales"
               height={350}
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
@@ -227,8 +250,8 @@ export default function ProductsDashboardPage() {
                       className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] h-3 rounded-full"
                       style={{
                         width: `${(data.products.featuredVsRegular.featured.revenue /
-                            (data.products.featuredVsRegular.featured.revenue +
-                              data.products.featuredVsRegular.regular.revenue)) *
+                          (data.products.featuredVsRegular.featured.revenue +
+                            data.products.featuredVsRegular.regular.revenue)) *
                           100
                           }%`,
                       }}
@@ -253,8 +276,8 @@ export default function ProductsDashboardPage() {
                       className="bg-blue-600 h-3 rounded-full"
                       style={{
                         width: `${(data.products.featuredVsRegular.regular.revenue /
-                            (data.products.featuredVsRegular.featured.revenue +
-                              data.products.featuredVsRegular.regular.revenue)) *
+                          (data.products.featuredVsRegular.featured.revenue +
+                            data.products.featuredVsRegular.regular.revenue)) *
                           100
                           }%`,
                       }}
@@ -323,6 +346,13 @@ export default function ProductsDashboardPage() {
               title="Revenue by Category"
               height={350}
               horizontal
+              titleColor={chartTitleColor}
+              textColor={chartTextColor}
+              gridColor={chartGridColor}
+              tooltipBgColor={tooltipBgColor}
+              tooltipTitleColor={tooltipTitleColor}
+              tooltipBodyColor={tooltipBodyColor}
+              tooltipBorderColor={tooltipBorderColor}
             />
           )}
 
