@@ -19,8 +19,6 @@ export default function UsersDashboardPage() {
   const [filter, setFilter] = useState("last_30_days");
   const [customDate, setCustomDate] = useState({ startDate: "", endDate: "" });
 
-  const router = useRouter();
-
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -35,6 +33,8 @@ export default function UsersDashboardPage() {
   const tooltipTitleColor = isDark ? "#F9FAFB" : "#111827";
   const tooltipBodyColor = isDark ? "#E5E7EB" : "#1F2937";
   const tooltipBorderColor = "rgba(255,107,53,0.5)";
+
+  const router = useRouter();
 
   const BackButton = () => (
     <button

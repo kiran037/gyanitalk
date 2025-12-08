@@ -40,6 +40,15 @@ export default function PageDetailPage() {
     schemaJson: "",
   });
 
+    const BackButton = () => (
+    <button
+      onClick={() => router.back()}
+      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+    </button>
+  );
+
   useEffect(() => {
     fetchPageData();
   }, [pageId]);
@@ -189,15 +198,10 @@ export default function PageDetailPage() {
           text: getTypeLabel(formData.type),
           variant: formData.type === "privacy" ? "blue" : formData.type === "terms" ? "purple" : "green",
         }}
+        leftActions={<BackButton />}
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              icon={<ArrowLeft className="w-4 h-4" />}
-              onClick={() => router.push("/pages")}
-            >
-              Back to List
-            </Button>
+            
             <Button
               variant="primary"
               icon={<Eye className="w-4 h-4" />}
