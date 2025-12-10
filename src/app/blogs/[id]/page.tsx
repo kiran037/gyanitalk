@@ -1,7 +1,7 @@
 // app/blogs/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/adminUI/PageHeader";
 import { Button } from "@/components/adminUI/Button";
@@ -39,6 +39,10 @@ export default function BlogDetailPage() {
   const [loading, setLoading] = useState(!isNewBlog);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // Refs for file inputs (avoid document.querySelector)
+  const blogImageInputRef = useRef<HTMLInputElement | null>(null);
+  const previewImageInputRef = useRef<HTMLInputElement | null>(null);
 
   const BackButton = () => (
     <button
@@ -84,6 +88,7 @@ export default function BlogDetailPage() {
     if (!isNewBlog) {
       fetchBlog();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blogId]);
 
   const fetchCategories = async () => {
@@ -139,24 +144,26 @@ export default function BlogDetailPage() {
     }
   };
 
+  // Use functional setState to avoid stale reads when auto-generating slug
   const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
 
-    // Auto-generate slug from title
-    if (field === "title" && !formData.slug) {
-      const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      setFormData((prev) => ({ ...prev, slug }));
-    }
+      // Auto-generate slug from title only if slug is currently empty
+      if (field === "title" && !prev.slug) {
+        const slug = String(value || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+        next.slug = slug;
+      }
+
+      return next;
+    });
   };
 
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: "blogImage" | "previewImage"
-  ) => {
-    const file = e.target.files?.[0];
+  // Accept File directly instead of React.ChangeEvent
+  const handleImageUpload = async (file: File | undefined, field: "blogImage" | "previewImage") => {
     if (!file) return;
 
     const setUploading = field === "blogImage" ? setUploadingImage : setUploadingPreview;
@@ -164,11 +171,15 @@ export default function BlogDetailPage() {
 
     try {
       const result = await uploadImage(file, "blogs");
-      if (result.success) {
+      if (result?.success) {
         handleInputChange(field, result.path);
         addToast("success", "Success", "Image uploaded successfully");
+      } else {
+        const errMsg = (result as any)?.error ?? (result as any)?.message ?? "Upload failed";
+        addToast("error", "Error", errMsg);
       }
     } catch (error) {
+      console.error("Upload error:", error);
       addToast("error", "Error", "Failed to upload image");
     } finally {
       setUploading(false);
@@ -229,35 +240,51 @@ export default function BlogDetailPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="w-full mx-auto">
+        {/* Hidden file inputs (one place for each upload) */}
+        <input
+          ref={blogImageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleImageUpload(e.target.files?.[0], "blogImage")}
+        />
+        <input
+          ref={previewImageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleImageUpload(e.target.files?.[0], "previewImage")}
+        />
+
         {/* Header */}
         <div className="mb-3">
-        <PageHeader
-          title={isNewBlog ? "Create New Blog" : "Edit Blog"}
-          subtitle={isNewBlog ? "Create and publish a new blog post" : `Editing: ${formData.title}`}
-          badge={{ text: isNewBlog ? "New" : "Edit", variant: "blue" }}
-           leftActions={<BackButton />}
-          actions={
-            <div className="flex items-center gap-2">
-              {!isNewBlog && (
+          <PageHeader
+            title={isNewBlog ? "Create New Blog" : "Edit Blog"}
+            subtitle={isNewBlog ? "Create and publish a new blog post" : `Editing: ${formData.title}`}
+            badge={{ text: isNewBlog ? "New" : "Edit", variant: "blue" }}
+            leftActions={<BackButton />}
+            actions={
+              <div className="flex items-center gap-2">
+                {!isNewBlog && (
+                  <Button
+                    variant="outline"
+                    icon={<Eye className="w-4 h-4" />}
+                    onClick={() => window.open(`/landing/blog/${formData.slug || blogId}`, "_blank")}
+                  >
+                    Preview
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
-                  icon={<Eye className="w-4 h-4" />}
-                  onClick={() => window.open(`/landing/blog/${formData.slug || blogId}`, "_blank")}
+                  variant="primary"
+                  icon={<Save className="w-4 h-4" />}
+                  onClick={handleSave}
+                  loading={saving}
                 >
-                  Preview
+                  {isNewBlog ? "Create Blog" : "Save Changes"}
                 </Button>
-              )}
-              <Button
-                variant="primary"
-                icon={<Save className="w-4 h-4" />}
-                onClick={handleSave}
-                loading={saving}
-              >
-                {isNewBlog ? "Create Blog" : "Save Changes"}
-              </Button>
-            </div>
-          }
-        />
+              </div>
+            }
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -384,40 +411,31 @@ export default function BlogDetailPage() {
                     alt="Featured"
                     className="w-full h-48 object-cover rounded-lg"
                   />
-                  <label className="block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, "blogImage")}
-                      className="hidden"
-                    />
+                  <div>
                     <Button
                       variant="outline"
                       size="sm"
                       icon={uploadingImage ? undefined : <Upload className="w-4 h-4" />}
                       loading={uploadingImage}
-                      onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                      onClick={() => blogImageInputRef.current?.click()}
                       className="w-full"
                     >
                       Change Image
                     </Button>
-                  </label>
+                  </div>
                 </div>
               ) : (
-                <label className="block cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, "blogImage")}
-                    className="hidden"
-                  />
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-[#FF6B35] transition-colors">
+                <div>
+                  <div
+                    onClick={() => blogImageInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-[#FF6B35] transition-colors cursor-pointer"
+                  >
                     <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Click to upload
                     </p>
                   </div>
-                </label>
+                </div>
               )}
             </div>
 
@@ -439,13 +457,7 @@ export default function BlogDetailPage() {
                     size="sm"
                     icon={<Upload className="w-4 h-4" />}
                     loading={uploadingPreview}
-                    onClick={() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
-                      input.accept = "image/*";
-                      input.onchange = (e) => handleImageUpload(e as any, "previewImage");
-                      input.click();
-                    }}
+                    onClick={() => previewImageInputRef.current?.click()}
                     className="w-full"
                   >
                     Change
@@ -457,13 +469,7 @@ export default function BlogDetailPage() {
                   size="sm"
                   icon={<Upload className="w-4 h-4" />}
                   loading={uploadingPreview}
-                  onClick={() => {
-                    const input = document.createElement("input");
-                    input.type = "file";
-                    input.accept = "image/*";
-                    input.onchange = (e) => handleImageUpload(e as any, "previewImage");
-                    input.click();
-                  }}
+                  onClick={() => previewImageInputRef.current?.click()}
                   className="w-full"
                 >
                   Upload Preview
