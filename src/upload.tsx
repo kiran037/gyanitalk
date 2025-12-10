@@ -57,8 +57,6 @@ export async function uploadImage(
     const bucket = process.env.AWS_BUCKET_NAME!;
     const region = process.env.AWS_REGION!;
 
-    // Build the key parts. We want keys like:
-    // public/storage/<newPath?>/<uploadPath?>/<uniqueName>
     const prefixFromEnv = trimSlashes(process.env.UPLOAD_PATH) || "public/storage";
     const cleanedParts: string[] = [];
 
@@ -89,7 +87,7 @@ export async function uploadImage(
       })
     );
 
-    // Build base URL: prefer NEXT_PUBLIC_ASSET_BASE_URL / ASSET_BASE_URL then fallback to S3 endpoint
+
     const baseUrl =
       process.env.NEXT_PUBLIC_ASSET_BASE_URL ||
       process.env.ASSET_BASE_URL ||
@@ -105,15 +103,12 @@ export async function uploadImage(
     };
   }
 
-  // Fallback: write to local filesystem (dev)
-  // Determine base directory for uploads. Prefer explicit newPath (if given),
-  // otherwise use UPLOAD_PATH env (should be something like "public/storage").
   const uploadPathFromEnv = trimSlashes(process.env.UPLOAD_PATH || "public/storage");
 
-  // baseDir should be a folder on disk. We'll resolve it relative to project root.
+
   const baseDir = newPath && newPath.trim() !== "" ? trimSlashes(newPath) : uploadPathFromEnv;
 
-  // Resolve uploads directory under project root (so public/storage/... maps to ./public/storage/...)
+
   const uploadsDir = path.join(process.cwd(), baseDir, trimSlashes(uploadPath));
 
   if (!fs.existsSync(uploadsDir)) {
@@ -123,13 +118,12 @@ export async function uploadImage(
   const finalPathOnDisk = path.join(uploadsDir, uniqueName);
   await fs.promises.writeFile(finalPathOnDisk, buffer);
 
-  // Relative path that front-end / DB expects (mirror S3 key format)
+
   const relativeKey = `${baseDir}/${trimSlashes(uploadPath)}/${uniqueName}`;
 
   return {
     success: true,
     mainPath: relativeKey,
     path: relativeKey,
-    // no url for local fallback (you can build one with NEXT_PUBLIC_BASEURL in dev if needed)
   };
 }
