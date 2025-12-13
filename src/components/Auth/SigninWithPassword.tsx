@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/components/Toast/ToastProvider";
+import Link from "next/link";
 
 type Props = {
   loginUser: (formData: FormData) => Promise<{
@@ -81,7 +82,7 @@ export default function SigninWithPassword({ loginUser }: Props) {
         "Welcome back!",
         `${result?.user?.name ? `Hi ${result.user.name}!` : "Successfully signed in"}`
       );
-      
+
       // Redirect to home
       window.location.href = "/";
     } catch (err: any) {
@@ -107,11 +108,13 @@ export default function SigninWithPassword({ loginUser }: Props) {
         <div className="mb-8 text-center">
 
           <div className="flex justify-center mb-6">
-            <img
-              src="https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png"
-              alt="Gyani Talk"
-              className="w-20 h-20 object-contain"
-            />
+            <Link href="/" aria-label="Go to home">
+              <img
+                src="https://gyanitalk.com/public/storage/images/astrologer_7851728112667.png"
+                alt="Gyani Talk"
+                className="w-20 h-20 object-contain cursor-pointer"
+              />
+            </Link>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
             Welcome back
@@ -142,11 +145,10 @@ export default function SigninWithPassword({ loginUser }: Props) {
                 }}
                 onBlur={(e) => validateEmail(e.target.value)}
                 disabled={loading}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${
-                  errors.email
+                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.email
                     ? "border-red-400 dark:border-red-500"
                     : "border-white/60 dark:border-white/10"
-                } bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               />
             </div>
             {errors.email && (
@@ -178,11 +180,10 @@ export default function SigninWithPassword({ loginUser }: Props) {
                 }}
                 onBlur={(e) => validatePassword(e.target.value)}
                 disabled={loading}
-                className={`w-full pl-12 pr-12 py-3.5 rounded-xl border ${
-                  errors.password
+                className={`w-full pl-12 pr-12 py-3.5 rounded-xl border ${errors.password
                     ? "border-red-400 dark:border-red-500"
                     : "border-white/60 dark:border-white/10"
-                } bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               />
               <button
                 type="button"

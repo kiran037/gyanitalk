@@ -3,9 +3,21 @@
 
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// Determine if S3 is configured
+/* ------------------------------------------------------------------ */
+/* Utils */
+/* ------------------------------------------------------------------ */
+
+function trimSlashes(value?: string) {
+  return (value || "").replace(/^\/+|\/+$/g, "");
+}
+
+/* ------------------------------------------------------------------ */
+/* Environment & Clients */
+/* ------------------------------------------------------------------ */
+
 const hasS3Config =
   !!process.env.AWS_ACCESS_KEY_ID &&
   !!process.env.AWS_SECRET_ACCESS_KEY &&
@@ -22,108 +34,114 @@ const s3Client = hasS3Config
     })
   : null;
 
-type UploadResult = {
+// 🔒 lock filesystem root (fixes Turbopack + security)
+const FS_ROOT = path.join(
+  process.cwd(),
+  trimSlashes(process.env.UPLOAD_FS_ROOT || "public/storage")
+);
+
+// S3 prefix (string only, no filesystem meaning)
+const S3_PREFIX = trimSlashes(
+  process.env.UPLOAD_S3_PREFIX || "public/storage"
+);
+
+/* ------------------------------------------------------------------ */
+/* Types */
+/* ------------------------------------------------------------------ */
+
+export type UploadResult = {
   success: boolean;
-  mainPath: string; // canonical key inside bucket (or filesystem path)
-  path: string; // what existing code expects (relative key)
-  url?: string; // full public URL to access the file (optional)
+  mainPath: string;
+  path: string;
+  url?: string;
 };
 
-function trimSlashes(value?: string) {
-  return (value || "").replace(/^\/+|\/+$/g, "");
-}
+/* ------------------------------------------------------------------ */
+/* Upload */
+/* ------------------------------------------------------------------ */
 
-/**
- * Uploads a file either to S3 (if configured) or to local filesystem (dev fallback).
- *
- * @param file - File object from browser
- * @param uploadPath - logical folder like "blogs" (can include nested folders)
- * @param newPath - optional additional prefix (e.g. tenant or other folder)
- */
 export async function uploadImage(
   file: File,
   uploadPath: string,
   newPath?: string
 ): Promise<UploadResult> {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = Buffer.from(await file.arrayBuffer());
 
-  const timestamp = Date.now();
   const ext = path.extname(file.name || ".png") || ".png";
-  const uniqueName = `${timestamp}-${Math.random().toString(36).slice(2)}${ext}`;
+  const uniqueName = `${Date.now()}-${crypto.randomUUID()}${ext}`;
 
-  // Use S3 if configured
+  /* ========================= S3 ========================= */
+
   if (s3Client && hasS3Config) {
     const bucket = process.env.AWS_BUCKET_NAME!;
     const region = process.env.AWS_REGION!;
 
-    const prefixFromEnv = trimSlashes(process.env.UPLOAD_PATH) || "public/storage";
-    const cleanedParts: string[] = [];
+    const keyParts = [
+      S3_PREFIX,
+      trimSlashes(newPath),
+      trimSlashes(uploadPath),
+      uniqueName,
+    ].filter(Boolean);
 
-    // ensure prefix (from env or default) is first
-    if (prefixFromEnv) cleanedParts.push(prefixFromEnv);
+    const key = keyParts.join("/");
 
-    // optional newPath
-    if (newPath && newPath.trim() !== "") {
-      cleanedParts.push(trimSlashes(newPath));
-    }
-
-    // uploadPath provided by caller (e.g. "blogs")
-    if (uploadPath && uploadPath.trim() !== "") {
-      cleanedParts.push(trimSlashes(uploadPath));
-    }
-
-    // Use POSIX join to ensure forward slashes for S3 keys
-    const prefix = cleanedParts.join("/");
-    const key = prefix ? `${prefix}/${uniqueName}` : uniqueName;
-
-    // Upload to S3
     await s3Client.send(
       new PutObjectCommand({
         Bucket: bucket,
         Key: key,
         Body: buffer,
         ContentType: file.type || "application/octet-stream",
+        ContentDisposition: "inline",
       })
     );
-
 
     const baseUrl =
       process.env.NEXT_PUBLIC_ASSET_BASE_URL ||
       process.env.ASSET_BASE_URL ||
       `https://${bucket}.s3.${region}.amazonaws.com`;
 
-    const publicUrl = `${baseUrl.replace(/\/+$/g, "")}/${key}`;
-
     return {
       success: true,
-      mainPath: key, // canonical key in bucket
-      path: key, // existing code expects relative key (so keeping same)
-      url: publicUrl,
+      mainPath: key,
+      path: key,
+      url: `${baseUrl.replace(/\/+$/, "")}/${key}`,
     };
   }
 
-  const uploadPathFromEnv = trimSlashes(process.env.UPLOAD_PATH || "public/storage");
+  /* ========================= LOCAL FS ========================= */
 
+  const uploadsDir = path.join(
+    FS_ROOT,
+    trimSlashes(newPath),
+    trimSlashes(uploadPath)
+  );
 
-  const baseDir = newPath && newPath.trim() !== "" ? trimSlashes(newPath) : uploadPathFromEnv;
-
-
-  const uploadsDir = path.join(process.cwd(), baseDir, trimSlashes(uploadPath));
+  // 🔐 prevent directory traversal
+  const resolved = path.resolve(uploadsDir);
+  if (!resolved.startsWith(FS_ROOT)) {
+    throw new Error("Invalid upload path");
+  }
 
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const finalPathOnDisk = path.join(uploadsDir, uniqueName);
-  await fs.promises.writeFile(finalPathOnDisk, buffer);
+  const finalPath = path.join(uploadsDir, uniqueName);
+  await fs.promises.writeFile(finalPath, buffer);
 
-
-  const relativeKey = `${baseDir}/${trimSlashes(uploadPath)}/${uniqueName}`;
+  const relativeKey = [
+    trimSlashes(process.env.UPLOAD_FS_ROOT || "public/storage"),
+    trimSlashes(newPath),
+    trimSlashes(uploadPath),
+    uniqueName,
+  ]
+    .filter(Boolean)
+    .join("/");
 
   return {
     success: true,
     mainPath: relativeKey,
     path: relativeKey,
+    url: `/${relativeKey}`,
   };
 }
