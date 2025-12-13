@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// Reuse one S3 client
+// Determine if S3 is configured
 const hasS3Config =
   !!process.env.AWS_ACCESS_KEY_ID &&
   !!process.env.AWS_SECRET_ACCESS_KEY &&
@@ -24,12 +24,22 @@ const s3Client = hasS3Config
 
 type UploadResult = {
   success: boolean;
-  mainPath: string; // for DB/storage
-  path: string;     // what your existing code already uses
-  // we add url (non-breaking, just extra)
-  url?: string;
+  mainPath: string; // canonical key inside bucket (or filesystem path)
+  path: string; // what existing code expects (relative key)
+  url?: string; // full public URL to access the file (optional)
 };
 
+function trimSlashes(value?: string) {
+  return (value || "").replace(/^\/+|\/+$/g, "");
+}
+
+/**
+ * Uploads a file either to S3 (if configured) or to local filesystem (dev fallback).
+ *
+ * @param file - File object from browser
+ * @param uploadPath - logical folder like "blogs" (can include nested folders)
+ * @param newPath - optional additional prefix (e.g. tenant or other folder)
+ */
 export async function uploadImage(
   file: File,
   uploadPath: string,
@@ -40,83 +50,80 @@ export async function uploadImage(
 
   const timestamp = Date.now();
   const ext = path.extname(file.name || ".png") || ".png";
-  const uniqueName = `${timestamp}-${Math.random()
-    .toString(36)
-    .slice(2)}${ext}`;
+  const uniqueName = `${timestamp}-${Math.random().toString(36).slice(2)}${ext}`;
 
-  // If S3 is configured, use S3
+  // Use S3 if configured
   if (s3Client && hasS3Config) {
     const bucket = process.env.AWS_BUCKET_NAME!;
     const region = process.env.AWS_REGION!;
 
-    // Build "folder" path similarly to your old logic
+    const prefixFromEnv = trimSlashes(process.env.UPLOAD_PATH) || "public/storage";
     const cleanedParts: string[] = [];
 
+    // ensure prefix (from env or default) is first
+    if (prefixFromEnv) cleanedParts.push(prefixFromEnv);
+
+    // optional newPath
     if (newPath && newPath.trim() !== "") {
-      cleanedParts.push(newPath.trim().replace(/^\/+|\/+$/g, ""));
+      cleanedParts.push(trimSlashes(newPath));
     }
 
+    // uploadPath provided by caller (e.g. "blogs")
     if (uploadPath && uploadPath.trim() !== "") {
-      cleanedParts.push(uploadPath.trim().replace(/^\/+|\/+$/g, ""));
+      cleanedParts.push(trimSlashes(uploadPath));
     }
 
+    // Use POSIX join to ensure forward slashes for S3 keys
     const prefix = cleanedParts.join("/");
     const key = prefix ? `${prefix}/${uniqueName}` : uniqueName;
 
-await s3Client.send(
-  new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: buffer,
-    ContentType: file.type || "application/octet-stream",
-    // ❌ no ACL here anymore
-  })
-);
+    // Upload to S3
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type || "application/octet-stream",
+      })
+    );
 
 
-    // Base URL (S3 default or custom CDN/domain)
     const baseUrl =
+      process.env.NEXT_PUBLIC_ASSET_BASE_URL ||
       process.env.ASSET_BASE_URL ||
       `https://${bucket}.s3.${region}.amazonaws.com`;
 
-    const publicUrl = `${baseUrl}/${key}`;
+    const publicUrl = `${baseUrl.replace(/\/+$/g, "")}/${key}`;
 
     return {
       success: true,
-      // mainPath = key inside bucket (good for DB)
-      mainPath: key,
-      // path = keep it "relative" so your existing helpers
-      // (like bannerSrcOf) can prepend their own base URL logic
-      path: key,
+      mainPath: key, // canonical key in bucket
+      path: key, // existing code expects relative key (so keeping same)
       url: publicUrl,
     };
   }
 
-  // Fallback: old local filesystem behavior (for dev / no AWS config)
-  const baseDir =
-    newPath && newPath.trim() !== ""
-      ? newPath
-      : process.env.UPLOAD_PATH;
+  const uploadPathFromEnv = trimSlashes(process.env.UPLOAD_PATH || "public/storage");
 
-  if (!baseDir) {
-    throw new Error("UPLOAD_PATH not defined in environment variables");
-  }
 
-  const uploadsDir = path.join(baseDir, uploadPath);
+  const baseDir = newPath && newPath.trim() !== "" ? trimSlashes(newPath) : uploadPathFromEnv;
+
+
+  const uploadsDir = path.join(process.cwd(), baseDir, trimSlashes(uploadPath));
 
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const finalPath = path.join(uploadsDir, uniqueName);
+  const finalPathOnDisk = path.join(uploadsDir, uniqueName);
+  await fs.promises.writeFile(finalPathOnDisk, buffer);
 
-  await fs.promises.writeFile(finalPath, buffer);
 
-  const relativePath = `public/storage/${uploadPath}/${uniqueName}`;
+  const relativeKey = `${baseDir}/${trimSlashes(uploadPath)}/${uniqueName}`;
 
   return {
     success: true,
-    mainPath: `${newPath}/${uploadPath}/${uniqueName}`,
-    path: relativePath,
+    mainPath: relativeKey,
+    path: relativeKey,
   };
 }
