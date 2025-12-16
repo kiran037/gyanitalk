@@ -8,11 +8,17 @@ export default function AppDownloadPopup() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    const dismissed = sessionStorage.getItem("app-download-dismissed");
+    if (dismissed) return;
+
     const timer = setTimeout(() => setIsOpen(true), 800);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClose = () => setIsOpen(false);
+  const handleClose = () => {
+    sessionStorage.setItem("app-download-dismissed", "1");
+    setIsOpen(false);
+  };
 
   return (
     <AnimatePresence>
@@ -26,6 +32,13 @@ export default function AppDownloadPopup() {
         >
           {/* Card */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="app-download-title"
+            tabIndex={-1}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") handleClose();
+            }}
             className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-white/10 shadow-2xl p-6 relative"
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -36,9 +49,10 @@ export default function AppDownloadPopup() {
             {/* Close button */}
             <button
               onClick={handleClose}
+              aria-label="Close download popup"
               className="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100/90 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" focusable="false" />
             </button>
 
             {/* Logo */}
@@ -50,7 +64,10 @@ export default function AppDownloadPopup() {
               />
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2
+                  id="app-download-title"
+                  className="text-xl font-bold text-gray-900 dark:text-white"
+                >
                   Download Gyani Talk
                 </h2>
                 <p className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -107,7 +124,11 @@ export default function AppDownloadPopup() {
             {/* Small meta row */}
             <div className="mt-4 flex items-center justify-center gap-3 text-[11px] text-gray-600 dark:text-gray-400">
               <span className="inline-flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                <Star
+                  className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500"
+                  aria-hidden="true"
+                  focusable="false"
+                />
                 4.2 rating
               </span>
               <span className="w-1 h-1 rounded-full bg-gray-400/70" />

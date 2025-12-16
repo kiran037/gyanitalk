@@ -24,7 +24,10 @@ const AppDownloadPopup = dynamic(
 
 const AstrologerCarousel = dynamic(
   () => import("@/components/landing/AstrologerCarousel"),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => <div className="h-[320px]" aria-hidden="true" />,
+  }
 );
 
 const ProductCarousel = dynamic(
@@ -49,7 +52,9 @@ export default function HomeClient() {
       <HomeMain />
 
       {/* FEATURES SECTION */}
-      <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
+      <section
+        aria-labelledby="features-heading"
+        className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
         <div className="max-w-7xl mx-auto">
           <motion.div
             className="text-center mb-10 sm:mb-14 lg:mb-16"
@@ -63,7 +68,10 @@ export default function HomeClient() {
                 POWERFUL FEATURES
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+            <h2
+              id="features-heading"
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4"
+            >
               <span className="text-gray-900 dark:text-white">
                 Everything You Need{" "}
               </span>
@@ -121,10 +129,10 @@ export default function HomeClient() {
                   prefersReducedMotion
                     ? undefined
                     : {
-                        scale: 1.03,
-                        borderColor: "rgba(255, 107, 53, 0.5)",
-                        boxShadow: "0 16px 30px rgba(255, 107, 53, 0.18)",
-                      }
+                      scale: 1.03,
+                      borderColor: "rgba(255, 107, 53, 0.5)",
+                      boxShadow: "0 16px 30px rgba(255, 107, 53, 0.18)",
+                    }
                 }
               >
                 <motion.div
@@ -134,7 +142,11 @@ export default function HomeClient() {
                   }
                   transition={{ duration: 0.3 }}
                 >
-                  <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <feature.icon
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-white"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 </motion.div>
                 <h3 className="text-base sm:text-lg font-bold mb-1.5 sm:mb-2 text-gray-900 dark:text-white">
                   {feature.title}
@@ -153,7 +165,10 @@ export default function HomeClient() {
       <ProductCarousel />
 
       {/* BENEFITS SECTION */}
-      <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
+
+      <section
+        aria-labelledby="benefits-heading"
+        className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02]">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* LEFT TEXT COLUMN */}
@@ -170,7 +185,9 @@ export default function HomeClient() {
                 </span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold">
+              <h2
+                id="benefits-heading"
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold">
                 <span className="text-gray-900 dark:text-white">
                   Why People Love{" "}
                 </span>
@@ -209,9 +226,9 @@ export default function HomeClient() {
                       prefersReducedMotion
                         ? undefined
                         : {
-                            scale: 1.02,
-                            borderColor: "rgba(255, 107, 53, 0.5)",
-                          }
+                          scale: 1.02,
+                          borderColor: "rgba(255, 107, 53, 0.5)",
+                        }
                     }
                   >
                     <motion.div
@@ -223,7 +240,11 @@ export default function HomeClient() {
                       }
                       transition={{ duration: 0.3 }}
                     >
-                      <ChevronRight className="w-5 h-5 text-[#FF6B35] group-hover:text-white transition-colors" />
+                      <ChevronRight
+                        className="w-5 h-5 text-[#FF6B35] group-hover:text-white transition-colors"
+                        aria-hidden="true"
+                        focusable="false"
+                      />
                     </motion.div>
                     <div>
                       <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-0.5">
@@ -266,13 +287,14 @@ export default function HomeClient() {
                     prefersReducedMotion
                       ? undefined
                       : {
-                          scale: 1.03,
-                          borderColor: "rgba(255, 107, 53, 0.5)",
-                          boxShadow: "0 12px 28px rgba(255, 107, 53, 0.18)",
-                        }
+                        scale: 1.03,
+                        borderColor: "rgba(255, 107, 53, 0.5)",
+                        boxShadow: "0 12px 28px rgba(255, 107, 53, 0.18)",
+                      }
                   }
                 >
                   <motion.div
+                    viewport={{ once: true }}
                     animate={
                       prefersReducedMotion
                         ? undefined
@@ -284,7 +306,11 @@ export default function HomeClient() {
                       delay: i * 0.5,
                     }}
                   >
-                    <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#FF6B35] mb-2 sm:mb-3" />
+                    <stat.icon
+                      className="w-6 h-6 sm:w-8 sm:h-8 text-[#FF6B35] mb-2 sm:mb-3"
+                      aria-hidden="true"
+                      focusable="false"
+                    />
                   </motion.div>
                   <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent mb-1.5 sm:mb-2">
                     {stat.value}

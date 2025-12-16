@@ -67,11 +67,11 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl shadow-lg border-b border-gray-200 dark:border-gray-800"
-            : "bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-900"
-        }`}
+        aria-label="Main navigation"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl shadow-lg border-b border-gray-200 dark:border-gray-800"
+          : "bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-900"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-3">
@@ -82,7 +82,7 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                   src="https://gyanitalk.s3.ap-south-1.amazonaws.com/public/storage/images/astrologer_7851728112667.png"
                   alt="Gyani Talk"
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
@@ -98,11 +98,11 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${
-                      active
-                        ? "bg-[#FF6B35] text-white shadow-sm"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-[#FF6B35] dark:hover:text-[#FF6B35]"
-                    }`}
+                    aria-current={active ? "page" : undefined}
+                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${active
+                      ? "bg-[#FF6B35] text-white shadow-sm"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-[#FF6B35] dark:hover:text-[#FF6B35]"
+                      }`}
                   >
                     {item.label}
                   </Link>
@@ -119,9 +119,17 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                 aria-label="Toggle theme"
               >
                 {theme === "dark" ? (
-                  <Sun className="w-5 h-5 text-yellow-500" />
+                  <Sun
+                    className="w-5 h-5 text-yellow-500"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 ) : (
-                  <Moon className="w-5 h-5 text-gray-700" />
+                  <Moon
+                    className="w-5 h-5 text-gray-700"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 )}
               </button>
 
@@ -132,9 +140,17 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  <X
+                    className="w-5 h-5 text-gray-700 dark:text-gray-300"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 ) : (
-                  <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  <Menu
+                    className="w-5 h-5 text-gray-700 dark:text-gray-300"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 )}
               </button>
             </div>
@@ -149,7 +165,8 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
           <button
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
-            aria-label="Close menu"
+            aria-hidden="true"
+            tabIndex={-1}
           />
 
           {/* Menu Panel */}
@@ -162,12 +179,12 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      aria-current={active ? "page" : undefined}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
-                        active
-                          ? "bg-[#FF6B35] text-white"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 active:bg-gray-200 dark:active:bg-gray-800"
-                      }`}
+                      className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${active
+                        ? "bg-[#FF6B35] text-white"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 active:bg-gray-200 dark:active:bg-gray-800"
+                        }`}
                     >
                       {item.label}
                     </Link>

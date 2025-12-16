@@ -2,7 +2,7 @@
 
 import { Star, Clock, Languages, Award, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { avatar } from "@/lib/images";
 
@@ -30,6 +30,7 @@ interface Astrologer {
 export default function AstrologerCarousel() {
   const [astrologers, setAstrologers] = useState<Astrologer[]>([]);
   const [loading, setLoading] = useState(true);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     let cancelled = false;
@@ -104,13 +105,12 @@ export default function AstrologerCarousel() {
       <div className="relative w-full overflow-hidden">
         <motion.div
           className="inline-flex gap-3 sm:gap-4 py-2 whitespace-nowrap will-change-transform"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{
-            repeat: Infinity,
-            repeatType: "loop",
-            ease: "linear",
-            duration,
-          }}
+          animate={prefersReducedMotion ? {} : { x: ["0%", "-50%"] }}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : { repeat: Infinity, ease: "linear", duration }
+          }
         >
           {[...astrologers, ...astrologers].map((astro, index) => (
             <div
@@ -124,7 +124,7 @@ export default function AstrologerCarousel() {
                   <div className="flex-shrink-0 relative">
                     {astro.badges?.top_badge && (
                       <div className="absolute -top-0.5 -right-0.5 px-1 py-0.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-[8px] font-bold rounded-full flex items-center gap-0.5 z-10 shadow-md">
-                        <Award className="w-1.5 h-1.5" />
+                        <Award className="w-1.5 h-1.5" aria-hidden="true" />
                         <span>TOP</span>
                       </div>
                     )}
@@ -132,6 +132,7 @@ export default function AstrologerCarousel() {
                       <img
                         src={avatar(astro.profileImage)}
                         alt={astro.name}
+                        loading="lazy"
                         className="w-full h-full rounded-full object-cover ring-2 ring-gray-200/60 dark:ring-gray-700/60 group-hover:ring-[#FF6B35]/50 transition-all"
                       />
                       {(astro.chatStatus === "online" || astro.callStatus === "online") && (
@@ -143,9 +144,9 @@ export default function AstrologerCarousel() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 mb-0.5 sm:mb-1">
-                      <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate group-hover:text-[#FF6B35] transition-colors">
+                      <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate group-hover:text-[#FF6B35] transition-colors">
                         {astro.name}
-                      </h1>
+                      </h3>
                       {astro.isVerified && (
                         <svg
                           className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
@@ -173,7 +174,11 @@ export default function AstrologerCarousel() {
                     {astro.avgRating != null && (
                       <div className="flex items-center gap-1">
                         <div className="flex items-center gap-0.5 bg-green-500/10 px-1.5 py-0.5 rounded">
-                          <Star className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-green-600 fill-green-600" />
+                          <Star
+                            className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-green-600 fill-green-600"
+                            aria-hidden="true"
+                            focusable="false"
+                          />
                           <span className="text-[10px] sm:text-xs font-semibold text-green-600">
                             {astro.avgRating.toFixed(1)}
                           </span>
@@ -207,14 +212,22 @@ export default function AstrologerCarousel() {
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-2">
                   {astro.experienceInYears != null && (
                     <div className="flex items-center gap-0.5 sm:gap-1">
-                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#FF6B35]" />
+                      <Clock
+                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#FF6B35]"
+                        aria-hidden="true"
+                        focusable="false"
+                      />
                       <span>{astro.experienceInYears}+ years</span>
                     </div>
                   )}
 
                   {astro.languageKnown && (
                     <div className="flex items-center gap-0.5 sm:gap-1">
-                      <Languages className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#FF6B35]" />
+                      <Languages
+                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#FF6B35]"
+                        aria-hidden="true"
+                        focusable="false"
+                      />
                       <span className="truncate max-w-[100px]">
                         {astro.languageKnown.split(",").slice(0, 2).join(", ")}
                       </span>
@@ -244,6 +257,7 @@ export default function AstrologerCarousel() {
       >
         <Link href="/landing/astro">
           <motion.button
+            aria-label="See all astrologers"
             className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -253,7 +267,11 @@ export default function AstrologerCarousel() {
               animate={{ x: [0, 5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ArrowRight
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                aria-hidden="true"
+                focusable="false"
+              />
             </motion.div>
           </motion.button>
         </Link>

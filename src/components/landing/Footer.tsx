@@ -8,7 +8,10 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
+    <footer
+      className="bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800"
+      aria-label="Footer">
+
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
@@ -66,7 +69,11 @@ export default function Footer() {
                   className="w-9 h-9 sm:w-8 sm:h-8 bg-gray-100 dark:bg-gray-900 hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-gray-600 dark:text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition-all"
                   aria-label={label}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon
+                    className="w-4 h-4"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 </a>
               ))}
             </div>
@@ -128,7 +135,15 @@ export default function Footer() {
               © {currentYear} Gyani Talk. All rights reserved.
             </p>
             <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400">
-              Made with <span className="text-[#FF6B35]">❤️</span> for spiritual seekers
+              Made with{" "}
+              <span
+                className="text-[#FF6B35]"
+                role="img"
+                aria-label="love"
+              >
+                ❤️
+              </span>{" "}
+              for spiritual seekers
             </p>
           </div>
         </div>
