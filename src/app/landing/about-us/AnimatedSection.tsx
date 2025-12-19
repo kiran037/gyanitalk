@@ -134,10 +134,10 @@ export default function AnimatedSection({
   const controls = useAnimation();
   const shouldReduceMotion = useReducedMotion();
 
-const variants = createVariants(type, delay);
-const seedRef = useRef<number>(Date.now() + Math.random()); // stable per instance
-const seed = seedRef.current;
-const isLoopType = type === "particle" || type === "orb1" || type === "orb2";
+  const variants = createVariants(type, delay);
+  const seedRef = useRef<number>(Date.now() + Math.random()); // stable per instance
+  const seed = seedRef.current;
+  const isLoopType = type === "particle" || type === "orb1" || type === "orb2";
 
   // If user prefers reduced motion: no fancy anim, just show content
   if (shouldReduceMotion) {
@@ -149,33 +149,32 @@ const isLoopType = type === "particle" || type === "orb1" || type === "orb2";
   }
 
   // Looping background types: no intersection observer needed
-// Looping background types: no intersection observer needed
-if (isLoopType) {
-  const loopAnim = getLoopAnimate(type, seed, delay);
-  return (
-    <div ref={ref} style={{ display: "contents" }}>
-      <motion.div
-        initial="hidden"
-        animate={loopAnim}
-        variants={variants}
-        style={style}
-      >
-        {children}
-      </motion.div>
-    </div>
-  );
-}
+  if (isLoopType) {
+    const loopAnim = getLoopAnimate(type, seed, delay);
+    return (
+      <div style={{ display: "contents" }}>
+        <motion.div
+          initial="hidden"
+          animate={loopAnim}
+          variants={variants}
+          style={style}
+        >
+          {children}
+        </motion.div>
+      </div>
+    );
+  }
 
   // Normal one-time scroll-into-view animations
   useEffect(() => {
     const el = ref.current;
     if (!el) {
-      controls.start("visible").catch(() => {});
+      controls.start("visible").catch(() => { });
       return;
     }
 
     if (isInViewport(el)) {
-      controls.start("visible").catch(() => {});
+      controls.start("visible").catch(() => { });
       return;
     }
 
@@ -183,7 +182,7 @@ if (isLoopType) {
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            controls.start("visible").catch(() => {});
+            controls.start("visible").catch(() => { });
             observer.unobserve(el);
             break;
           }
@@ -195,7 +194,7 @@ if (isLoopType) {
     observer.observe(el);
 
     const fallback = window.setTimeout(() => {
-      controls.start("visible").catch(() => {});
+      controls.start("visible").catch(() => { });
     }, 4000 + delay * 1000);
 
     return () => {
@@ -205,7 +204,7 @@ if (isLoopType) {
   }, [controls, delay]);
 
   return (
-    <div ref={ref} style={{ display: "contents" }}>
+    <div style={{ display: "contents" }}>
       <motion.div
         initial="hidden"
         animate={controls}
