@@ -24,6 +24,7 @@ import Link from "next/link";
 import { avatar } from "@/lib/images";
 import { motion } from "framer-motion";
 
+
 interface Review {
   id: string;
   rating: number;
@@ -122,9 +123,9 @@ interface Props {
 export default function AstrologerDetailClient({ astrologer }: Props) {
   const router = useRouter();
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "reviews" | "availability">(
-    "about"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "about" | "reviews" | "availability"
+  >("about");
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -136,28 +137,59 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
   };
 
   const displayReviews = useMemo(
-    () => (showAllReviews ? astrologer.reviews : astrologer.reviews.slice(0, 5)),
-    [astrologer.reviews, showAllReviews]
+    () =>
+      showAllReviews ? astrologer.reviews : astrologer.reviews.slice(0, 5),
+    [astrologer.reviews, showAllReviews],
   );
+
+function redirectToAppStore() {
+  if (typeof window === "undefined") return;
+
+  const ua = navigator.userAgent || "";
+
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+
+  // 📱 Android → Play Store
+  if (isAndroid) {
+    window.location.href =
+      "https://play.google.com/store/apps/details?id=com.app.gyanitalk";
+    return;
+  }
+
+  // 📱 iOS → App Store
+  if (isIOS) {
+    window.location.href =
+      "https://apps.apple.com/in/app/gyanitalk/id6742021396";
+    return;
+  }
+
+  // 🖥 Desktop → open Play Store in new tab
+  window.open(
+    "https://play.google.com/store/apps/details?id=com.app.gyanitalk",
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
 
   return (
     <LandingWrapper>
       {/* Breadcrumb */}
-      <section className="pt-24 pb-4 px-4 sm:px-6 lg:px-8">
-        <div className="w-full mx-auto">
+      <section className="px-4 pb-4 pt-24 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full">
           <motion.nav
-            className="flex items-center gap-2 text-sm overflow-x-auto"
+            className="flex items-center gap-2 overflow-x-auto text-sm"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <Link
               href="/landing/astro"
-              className="text-gray-500 hover:text-[#FF6B35] transition-colors flex-shrink-0"
+              className="flex-shrink-0 text-gray-500 transition-colors hover:text-[#FF6B35]"
             >
               Astrologers
             </Link>
-            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-900 dark:text-white font-medium truncate">
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400" />
+            <span className="truncate font-medium text-gray-900 dark:text-white">
               {astrologer.name}
             </span>
           </motion.nav>
@@ -165,37 +197,37 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
       </section>
 
       {/* Hero Section */}
-      <section className="pb-6 px-4 sm:px-6 lg:px-8">
-        <div className="w-full mx-auto">
+      <section className="px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full">
           <motion.div
-            className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/60 dark:border-gray-800 rounded-2xl p-5 sm:p-6 shadow-sm"
+            className="rounded-2xl border border-gray-200/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-gray-800 dark:bg-white/5 sm:p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-center sm:items-start text-center sm:text-left">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-start sm:gap-6 sm:text-left">
               {/* Avatar */}
-              <div className="flex-shrink-0 relative">
+              <div className="relative flex-shrink-0">
                 {(astrologer.top_badge || astrologer.featured_badge) && (
-                  <div className="absolute -top-1 -right-1 flex flex-col gap-1 z-10">
+                  <div className="absolute -right-1 -top-1 z-10 flex flex-col gap-1">
                     {astrologer.top_badge && (
-                      <div className="px-1.5 py-0.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-[9px] font-bold rounded-full flex items-center gap-0.5 shadow-md">
-                        <Award className="w-2 h-2" />
+                      <div className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-md">
+                        <Award className="h-2 w-2" />
                         <span>TOP</span>
                       </div>
                     )}
                     {astrologer.featured_badge && (
-                      <div className="px-1.5 py-0.5 bg-purple-600 text-white text-[9px] font-bold rounded-full shadow-md">
+                      <div className="rounded-full bg-purple-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-md">
                         FEATURED
                       </div>
                     )}
                   </div>
                 )}
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#FFB347] blur-md opacity-40" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#FFB347] opacity-40 blur-md" />
                   <img
                     src={avatar(astrologer.profileImage)}
                     alt={astrologer.name}
-                    className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-white dark:ring-gray-900 shadow-lg"
+                    className="relative h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-white dark:ring-gray-900 sm:h-28 sm:w-28"
                     loading="eager"
                     width={112}
                     height={112}
@@ -204,9 +236,9 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
               </div>
 
               {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex items-center justify-center gap-2 sm:justify-start">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                     {astrologer.name}
                   </h1>
                   {astrologer.isVerified && (
@@ -216,33 +248,46 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                       aria-label="Verified"
                     />
                   )}
-                  <Sparkles className="w-4 h-4 text-[#FF6B35]" aria-hidden="true" />
+                  <Sparkles
+                    className="h-4 w-4 text-[#FF6B35]"
+                    aria-hidden="true"
+                  />
                 </div>
 
                 {/* Quick Stats */}
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <div className="mb-3 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-600 dark:text-gray-400 sm:justify-start sm:text-sm">
                   <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" aria-hidden="true" />
+                    <Star
+                      className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"
+                      aria-hidden="true"
+                    />
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {astrologer.avgRating ? astrologer.avgRating.toFixed(1) : "New"}
+                      {astrologer.avgRating
+                        ? astrologer.avgRating.toFixed(1)
+                        : "New"}
                     </span>
-                    <span className="text-gray-500">({astrologer.reviewsCount})</span>
+                    <span className="text-gray-500">
+                      ({astrologer.reviewsCount})
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                    <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>{astrologer.experienceInYears}y experience</span>
                   </div>
                   {astrologer.languageKnown && (
                     <div className="flex items-center gap-1">
-                      <Languages className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span className="truncate max-w-[160px]">
-                        {astrologer.languageKnown.split(",").slice(0, 2).join(", ")}
+                      <Languages className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className="max-w-[160px] truncate">
+                        {astrologer.languageKnown
+                          .split(",")
+                          .slice(0, 2)
+                          .join(", ")}
                       </span>
                     </div>
                   )}
                   {astrologer.currentCity && (
                     <div className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                      <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                       <span>{astrologer.currentCity}</span>
                     </div>
                   )}
@@ -250,14 +295,14 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
 
                 {/* Skills */}
                 {astrologer.allSkill && (
-                  <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 mb-4">
+                  <div className="mb-4 flex flex-wrap justify-center gap-1.5 sm:justify-start">
                     {astrologer.allSkill
                       .split(",")
                       .slice(0, 5)
                       .map((skill, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 bg-[#FF6B35]/8 text-[#FF6B35] text-[11px] font-medium rounded-full"
+                          className="bg-[#FF6B35]/8 rounded-full px-2 py-0.5 text-[11px] font-medium text-[#FF6B35]"
                         >
                           {skill.trim()}
                         </span>
@@ -266,19 +311,21 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                 )}
 
                 {/* CTA */}
-                <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-start">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl border border-gray-200/70 dark:border-gray-700/70">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <div className="flex items-center gap-2 rounded-xl border border-gray-200/70 bg-gray-50/80 px-3 py-2 dark:border-gray-700/70 dark:bg-gray-800/60">
                     <span className="text-xs text-gray-600 dark:text-gray-400">
                       Starts at
                     </span>
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
                       ₹{astrologer.charge}
-                      <span className="text-xs font-normal text-gray-500">/min</span>
+                      <span className="text-xs font-normal text-gray-500">
+                        /min
+                      </span>
                     </span>
                   </div>
                   <motion.button
-                    onClick={() => router.push("/")}
-                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white font-semibold rounded-xl shadow-lg text-sm"
+                    onClick={redirectToAppStore}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-5 py-2.5 text-sm font-semibold text-white shadow-lg sm:flex-initial"
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                     aria-label="Get app to consult with astrologer"
@@ -293,13 +340,17 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
       </section>
 
       {/* Tabs & Content */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8">
-        <div className="w-full mx-auto">
+      <section className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full">
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-1" role="tablist">
+          <div className="mb-6 flex gap-2 overflow-x-auto pb-1" role="tablist">
             {(["about", "reviews", "availability"] as const).map((tab) => {
-              if (tab === "reviews" && astrologer.reviews.length === 0) return null;
-              if (tab === "availability" && astrologer.availabilities.length === 0)
+              if (tab === "reviews" && astrologer.reviews.length === 0)
+                return null;
+              if (
+                tab === "availability" &&
+                astrologer.availabilities.length === 0
+              )
                 return null;
 
               const isActive = activeTab === tab;
@@ -308,10 +359,10 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                 <motion.button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-2xl font-medium text-sm whitespace-nowrap transition-all ${
+                  className={`whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-medium transition-all ${
                     isActive
                       ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"
-                      : "bg-white/70 dark:bg-white/5 border border-gray-200/70 dark:border-gray-700/70 text-gray-700 dark:text-gray-300"
+                      : "border border-gray-200/70 bg-white/70 text-gray-700 dark:border-gray-700/70 dark:bg-white/5 dark:text-gray-300"
                   }`}
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
@@ -332,16 +383,19 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
               {/* Bio */}
               {astrologer.loginBio && (
                 <motion.div
-                  className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
+                  className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                 >
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#FF6B35]" aria-hidden="true" />
+                  <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                    <BookOpen
+                      className="h-4 w-4 text-[#FF6B35]"
+                      aria-hidden="true"
+                    />
                     About
                   </h2>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     {astrologer.loginBio}
                   </p>
                 </motion.div>
@@ -349,61 +403,79 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
 
               {/* Service Rates */}
               <motion.div
-                className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
+                className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">
+                <h3 className="mb-3 text-base font-bold text-gray-900 dark:text-white">
                   Service Rates
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-[#FF6B35]" aria-hidden="true" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <MessageSquare
+                        className="h-3.5 w-3.5 text-[#FF6B35]"
+                        aria-hidden="true"
+                      />
                       <span className="text-xs font-semibold text-gray-900 dark:text-white">
                         Chat
                       </span>
                     </div>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       ₹{astrologer.charge}
-                      <span className="text-[10px] font-normal text-gray-500">/min</span>
+                      <span className="text-[10px] font-normal text-gray-500">
+                        /min
+                      </span>
                     </p>
                   </div>
 
-                  <div className="p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Phone className="w-3.5 h-3.5 text-[#FF6B35]" aria-hidden="true" />
+                  <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <Phone
+                        className="h-3.5 w-3.5 text-[#FF6B35]"
+                        aria-hidden="true"
+                      />
                       <span className="text-xs font-semibold text-gray-900 dark:text-white">
                         Call
                       </span>
                     </div>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       ₹{astrologer.charge}
-                      <span className="text-[10px] font-normal text-gray-500">/min</span>
+                      <span className="text-[10px] font-normal text-gray-500">
+                        /min
+                      </span>
                     </p>
                   </div>
 
                   {astrologer.videoCallRate && (
-                    <div className="p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Video className="w-3.5 h-3.5 text-[#FF6B35]" aria-hidden="true" />
+                    <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <Video
+                          className="h-3.5 w-3.5 text-[#FF6B35]"
+                          aria-hidden="true"
+                        />
                         <span className="text-xs font-semibold text-gray-900 dark:text-white">
                           Video
                         </span>
                       </div>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">
                         ₹{astrologer.videoCallRate}
-                        <span className="text-[10px] font-normal text-gray-500">/min</span>
+                        <span className="text-[10px] font-normal text-gray-500">
+                          /min
+                        </span>
                       </p>
                     </div>
                   )}
 
                   {astrologer.reportRate && (
-                    <div className="p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <BookOpen className="w-3.5 h-3.5 text-[#FF6B35]" aria-hidden="true" />
+                    <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <BookOpen
+                          className="h-3.5 w-3.5 text-[#FF6B35]"
+                          aria-hidden="true"
+                        />
                         <span className="text-xs font-semibold text-gray-900 dark:text-white">
                           Report
                         </span>
@@ -422,45 +494,52 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                 astrologer.college ||
                 astrologer.learnAstrology) && (
                 <motion.div
-                  className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
+                  className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#FF6B35]" aria-hidden="true" />
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                    <GraduationCap
+                      className="h-4 w-4 text-[#FF6B35]"
+                      aria-hidden="true"
+                    />
                     Education
                   </h3>
-                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                  <div className="grid gap-3 text-sm sm:grid-cols-2">
                     {astrologer.highestQualification && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Qualification</p>
-                        <p className="text-gray-900 dark:text-white font-medium">
+                        <p className="mb-0.5 text-xs text-gray-500">
+                          Qualification
+                        </p>
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {astrologer.highestQualification}
                         </p>
                       </div>
                     )}
                     {astrologer.degree && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Degree</p>
-                        <p className="text-gray-900 dark:text-white font-medium">
+                        <p className="mb-0.5 text-xs text-gray-500">Degree</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {astrologer.degree}
                         </p>
                       </div>
                     )}
                     {astrologer.college && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Institution</p>
-                        <p className="text-gray-900 dark:text-white font-medium">
+                        <p className="mb-0.5 text-xs text-gray-500">
+                          Institution
+                        </p>
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {astrologer.college}
                         </p>
                       </div>
                     )}
                     {astrologer.learnAstrology && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Training</p>
-                        <p className="text-gray-900 dark:text-white font-medium">
+                        <p className="mb-0.5 text-xs text-gray-500">Training</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {astrologer.learnAstrology}
                         </p>
                       </div>
@@ -471,32 +550,44 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
 
               {/* Stats */}
               <motion.div
-                className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
+                className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#FF6B35]" aria-hidden="true" />
+                <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                  <Users
+                    className="h-4 w-4 text-[#FF6B35]"
+                    aria-hidden="true"
+                  />
                   Statistics
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                   {[
-                    { value: astrologer.stats.followerCount, label: "Followers" },
+                    {
+                      value: astrologer.stats.followerCount,
+                      label: "Followers",
+                    },
                     { value: astrologer.stats.reviewCount, label: "Reviews" },
-                    { value: astrologer.stats.chatRequestCount, label: "Chats" },
-                    { value: astrologer.stats.callRequestCount, label: "Calls" },
+                    {
+                      value: astrologer.stats.chatRequestCount,
+                      label: "Chats",
+                    },
+                    {
+                      value: astrologer.stats.callRequestCount,
+                      label: "Calls",
+                    },
                     { value: astrologer.stats.orderCount, label: "Orders" },
                   ].map((stat, i) => (
                     <div
                       key={i}
-                      className="text-center p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl"
+                      className="rounded-xl bg-gray-50/80 p-3 text-center dark:bg-gray-800/60"
                     >
                       <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {stat.value}
                       </p>
-                      <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">
+                      <p className="mt-0.5 text-[10px] text-gray-600 dark:text-gray-400">
                         {stat.label}
                       </p>
                     </div>
@@ -506,35 +597,35 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
 
               {/* What I Do / Why I'm Here */}
               {(astrologer.whatwillDo || astrologer.whyOnBoard) && (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {astrologer.whatwillDo && (
                     <motion.div
-                      className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-4"
+                      className="rounded-2xl border border-gray-200/70 bg-white/70 p-4 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                       viewport={{ once: true }}
                     >
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+                      <h4 className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
                         What I Do
                       </h4>
-                      <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300">
                         {astrologer.whatwillDo}
                       </p>
                     </motion.div>
                   )}
                   {astrologer.whyOnBoard && (
                     <motion.div
-                      className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-4"
+                      className="rounded-2xl border border-gray-200/70 bg-white/70 p-4 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                       viewport={{ once: true }}
                     >
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+                      <h4 className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
                         Why I'm Here
                       </h4>
-                      <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300">
                         {astrologer.whyOnBoard}
                       </p>
                     </motion.div>
@@ -547,21 +638,21 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
           {/* REVIEWS TAB */}
           {activeTab === "reviews" && astrologer.reviews.length > 0 && (
             <motion.div
-              className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
+              className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               role="tabpanel"
               id="reviews-panel"
             >
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">
+              <h2 className="mb-5 text-lg font-bold text-gray-900 dark:text-white">
                 Customer Reviews ({astrologer.reviewsCount})
               </h2>
               <div className="space-y-4">
                 {displayReviews.map((review, index) => (
                   <motion.div
                     key={review.id}
-                    className="pb-4 border-b border-gray-200/60 dark:border-gray-700/60 last:border-0 last:pb-0"
+                    className="border-b border-gray-200/60 pb-4 last:border-0 last:pb-0 dark:border-gray-700/60"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
@@ -570,37 +661,42 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                       <img
                         src={avatar(review.user?.profile)}
                         alt={review.user?.name || "User"}
-                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
                         loading="lazy"
                         width={40}
                         height={40}
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <h4 className="font-semibold text-sm text-gray-900 dark:text-white">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                             {review.user?.name || "Anonymous User"}
                           </h4>
                           <div className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" aria-hidden="true" />
-                            <span className="font-semibold text-xs text-gray-900 dark:text-white">
+                            <Star
+                              className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"
+                              aria-hidden="true"
+                            />
+                            <span className="text-xs font-semibold text-gray-900 dark:text-white">
                               {review.rating}
                             </span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 leading-relaxed">
+                        <p className="mb-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                           {review.review}
                         </p>
                         {review.reply && (
-                          <div className="mt-2 pl-3 border-l-2 border-[#FF6B35] bg-gray-50/80 dark:bg-gray-800/60 p-2.5 rounded-r-lg">
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              <span className="font-semibold text-[#FF6B35]">Reply:</span>
+                          <div className="mt-2 rounded-r-lg border-l-2 border-[#FF6B35] bg-gray-50/80 p-2.5 pl-3 dark:bg-gray-800/60">
+                            <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                              <span className="font-semibold text-[#FF6B35]">
+                                Reply:
+                              </span>
                             </p>
                             <p className="text-xs text-gray-700 dark:text-gray-300">
                               {review.reply}
                             </p>
                           </div>
                         )}
-                        <p className="text-[10px] text-gray-500 mt-1.5">
+                        <p className="mt-1.5 text-[10px] text-gray-500">
                           {formatDate(review.created_at)}
                         </p>
                       </div>
@@ -611,7 +707,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
               {astrologer.reviews.length > 5 && (
                 <motion.button
                   onClick={() => setShowAllReviews(!showAllReviews)}
-                  className="mt-4 w-full py-2.5 text-sm text-[#FF6B35] font-semibold hover:bg-gray-50 dark:hover:bg-gray-800/60 rounded-lg transition-colors"
+                  className="mt-4 w-full rounded-lg py-2.5 text-sm font-semibold text-[#FF6B35] transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-expanded={showAllReviews}
@@ -625,52 +721,53 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
           )}
 
           {/* AVAILABILITY TAB */}
-          {activeTab === "availability" && astrologer.availabilities.length > 0 && (
-            <motion.div
-              className="bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-2xl p-5"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              role="tabpanel"
-              id="availability-panel"
-            >
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-4 h-4" aria-hidden="true" />
-                Weekly Schedule
-              </h2>
-              <div className="space-y-2">
-                {astrologer.availabilities.map((avail, index) => (
-                  <motion.div
-                    key={avail.id}
-                    className="flex items-center justify-between p-3 bg-gray-50/80 dark:bg-gray-800/60 rounded-lg text-sm"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      {avail.day}
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {avail.fromTime && avail.toTime
-                        ? `${avail.fromTime} - ${avail.toTime}`
-                        : "Not Available"}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {activeTab === "availability" &&
+            astrologer.availabilities.length > 0 && (
+              <motion.div
+                className="rounded-2xl border border-gray-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-800 dark:bg-white/5"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                role="tabpanel"
+                id="availability-panel"
+              >
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
+                  Weekly Schedule
+                </h2>
+                <div className="space-y-2">
+                  {astrologer.availabilities.map((avail, index) => (
+                    <motion.div
+                      key={avail.id}
+                      className="flex items-center justify-between rounded-lg bg-gray-50/80 p-3 text-sm dark:bg-gray-800/60"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {avail.day}
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {avail.fromTime && avail.toTime
+                          ? `${avail.fromTime} - ${avail.toTime}`
+                          : "Not Available"}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
         </div>
       </section>
 
       {/* Back Button */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8">
-        <div className="w-full mx-auto text-center">
+      <section className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full text-center">
           <Link
             href="/landing/astro"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white/70 dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-gray-800/60 backdrop-blur-xl border border-gray-200/70 dark:border-gray-800 rounded-xl font-medium text-gray-900 dark:text-white transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200/70 bg-white/70 px-6 py-3 font-medium text-gray-900 backdrop-blur-xl transition-all hover:scale-105 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/5 dark:text-white dark:hover:bg-gray-800/60"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Astrologers
           </Link>
         </div>

@@ -82,6 +82,11 @@ interface RelatedCourse {
 
 /* ================= COMPONENT ================= */
 
+const PLAY_STORE_URL =
+  "https://play.google.com/store/apps/details?id=com.app.gyanitalk&pcampaignid=web_share";
+const APP_STORE_URL =
+  "https://apps.apple.com/in/app/gyanitalk/id6742021396";
+
 export default function CourseDetailClient({
   course,
   relatedCourses,
@@ -100,6 +105,36 @@ export default function CourseDetailClient({
   const toggleChapter = (chapterId: number) => {
     setExpandedChapter((prev) => (prev === chapterId ? null : chapterId));
   };
+
+function redirectToAppStore() {
+  if (typeof window === "undefined") return;
+
+  const ua = navigator.userAgent || "";
+
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+
+  // 📱 Android → Play Store
+  if (isAndroid) {
+    window.location.href =
+      "https://play.google.com/store/apps/details?id=com.app.gyanitalk";
+    return;
+  }
+
+  // 📱 iOS → App Store
+  if (isIOS) {
+    window.location.href =
+      "https://apps.apple.com/in/app/gyanitalk/id6742021396";
+    return;
+  }
+
+  // 🖥 Desktop → open Play Store in new tab
+  window.open(
+    "https://play.google.com/store/apps/details?id=com.app.gyanitalk",
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
 
   return (
     <>
@@ -353,7 +388,7 @@ export default function CourseDetailClient({
                     </div>
 
                     <motion.button
-                      onClick={() => setShowEnrollPopup(true)}
+                      onClick={redirectToAppStore}
                       aria-label={`Enroll in ${course.name}`}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-6 py-3 text-sm font-bold text-white shadow-lg sm:w-auto sm:px-8 sm:py-4 sm:text-base"
                       whileHover={{
@@ -562,7 +597,7 @@ export default function CourseDetailClient({
                           materials
                         </p>
                         <motion.button
-                          onClick={() => setShowEnrollPopup(true)}
+                          onClick={redirectToAppStore}
                           aria-label={`Enroll in ${course.name}`}
                           className="w-full rounded-xl bg-white py-3 text-sm font-bold text-[#FF6B35] sm:text-base"
                           whileHover={{ scale: 1.05 }}

@@ -100,7 +100,7 @@ const getPageData = cache(async (): Promise<PageData | null> => {
         image: page.ogImage || null,
         url:
           (process.env.NEXT_PUBLIC_BASEURL ||
-            process.env.NEXT_PUBLIC_BASE_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
             "") +
           (page.slug ? `/landing/${page.slug}` : `/landing/about-us`),
       },
