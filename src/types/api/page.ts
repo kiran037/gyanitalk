@@ -1,6 +1,6 @@
 // types/api/page.ts
 
-import { pages_type } from '@prisma/client';
+import { pages_type } from "@/generated/client/client";
 
 /**
  * Main API response structure for page data

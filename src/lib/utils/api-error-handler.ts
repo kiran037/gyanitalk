@@ -1,7 +1,7 @@
 // lib/utils/api-error-handler.ts
 
 import { NextResponse } from 'next/server';
-import { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 import { ErrorResponse } from '@/types/api/page';
 
 /**

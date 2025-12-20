@@ -1,7 +1,7 @@
 // app/api/landing/home/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 
 export async function GET() {
   try {

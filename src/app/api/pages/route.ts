@@ -1,7 +1,7 @@
 // app/api/pages/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 
 
 // GET /api/pages - List all pages with filters

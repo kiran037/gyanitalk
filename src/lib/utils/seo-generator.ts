@@ -1,6 +1,6 @@
 // lib/utils/seo-generator.ts
 
-import { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 import { SEOMetadata, OpenGraphData, TwitterCardData } from '@/types/api/page';
 import { SITE_CONFIG, DEFAULT_SEO, PAGE_SPECIFIC_SEO } from '@/lib/constants/seo';
 
