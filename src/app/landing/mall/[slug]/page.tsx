@@ -2,8 +2,10 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductClient from "@/components/landing/ProductClient";
 
+/* ================= TYPES ================= */
+
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 /* ================= DATA FETCH ================= */
@@ -27,7 +29,9 @@ async function getProductData(slug: string) {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const data = await getProductData(params.slug);
+  const { slug } = await params;
+
+  const data = await getProductData(slug);
   if (!data?.seo) return {};
 
   const seo = data.seo;
@@ -70,7 +74,7 @@ export async function generateMetadata({
             },
           ]
         : undefined,
-      type: "website", // ✅ Next.js allowed value
+      type: "website", // ✅ allowed by Next.js
     },
 
     twitter: {
@@ -85,7 +89,9 @@ export async function generateMetadata({
 /* ================= PAGE ================= */
 
 export default async function ProductPage({ params }: PageProps) {
-  const data = await getProductData(params.slug);
+  const { slug } = await params;
+
+  const data = await getProductData(slug);
 
   if (!data) notFound();
 
