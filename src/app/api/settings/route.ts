@@ -1,9 +1,6 @@
 // app/api/settings/route.ts
-// Overview/Dashboard endpoint for settings
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // GET - Fetch settings overview/statistics
 export async function GET(req: NextRequest) {

@@ -1,7 +1,7 @@
 // app/api/pages/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import type { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 
 
 // GET /api/pages - List all pages with filters
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get all possible page types (match Prisma enum)
-    const allTypes: pages_type[] = ['privacy', 'terms', 'aboutus'];
+    const allTypes = Object.values(pages_type);
 
     // Existing types from DB, filter out null safely
     const existingTypes = pages
@@ -101,17 +101,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if type is valid
-    const validTypes = ['privacy', 'terms', 'aboutus'];
-    if (!validTypes.includes(type)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Invalid type. Must be one of: ${validTypes.join(', ')}`,
-        },
-        { status: 400 }
-      );
-    }
+if (!Object.values(pages_type).includes(type)) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: `Invalid type. Must be one of: ${Object.values(pages_type).join(', ')}`,
+    },
+    { status: 400 }
+  );
+}
 
     // Check if page with this type already exists
     const existingPage = await prisma.pages.findFirst({

@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { pages_type } from "@prisma/client";
+import { cache } from "react";
 
 interface PageData {
   page: {
@@ -48,7 +49,7 @@ interface PageData {
   };
 }
 
-async function getPageData(): Promise<PageData | null> {
+const getPageData = cache(async (): Promise<PageData | null> => {
   try {
     const page = await prisma.pages.findFirst({
       where: {
@@ -145,7 +146,7 @@ async function getPageData(): Promise<PageData | null> {
     console.error("getPageData error (prisma):", err);
     return null;
   }
-}
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const pageData = await getPageData();
@@ -160,6 +161,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: pageData.seo.title,
     description: pageData.seo.metaDescription,
+    robots: {
+      index: true,
+      follow: true,
+    },
     keywords: pageData.seo.metaKeywords,
     alternates: {
       canonical: pageData.seo.canonicalUrl,
@@ -214,7 +219,7 @@ export default async function TermsOfServicePage() {
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="mb-6 sm:mb-8">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-[#FF6B35]/10 dark:bg-white/10 border border-[#FF6B35]/20 dark:border-white/20 backdrop-blur-md text-[#FF6B35] dark:text-[#FF8C61] rounded-full text-xs sm:text-sm font-semibold mb-4 shadow-sm">
-              <FileText className="w-4 h-4" />
+              <FileText className="w-4 h-4" aria-hidden="true" />
               LEGAL
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
@@ -227,7 +232,7 @@ export default async function TermsOfServicePage() {
             </p>
             {pageData && (
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 mt-3">
-                Last updated: {pageData.computed.lastModified}
+                Last updated: {new Date(pageData.computed.lastModified).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -263,7 +268,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4 mb-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8C61] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -290,7 +295,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FFB347] to-[#FFCC80] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -315,7 +320,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF6B35] to-[#FFB347] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -332,7 +337,7 @@ export default async function TermsOfServicePage() {
                           key={i}
                           className="flex items-center gap-2 p-2.5 sm:p-3 bg-white/70 dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-lg"
                         >
-                          <CheckCircle className="w-4 h-4 text-[#FF6B35] dark:text-[#FF8C61] flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-[#FF6B35] dark:text-[#FF8C61] flex-shrink-0" aria-hidden="true" />
                           <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                             {service}
                           </span>
@@ -348,7 +353,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF8C61] to-[#FFB347] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -368,7 +373,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FFB347] to-[#FF6B35] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -398,7 +403,7 @@ export default async function TermsOfServicePage() {
             <div className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-sm sm:shadow-lg">
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8C61] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -411,7 +416,7 @@ export default async function TermsOfServicePage() {
                     href="mailto:gyanitalksapp@gmail.com"
                     className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:from-[#FF5722] hover:to-[#FF6B35] text-white text-sm sm:text-base font-semibold rounded-xl shadow-md hover:shadow-xl hover:shadow-[#FF6B35]/40 transition-all"
                   >
-                    <Mail className="w-4 h-4" />
+                    <Mail className="w-4 h-4" aria-hidden="true" />
                     gyanitalksapp@gmail.com
                   </a>
                 </div>
@@ -434,7 +439,7 @@ export default async function TermsOfServicePage() {
                 href="/landing/home"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/20 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/20 transition-all text-xs sm:text-sm font-medium shadow-sm"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                 Back to Home
               </Link>
             </div>

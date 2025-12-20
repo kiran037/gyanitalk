@@ -1,6 +1,6 @@
 // lib/constants/seo.ts
 
-import { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 import { SiteConfig, PageSEOConfig } from '@/types/api/page';
 
 /**

@@ -1,7 +1,7 @@
 // app/api/landing/pages/[type]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // <-- use singleton
-import { pages_type } from '@prisma/client';
+import { pages_type } from '@/generated/client/client';
 import { generateSEOMetadata } from '@/lib/utils/seo-generator';
 import { analyzeContent } from '@/lib/utils/content-analyzer';
 import { handleNotFound, handleServerError } from '@/lib/utils/api-error-handler';

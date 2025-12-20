@@ -94,7 +94,9 @@ export default function ProductCarousel() {
     if (!products.length) return null;
 
     return (
-        <section className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
+        <section
+            aria-labelledby="featured-products-heading"
+            className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
             <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
@@ -109,7 +111,10 @@ export default function ProductCarousel() {
                             FEATURED PRODUCTS
                         </span>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">
+                    <h2
+                        id="featured-products-heading"
+                        className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3"
+                    >
                         <span className="text-gray-900 dark:text-white">Shop from </span>
                         <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
                             AstroMall
@@ -124,7 +129,8 @@ export default function ProductCarousel() {
             {/* Marquee container */}
             <div className="relative w-full overflow-hidden">
                 <motion.div
-                    className="inline-flex gap-3 sm:gap-4 md:gap-5 py-2 whitespace-nowrap will-change-transform"
+                    className={`inline-flex gap-3 sm:gap-4 md:gap-5 py-2 whitespace-nowrap ${shouldReduceMotion ? "" : "will-change-transform"
+                        }`}
                     animate={
                         shouldReduceMotion
                             ? {}
@@ -151,9 +157,12 @@ export default function ProductCarousel() {
                             className="flex-shrink-0 w-[260px] xs:w-[280px] sm:w-[320px] md:w-[360px] group inline-block"
                         >
                             <motion.div
-                                whileHover={{ scale: 1.02, y: -4 }}
+                                whileHover={
+                                    shouldReduceMotion
+                                        ? undefined
+                                        : { scale: 1.02, y: -4 }
+                                }
                                 transition={{ duration: 0.2 }}
-                                className="h-full"
                             >
                                 <div className="bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black rounded-2xl overflow-hidden h-full shadow-md sm:shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-700 hover:border-[#FF6B35]/50 dark:hover:border-[#FF6B35]/50 transition-all">
                                     {/* Product Image */}
@@ -177,7 +186,7 @@ export default function ProductCarousel() {
                                                     transition={{ delay: 0.15 }}
                                                     className="px-2.5 py-1 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
                                                 >
-                                                    <Star className="w-3 h-3 fill-white" />
+                                                    <Star className="w-3 h-3 fill-white" aria-hidden="true" focusable="false" />
                                                     <span>BESTSELLER</span>
                                                 </motion.div>
                                             )}
@@ -188,7 +197,7 @@ export default function ProductCarousel() {
                                                     transition={{ delay: 0.2 }}
                                                     className="px-2.5 py-1 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
                                                 >
-                                                    <Sparkles className="w-3 h-3" />
+                                                    <Sparkles className="w-3 h-3" aria-hidden="true" focusable="false" />
                                                     <span>FEATURED</span>
                                                 </motion.div>
                                             )}
@@ -219,7 +228,11 @@ export default function ProductCarousel() {
                                         {/* Features Preview */}
                                         {product.features && (
                                             <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-500">
-                                                <Package className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#FF6B35]" />
+                                                <Package
+                                                    className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#FF6B35]"
+                                                    aria-hidden="true"
+                                                    focusable="false"
+                                                />
                                                 <p className="line-clamp-2 leading-relaxed">
                                                     {stripHtml(product.features).slice(0, 100)}…
                                                 </p>
@@ -252,7 +265,7 @@ export default function ProductCarousel() {
                             animate={{ x: [0, 5, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity }}
                         >
-                            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" focusable="false" />
                         </motion.div>
                     </motion.button>
                 </Link>

@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"              
+  output   = "../src/generated/client"    
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 
@@ -1427,6 +1427,8 @@ model pages {
   isActive    Boolean?    @default(true)
   created_at  DateTime    @default(now()) @db.Timestamp(0)
   updated_at  DateTime    @default(now()) @db.Timestamp(0)
+
+  @@unique([type])
 }
 
 
@@ -2144,6 +2146,11 @@ enum pages_type {
   privacy
   terms
   aboutus
+  home
+  mall
+  astrologers
+  courses
+  blogs
 }
 
 enum coupons_discount_type {

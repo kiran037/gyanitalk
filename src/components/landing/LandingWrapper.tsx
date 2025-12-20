@@ -9,7 +9,10 @@ interface LandingWrapperProps {
   menuItems?: Array<{ label: string; href: string }>;
 }
 
-export default function LandingWrapper({ children, menuItems }: LandingWrapperProps) {
+export default function LandingWrapper({
+  children,
+  menuItems,
+}: LandingWrapperProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [hydrated, setHydrated] = useState(false);
 
@@ -17,14 +20,15 @@ export default function LandingWrapper({ children, menuItems }: LandingWrapperPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
+    const savedTheme =
+      (localStorage.getItem("theme") as "light" | "dark") || "light";
 
     setTheme(savedTheme);
     document.documentElement.classList.toggle("dark", savedTheme === "dark");
     setHydrated(true);
   }, []);
 
-  // Sync theme changes to DOM + storage
+  // Sync theme changes
   useEffect(() => {
     if (!hydrated) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -35,42 +39,26 @@ export default function LandingWrapper({ children, menuItems }: LandingWrapperPr
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
+  // ⛔ Prevent layout shift before hydration
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black" aria-hidden="true" />
+    );
+  }
+
   return (
     <div className={theme === "dark" ? "dark" : ""}>
       <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-950 dark:via-black dark:to-gray-900 transition-colors duration-300 min-h-screen">
+        {/* Header = banner landmark */}
         <Header theme={theme} toggleTheme={toggleTheme} menuItems={menuItems} />
 
-        {/* Add padding-top so content doesn't sit under fixed header */}
-        
+        {/* ✅ MAIN LANDMARK (important for Lighthouse a11y) */}
+        <main id="main-content" role="main" className="pt-16">
           {children}
-      
+        </main>
 
+        {/* Footer = contentinfo landmark */}
         <Footer />
-
-        {/* Global tiny helpers */}
-        <style jsx global>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-          }
-
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-
-          .animate-float-delayed {
-            animation: float 3s ease-in-out infinite;
-            animation-delay: 1.5s;
-          }
-
-          * {
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          html {
-            scroll-behavior: smooth;
-          }
-        `}</style>
       </div>
     </div>
   );

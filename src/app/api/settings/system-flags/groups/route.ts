@@ -1,8 +1,6 @@
 // app/api/settings/system-flags/groups/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // GET - Fetch all flag groups with flag counts
 export async function GET(req: NextRequest) {

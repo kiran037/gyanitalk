@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { pages_type } from "@prisma/client";
+import { cache } from "react";
 
 interface PageData {
   page: {
@@ -50,7 +51,7 @@ interface PageData {
 }
 
 // server-side DB fetch
-async function getPageData(): Promise<PageData | null> {
+const getPageData = cache(async (): Promise<PageData | null> => {
   try {
     const page = await prisma.pages.findFirst({
       where: {
@@ -154,7 +155,7 @@ async function getPageData(): Promise<PageData | null> {
     console.error("getPageData error (prisma):", err);
     return null;
   }
-}
+});
 
 // Server-side generateMetadata using DB
 export async function generateMetadata(): Promise<Metadata> {
@@ -171,6 +172,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: pageData.seo.title,
     description: pageData.seo.metaDescription,
+    robots: {
+  index: true,
+  follow: true,
+},
     keywords: pageData.seo.metaKeywords,
     alternates: { canonical: pageData.seo.canonicalUrl },
     openGraph: {
@@ -223,7 +228,7 @@ export default async function PrivacyPolicyPage() {
         <div className="relative z-10 max-w-4xl mx-auto">
           <div className="text-center mb-8 sm:mb-10">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-[#FF6B35]/10 dark:bg-white/10 border border-[#FF6B35]/20 dark:border-white/20 backdrop-blur-md text-[#FF6B35] dark:text-[#FF8C61] rounded-full text-xs sm:text-sm font-semibold mb-4 shadow-sm">
-              <Shield className="w-4 h-4" />
+              <Shield className="w-4 h-4" aria-hidden="true" />
               YOUR PRIVACY MATTERS
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
@@ -236,7 +241,7 @@ export default async function PrivacyPolicyPage() {
             </p>
             {pageData && (
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 mt-3">
-                Last updated: {pageData.computed.lastModified}
+                Last updated: {new Date(pageData.computed.lastModified).toLocaleDateString()}
               </p>
             )}
           </div>
