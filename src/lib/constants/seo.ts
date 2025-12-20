@@ -3,10 +3,7 @@
 import { pages_type } from '@/generated/client/client';
 import { SiteConfig, PageSEOConfig } from '@/types/api/page';
 
-/**
- * Site-wide configuration
- * Update these values according to your environment variables
- */
+
 export const SITE_CONFIG: SiteConfig = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME || 'GyanITalk',
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://gyanitalk.com',
