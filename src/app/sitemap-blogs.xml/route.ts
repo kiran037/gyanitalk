@@ -10,15 +10,20 @@ export async function GET() {
     select: { slug: true, updated_at: true },
   });
 
-  const urls = blogs.map(
-    (b) => `
+  const urls = blogs
+    .map((b) => {
+      const lastmod = (b.updated_at ?? new Date())
+        .toISOString(); // YYYY-MM-DD (Google recommended)
+
+      return `
   <url>
     <loc>${BASE_URL}/landing/blog/${b.slug}</loc>
-    <lastmod>${b.updated_at?.toISOString()}</lastmod>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>`
-  ).join("");
+  </url>`;
+    })
+    .join('');
 
   return new NextResponse(
     `<?xml version="1.0" encoding="UTF-8"?>
