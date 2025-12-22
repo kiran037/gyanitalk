@@ -270,7 +270,7 @@ if (search) {
           "position": skip + index + 1,
           "item": {
             "@type": "Person",
-            "@id": `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_BASEURL || 'https://yourdomain.com'}/landing/astro/${astro.slug || astro.id}`,
+            "@id": `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASEURL || 'https://yourdomain.com'}/landing/astro/${astro.slug || astro.id}`,
             "name": astro.name,
             "image": astro.profileImage,
             "description": astro.loginBio || `Expert astrologer specializing in ${astro.primarySkill}`,

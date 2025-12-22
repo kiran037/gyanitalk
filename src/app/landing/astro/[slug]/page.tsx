@@ -11,7 +11,7 @@ interface PageProps {
 // Fetch astrologer data on server
 async function getAstrologer(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/landing/astro/${slug}`, {
       next: { revalidate: 3600 }, // Revalidate every hour
     });
