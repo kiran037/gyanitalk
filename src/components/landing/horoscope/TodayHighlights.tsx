@@ -65,6 +65,15 @@ export default function TodayHighlights() {
     fetchHighlights();
   }, []);
 
+  const titleCase = (text?: string) =>
+    text
+      ? text
+          .toLowerCase()
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      : "";
+
   if (loading) {
     return (
       <motion.div
@@ -144,7 +153,9 @@ export default function TodayHighlights() {
                 />
                 <span>
                   Lucky Color:{" "}
-                  <strong>{data.highlights.signOfTheDay.luckyColor}</strong>
+                  <strong>
+                    {titleCase(data.highlights.signOfTheDay.luckyColor)}
+                  </strong>
                 </span>
               </div>
               <div className="flex items-center gap-1.5">

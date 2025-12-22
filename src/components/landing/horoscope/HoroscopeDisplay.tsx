@@ -110,6 +110,9 @@ export default function HoroscopeDisplay({
     });
   };
 
+  const capitalize = (text?: string) =>
+  text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+
   const formatDateRange = (start?: string, end?: string) => {
     if (!start || !end) return "";
 
@@ -255,31 +258,33 @@ export default function HoroscopeDisplay({
           {data.summary.botResponse}
         </p>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
-            <div className="mb-1 text-xs text-gray-600 dark:text-gray-400">
-              Lucky Color
+        {horoscopeType !== "yearly" && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+              <div className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                Lucky Color
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-5 w-5 rounded-full ring-2 ring-white dark:ring-gray-800"
+                  style={{ backgroundColor: data.summary.luckyColorCode }}
+                />
+               <span className="font-semibold text-gray-900 dark:text-white">
+  {capitalize(data.summary.luckyColor)}
+</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="h-5 w-5 rounded-full ring-2 ring-white dark:ring-gray-800"
-                style={{ backgroundColor: data.summary.luckyColorCode }}
-              />
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {data.summary.luckyColor}
-              </span>
-            </div>
-          </div>
 
-          <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
-            <div className="mb-1 text-xs text-gray-600 dark:text-gray-400">
-              Lucky Numbers
-            </div>
-            <div className="font-semibold text-gray-900 dark:text-white">
-              {data.summary.luckyNumber}
+            <div className="rounded-xl bg-gray-50/80 p-3 dark:bg-gray-800/60">
+              <div className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                Lucky Numbers
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white">
+                {data.summary.luckyNumber}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </motion.div>
       {/* Aspects Grid */}
       <div
