@@ -17,7 +17,8 @@ interface HighlightsData {
     signOfTheDay: {
       zodiac: string;
       score: number;
-      luckyColor: string;
+      luckyColor: string; // "Red"
+      luckyColorCode: string; // "#FF0000"
       luckyNumber: string;
       message: string;
     };
@@ -88,7 +89,7 @@ export default function TodayHighlights() {
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
           <Star className="h-5 w-5 text-[#FF6B35]" />
-          Today's Cosmic Highlights
+          Today's Horoscope Highlights
         </h2>
         <div className="text-sm text-gray-600 dark:text-gray-400">
           {new Date(data.date).toLocaleDateString("en-US", {
@@ -136,13 +137,22 @@ export default function TodayHighlights() {
               <div className="flex items-center gap-1.5">
                 <div
                   className="h-4 w-4 rounded-full ring-2 ring-white dark:ring-gray-800"
-                  style={{ backgroundColor: data.highlights.signOfTheDay.luckyColor }}
+                  style={{
+                    backgroundColor:
+                      data.highlights.signOfTheDay.luckyColorCode,
+                  }}
                 />
-                <span>Lucky Color</span>
+                <span>
+                  Lucky Color:{" "}
+                  <strong>{data.highlights.signOfTheDay.luckyColor}</strong>
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>{data.highlights.signOfTheDay.luckyNumber}</span>
+                <span>
+                  Lucky Number:{" "}
+                  <strong>{data.highlights.signOfTheDay.luckyNumber}</strong>
+                </span>
               </div>
             </div>
           </div>
@@ -231,16 +241,21 @@ export default function TodayHighlights() {
             if (signs.length === 0) return null;
 
             const colors = {
-              excellent: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20",
-              veryGood: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+              excellent:
+                "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+              veryGood:
+                "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
               good: "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20",
               fair: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20",
-              challenging: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20",
+              challenging:
+                "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20",
             };
 
             return (
               <div key={category} className="flex items-start gap-3">
-                <span className={`rounded-lg px-2 py-1 text-xs font-bold capitalize ${colors[category as keyof typeof colors]}`}>
+                <span
+                  className={`rounded-lg px-2 py-1 text-xs font-bold capitalize ${colors[category as keyof typeof colors]}`}
+                >
                   {category.replace(/([A-Z])/g, " $1").trim()}
                 </span>
                 <div className="flex flex-wrap gap-1.5">

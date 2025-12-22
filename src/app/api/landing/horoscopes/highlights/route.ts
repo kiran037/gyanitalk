@@ -44,7 +44,9 @@ export async function GET(req: NextRequest) {
     const langcode = searchParams.get("lang") || "en";
     const aspect = searchParams.get("aspect");
 
-    const targetDate = dateParam ? new Date(dateParam) : null;
+    const targetDate = dateParam
+      ? new Date(`${dateParam}T00:00:00Z`)
+      : null;
 
     /* ---------- fetch daily horoscopes ---------- */
     const horoscopes = await Promise.all(
@@ -109,8 +111,14 @@ export async function GET(req: NextRequest) {
         .slice(0, 3);
     });
 
-    let aspectHighlight: any = null;
-    if (aspect && aspect in aspectScores) {
+    let aspectHighlight:
+      | {
+        aspect: string;
+        topSigns: { zodiac: string; score: number }[];
+        average: number;
+      }
+      | null = null;
+    if (aspect && ASPECT_KEYS.includes(aspect as any)) {
       const list = aspectScores[aspect as keyof typeof aspectScores];
       aspectHighlight = {
         aspect,
@@ -146,6 +154,7 @@ export async function GET(req: NextRequest) {
           zodiac: bestSign.zodiac,
           score: bestSign.total_score,
           luckyColor: bestSign.lucky_color,
+          luckyColorCode: bestSign.lucky_color_code,
           luckyNumber: bestSign.lucky_number,
           message: "Today is your day to shine!",
         },
@@ -159,6 +168,7 @@ export async function GET(req: NextRequest) {
         zodiac: h.zodiac,
         score: h.total_score,
         luckyColor: h.lucky_color,
+        luckyColorCode: h.lucky_color_code,
       })),
       bottomThree: sorted.slice(-3).reverse().map((h) => ({
         zodiac: h.zodiac,
