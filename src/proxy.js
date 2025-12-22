@@ -11,6 +11,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/landing/astro",
   "/landing/mall",
   "/landing/courses",
+  "/landing/horoscope"
 ];
 
 const PUBLIC_EXACT_ROUTES = ["/", "/sign-in"];

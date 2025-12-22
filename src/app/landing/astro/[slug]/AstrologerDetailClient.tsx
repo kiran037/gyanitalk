@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/landing/astro/[slug]/AstrologerDetailClient.tsx
 "use client";
 
 import { useState, useMemo } from "react";
