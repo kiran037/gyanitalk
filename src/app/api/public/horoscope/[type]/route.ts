@@ -31,13 +31,15 @@ export async function GET(
     }
 
     const apiKey = systemFlag.value;
-    const languages = ['en', 'hi', 'be', 'mr'];
+    const languages = ['en', 'hi', 'be', 'mr','ka','ta','te','ml','gu','pa'];
 
     const today = new Date();
     const currDate = today.toISOString().split('T')[0]; // yyyy-mm-dd
     const currDateDDMMYYYY = today.toLocaleDateString('en-GB'); // dd/mm/yyyy
     const { start: weekStartDate, end: weekEndDate } = getWeekRange();
     // 🔁 Zodiac loop
+    let yearlyStartDate: Date | null = null;
+    let yearlyEndDate: Date | null = null;
     for (let zodiac = 1; zodiac <= 12; zodiac++) {
       for (const lang of languages) {
 
@@ -157,8 +159,6 @@ export async function GET(
 
           const json = await res.json();
           if (!json?.response) continue;
-          let yearlyStartDate: Date | null = null;
-          let yearlyEndDate: Date | null = null;
           for (const [, rawValue] of Object.entries(json.response)) {
             const value: any = rawValue;
 
