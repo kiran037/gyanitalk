@@ -11,9 +11,21 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/landing/astro",
   "/landing/mall",
   "/landing/courses",
+  "/landing/horoscope",
 ];
 
-const PUBLIC_EXACT_ROUTES = ["/", "/sign-in"];
+const PUBLIC_EXACT_ROUTES = [
+  "/",
+  "/sign-in",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/sitemap-static.xml",
+  "/sitemap-blogs.xml",
+  "/sitemap-courses.xml",
+  "/sitemap-products.xml",
+  "/sitemap-astrologers.xml",
+  "/sitemap-horoscope.xml",
+];
 const PROTECTED_ROUTES = ["/dashboard", "/profile"];
 
 function getSecret() {
@@ -32,8 +44,15 @@ function isStaticAsset(pathname) {
 export async function proxy(req) {
   const pathname = req.nextUrl?.pathname || new URL(req.url).pathname;
 
+  if (pathname === "/robots.txt" || pathname.startsWith("/sitemap")) {
+    return NextResponse.next();
+  }
   // Allow open API endpoints
-  if (pathname.startsWith("/api/landing") || pathname.startsWith("/api/public")) {
+  if (
+    pathname.startsWith("/api/landing") ||
+    pathname.startsWith("/api/public") ||
+    pathname.startsWith("/api/indexnow")
+  ) {
     return NextResponse.next();
   }
 
@@ -44,7 +63,7 @@ export async function proxy(req) {
 
   const isPublicRoute =
     PUBLIC_EXACT_ROUTES.includes(pathname) ||
-    PUBLIC_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix));
+    PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (token) {
     const secret = getSecret();
@@ -59,7 +78,8 @@ export async function proxy(req) {
       const role = payload?.role || payload?.roles || payload?.roleName || null;
 
       const isAuthLandingHit = pathname === "/sign-in" || pathname === "/";
-      if (isAuthLandingHit) return NextResponse.redirect(new URL("/dashboard", req.url));
+      if (isAuthLandingHit)
+        return NextResponse.redirect(new URL("/dashboard", req.url));
 
       if (role === "admin" && isPublicRoute) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -74,7 +94,9 @@ export async function proxy(req) {
   }
 
   const isProtectedRoute =
-    PROTECTED_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`)) ||
+    PROTECTED_ROUTES.some(
+      (r) => pathname === r || pathname.startsWith(`${r}/`),
+    ) ||
     (!isPublicRoute && pathname !== "/" && pathname !== "/sign-in");
 
   if (isProtectedRoute) {
@@ -86,6 +108,6 @@ export async function proxy(req) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

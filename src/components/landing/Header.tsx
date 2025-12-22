@@ -21,6 +21,7 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
       menuItems || [
         { label: "Home", href: "/" },
         { label: "Astrologers", href: "/landing/astro" },
+        { label: "Horoscope", href: "/landing/horoscope" },
         { label: "Mall", href: "/landing/mall" },
         { label: "Courses", href: "/landing/courses" },
         { label: "Blog", href: "/landing/blog" },

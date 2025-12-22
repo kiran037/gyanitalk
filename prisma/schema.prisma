@@ -2139,9 +2139,6 @@ model aiastrologers {
 
 }
 
-
-
-
 enum pages_type {
   privacy
   terms
@@ -2151,6 +2148,7 @@ enum pages_type {
   astrologers
   courses
   blogs
+  horoscope
 }
 
 enum coupons_discount_type {

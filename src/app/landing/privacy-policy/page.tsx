@@ -83,7 +83,7 @@ const getPageData = cache(async (): Promise<PageData | null> => {
 
     const baseUrl =
       process.env.NEXT_PUBLIC_BASEURL ||
-      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
       "";
 
     const plainDesc = page.description

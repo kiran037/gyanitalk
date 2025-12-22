@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/landing/courses/page.tsx
 import type { Metadata } from "next";
 import CoursesClient from "./CoursesClient";
 import { prisma } from "@/lib/prisma";

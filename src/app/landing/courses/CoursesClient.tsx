@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/landing/courses/CoursesClient.tsx
 "use client";
 
 import { useState, useEffect } from "react";

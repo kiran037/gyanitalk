@@ -106,6 +106,36 @@ export default function ProductClient({
     }
   };
 
+function redirectToAppStore() {
+  if (typeof window === "undefined") return;
+
+  const ua = navigator.userAgent || "";
+
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+
+  // 📱 Android → Play Store
+  if (isAndroid) {
+    window.location.href =
+      "https://play.google.com/store/apps/details?id=com.app.gyanitalk";
+    return;
+  }
+
+  // 📱 iOS → App Store
+  if (isIOS) {
+    window.location.href =
+      "https://apps.apple.com/in/app/gyanitalk/id6742021396";
+    return;
+  }
+
+  // 🖥 Desktop → open Play Store in new tab
+  window.open(
+    "https://play.google.com/store/apps/details?id=com.app.gyanitalk",
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
   return (
     <LandingWrapper>
       {/* Breadcrumb & Back Button */}
@@ -365,16 +395,15 @@ export default function ProductClient({
                   </div>
                 </div>
 
-                <Link href="/" className="block">
-                  <motion.button
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3.5 text-base font-bold text-white shadow-lg sm:gap-3 sm:py-4 sm:text-lg"
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-                  >
-                    <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
-                    Download App to Order
-                  </motion.button>
-                </Link>
+                <motion.button
+                  onClick={redirectToAppStore}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3.5 text-base font-bold text-white shadow-lg sm:gap-3 sm:py-4 sm:text-lg"
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                >
+                  <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
+                  Download App to Order
+                </motion.button>
               </motion.div>
 
               {/* Trust Indicators - Desktop */}
@@ -812,16 +841,15 @@ export default function ProductClient({
         animate={{ y: 0 }}
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/60 bg-white/95 p-3 shadow-lg backdrop-blur-lg dark:border-gray-700/60 dark:bg-gray-900/95 sm:p-4 lg:hidden"
       >
-        <Link href="/" className="block">
-          <motion.button
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3 text-sm font-bold text-white sm:py-3.5 sm:text-base"
-            whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-            whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-          >
-            <ShoppingBag className="h-5 w-5" />
-            Download App to Order
-          </motion.button>
-        </Link>
+        <motion.button
+          onClick={redirectToAppStore}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3 text-sm font-bold text-white sm:py-3.5 sm:text-base"
+          whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+          whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+        >
+          <ShoppingBag className="h-5 w-5" />
+          Download App to Order
+        </motion.button>
       </motion.div>
     </LandingWrapper>
   );
