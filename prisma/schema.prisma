@@ -2149,6 +2149,9 @@ enum pages_type {
   courses
   blogs
   horoscope
+  panchang
+  kundali
+  kundali_matching
 }
 
 enum coupons_discount_type {

@@ -28,6 +28,24 @@ export default function PanchangDisplay({
   error,
   selectedDate,
 }: PanchangDisplayProps) {
+  function formatTimeToAMPM(time: string | { hour: number; minute: number }) {
+  let hours: number;
+  let minutes: number;
+
+  if (typeof time === "string") {
+    const parts = time.split(":");
+    hours = Number(parts[0]);
+    minutes = Number(parts[1] || 0);
+  } else {
+    hours = time.hour;
+    minutes = time.minute;
+  }
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  return `${hours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+}
   if (loading) {
     return (
       <motion.div
@@ -83,8 +101,7 @@ export default function PanchangDisplay({
               </div>
               {data.tithi.end_time && (
                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Till {String(data.tithi.end_time.hour).padStart(2, '0')}:
-                  {String(data.tithi.end_time.minute).padStart(2, '0')}
+                  Till {formatTimeToAMPM(data.tithi.end_time)}
                 </div>
               )}
               {data.tithi.details.special && (
@@ -109,8 +126,7 @@ export default function PanchangDisplay({
               </div>
               {data.nakshatra.end_time && (
                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Till {String(data.nakshatra.end_time.hour).padStart(2, '0')}:
-                  {String(data.nakshatra.end_time.minute).padStart(2, '0')}
+                Till {formatTimeToAMPM(data.nakshatra.end_time)}
                 </div>
               )}
               {data.nakshatra.details.ruler && (
@@ -135,8 +151,7 @@ export default function PanchangDisplay({
               </div>
               {data.yog.end_time && (
                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Till {String(data.yog.end_time.hour).padStart(2, '0')}:
-                  {String(data.yog.end_time.minute).padStart(2, '0')}
+                 Till {formatTimeToAMPM(data.yog.end_time)}
                 </div>
               )}
             </div>
@@ -156,8 +171,7 @@ export default function PanchangDisplay({
               </div>
               {data.karan.end_time && (
                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Till {String(data.karan.end_time.hour).padStart(2, '0')}:
-                  {String(data.karan.end_time.minute).padStart(2, '0')}
+                 Till {formatTimeToAMPM(data.karan.end_time)}
                 </div>
               )}
             </div>
@@ -272,7 +286,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.sunrise}
+                   {formatTimeToAMPM(data.sunrise)}
                   </span>
                 </div>
               )}
@@ -286,7 +300,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.sunset}
+                    {formatTimeToAMPM(data.sunset)}
                   </span>
                 </div>
               )}
@@ -300,7 +314,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.vedic_sunrise}
+                    {formatTimeToAMPM(data.vedic_sunrise)}
                   </span>
                 </div>
               )}
@@ -314,7 +328,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.vedic_sunset}
+                    {formatTimeToAMPM(data.vedic_sunset)}
                   </span>
                 </div>
               )}
@@ -345,7 +359,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.moonrise}
+                    {formatTimeToAMPM(data.moonrise)}
                   </span>
                 </div>
               )}
@@ -359,7 +373,7 @@ export default function PanchangDisplay({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {data.moonset}
+                    {formatTimeToAMPM(data.moonset)}
                   </span>
                 </div>
               )}
@@ -386,7 +400,7 @@ export default function PanchangDisplay({
               Abhijit Muhurta
             </div>
             <div className="text-xl font-bold text-gray-900 dark:text-white">
-              {data.abhijit_muhurta.start} - {data.abhijit_muhurta.end}
+{formatTimeToAMPM(data.abhijit_muhurta.start)} - {formatTimeToAMPM(data.abhijit_muhurta.end)}
             </div>
             <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
               Most auspicious time for important activities
@@ -415,7 +429,7 @@ export default function PanchangDisplay({
                   Rahu Kaal
                 </div>
                 <div className="text-sm font-bold text-gray-900 dark:text-white">
-                  {data.rahukaal.start} - {data.rahukaal.end}
+{formatTimeToAMPM(data.rahukaal.start)} - {formatTimeToAMPM(data.rahukaal.end)}
                 </div>
               </div>
             )}
@@ -426,7 +440,7 @@ export default function PanchangDisplay({
                   Gulika Kalam
                 </div>
                 <div className="text-sm font-bold text-gray-900 dark:text-white">
-                  {data.guliKaal.start} - {data.guliKaal.end}
+                  {formatTimeToAMPM(data.guliKaal.start)} - {formatTimeToAMPM(data.guliKaal.end)}
                 </div>
               </div>
             )}
@@ -437,7 +451,7 @@ export default function PanchangDisplay({
                   Yamaghanta
                 </div>
                 <div className="text-sm font-bold text-gray-900 dark:text-white">
-                  {data.yamghant_kaal.start} - {data.yamghant_kaal.end}
+                  {formatTimeToAMPM(data.yamghant_kaal.start)} - {formatTimeToAMPM(data.yamghant_kaal.end)}
                 </div>
               </div>
             )}

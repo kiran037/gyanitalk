@@ -8,6 +8,7 @@ import { Calendar, Sparkles, Sun } from "lucide-react";
 import DateSelector from "@/components/landing/panchang/DateSelector";
 import PanchangDisplay from "@/components/landing/panchang/PanchangDisplay";
 import PanchangInfo from "@/components/landing/panchang/PanchangInfo";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function PanchangClient() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -15,12 +16,25 @@ export default function PanchangClient() {
   const [panchangData, setPanchangData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+const searchParams = useSearchParams();
+
   const prefersReducedMotion = useReducedMotion();
 
-  // Fetch panchang data when date changes
-  useEffect(() => {
-    fetchPanchang(selectedDate);
-  }, [selectedDate]);
+useEffect(() => {
+  const dateParam = searchParams.get("date");
+  let dateToUse = selectedDate;
+
+  if (dateParam) {
+    const parsedDate = new Date(dateParam);
+    if (!isNaN(parsedDate.getTime())) {
+      dateToUse = parsedDate;
+      setSelectedDate(parsedDate);
+    }
+  }
+
+  fetchPanchang(dateToUse);
+}, [searchParams]);
 
   const fetchPanchang = async (date: Date) => {
     setLoading(true);
@@ -55,9 +69,12 @@ export default function PanchangClient() {
     }
   };
 
-  const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
-  };
+const handleDateChange = (date: Date) => {
+  setSelectedDate(date);
+
+  const yyyyMMdd = date.toISOString().split("T")[0];
+  router.push(`?date=${yyyyMMdd}`, { scroll: false });
+};
 
   return (
     <LandingWrapper>
