@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ZodiacSign,
   HoroscopeType,
@@ -73,6 +74,8 @@ export default function HoroscopeDisplay({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<HoroscopeData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+const searchParams = useSearchParams();
 
   useEffect(() => {
     async function fetchHoroscope() {
@@ -99,6 +102,14 @@ export default function HoroscopeDisplay({
 
     fetchHoroscope();
   }, [zodiac, horoscopeType]);
+
+  const handleTypeChange = (type: HoroscopeType) => {
+  onTypeChange(type);
+  router.push(
+    `/landing/horoscope/${zodiac}?type=${type}`,
+    { scroll: false }
+  );
+};
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "";
@@ -209,7 +220,7 @@ export default function HoroscopeDisplay({
         {(["daily", "weekly", "yearly"] as const).map((type) => (
           <motion.button
             key={type}
-            onClick={() => onTypeChange(type)}
+            onClick={() => handleTypeChange(type)}
             className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all ${
               horoscopeType === type
                 ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md"

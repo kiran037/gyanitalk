@@ -307,7 +307,7 @@ model astrologers {
   id                          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   userId                      BigInt    @db.UnsignedBigInt
   name                        String    @db.VarChar(255)
-  slug                        String?   @db.VarChar(255)
+  slug                        String?   @unique @db.VarChar(255)
   metaTitle                   String?   @db.VarChar(255)
   metaDescription             String?   @db.VarChar(500)
   metaKeywords                String?   @db.VarChar(500)

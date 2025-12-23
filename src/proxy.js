@@ -12,6 +12,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/landing/mall",
   "/landing/courses",
   "/landing/horoscope",
+  "/landing/panchang",
 ];
 
 const PUBLIC_EXACT_ROUTES = [

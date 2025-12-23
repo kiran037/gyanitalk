@@ -163,16 +163,49 @@ export default function BlogClient({
     setAppliedSearch(searchQuery);
   };
 
-  const stripHtml = (html: string) =>
-    html
-      .replace(/<[^>]*>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .trim();
+  // const stripHtml = (html: string) =>
+  //   html
+  //     .replace(/<[^>]*>/g, "")
+  //     .replace(/&nbsp;/g, " ")
+  //     .trim();
 
-  const truncateText = (text: string, max: number) => {
-    const clean = stripHtml(text);
-    return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
-  };
+  // const truncateText = (text: string, max: number) => {
+  //   const clean = stripHtml(text);
+  //   return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
+  // };
+
+  const stripHtml = (html: string) => {
+  // If it's JSON from TipTap editor
+  try {
+    const parsed = JSON.parse(html);
+    if (parsed && parsed.type === "doc" && parsed.content) {
+      // Extract text from TipTap JSON structure
+      const extractText = (node: any): string => {
+        if (node.type === "text") return node.text || "";
+        if (node.content) {
+          return node.content.map(extractText).join(" ");
+        }
+        return "";
+      };
+      const text = parsed.content.map(extractText).join(" ");
+      return text.replace(/\s+/g, " ").trim();
+    }
+  } catch (e) {
+    // Not JSON, treat as HTML
+  }
+  
+  // Strip HTML tags
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const truncateText = (text: string, max: number) => {
+  const clean = stripHtml(text);
+  return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
+};
 
   /* ================= UI ================= */
 
