@@ -11,26 +11,62 @@ export async function GET() {
       isDelete: false,
     },
     select: {
+      id: true,
       slug: true,
       name: true,
       updated_at: true,
     },
   });
 
-  // simple slugify helper
+  // ✅ Unicode-safe slugify (Hindi + English)
   const slugify = (text: string) =>
     text
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '') // special chars remove
-      .replace(/\s+/g, '-')         // spaces → -
-      .replace(/-+/g, '-');         // extra -
+      .replace(/[^\p{L}\p{N}\s-]/gu, '') // unicode letters & numbers
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
 
-  const urls = astros
-    .map((a) => {
-      const finalSlug = a.slug?.trim()
-        ? a.slug
-        : slugify(a.name);
+  // ✅ Ensure slug is unique in DB
+  const generateUniqueSlug = async (baseSlug: string) => {
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (true) {
+      const exists = await prisma.astrologers.findFirst({
+        where: { slug },
+        select: { id: true },
+      });
+
+      if (!exists) return slug;
+
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  };
+
+  const updates: Promise<any>[] = [];
+
+  const urls = await Promise.all(
+    astros.map(async (a) => {
+      let finalSlug = a.slug?.trim();
+
+      // 🔥 slug missing → generate + save in DB
+      if (!finalSlug) {
+        const baseSlug = slugify(a.name);
+
+        // safety: agar name bhi empty ho
+        if (!baseSlug) return '';
+
+        finalSlug = await generateUniqueSlug(baseSlug);
+
+        updates.push(
+          prisma.astrologers.update({
+            where: { id: a.id },
+            data: { slug: finalSlug },
+          })
+        );
+      }
 
       const lastmod = (a.updated_at ?? new Date())
         .toISOString()
@@ -44,12 +80,17 @@ export async function GET() {
     <priority>0.6</priority>
   </url>`;
     })
-    .join('');
+  );
+
+  // ✅ DB updates execute once
+  if (updates.length > 0) {
+    await Promise.all(updates);
+  }
 
   return new NextResponse(
     `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
+${urls.filter(Boolean).join('')}
 </urlset>`,
     {
       headers: {
@@ -58,3 +99,5 @@ ${urls}
     }
   );
 }
+
+
