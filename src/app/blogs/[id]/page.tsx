@@ -8,8 +8,10 @@ import { Button } from "@/components/adminUI/Button";
 import { Input } from "@/components/adminUI/Input";
 import { useToast } from "@/components/Toast/ToastProvider";
 
-import { ProBlogEditor, type ProBlogEditorRef } from "@/components/editor/ProBlogEditor";
-
+import {
+  ProBlogEditor,
+  type ProBlogEditorRef,
+} from "@/components/editor/ProBlogEditor";
 
 import { BlogImageGallery } from "@/components/blogs/BlogImageGallery";
 import { BlogSEOSection } from "@/components/blogs/BlogSEOSection";
@@ -32,6 +34,14 @@ interface Category {
   name: string;
 }
 
+const generateSlug = (value: string) => {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+};
+
 export default function BlogDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -46,7 +56,7 @@ export default function BlogDetailPage() {
   // Refs for file inputs
   const blogImageInputRef = useRef<HTMLInputElement | null>(null);
   const previewImageInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   // ✅ UPDATE REF TYPE:
   const editorRef = useRef<ProBlogEditorRef>(null);
 
@@ -116,7 +126,7 @@ export default function BlogDetailPage() {
 
       if (data.success) {
         const blog = data.data;
-        
+
         // ✅ Pass raw content - editor will handle conversion
         setFormData({
           title: blog.title || "",
@@ -155,20 +165,7 @@ export default function BlogDetailPage() {
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value };
-
-      // Auto-generate slug from title only if slug is currently empty
-      if (field === "title" && !prev.slug) {
-        const slug = String(value || "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-        next.slug = slug;
-      }
-
-      return next;
-    });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleImageUpload = async (
@@ -353,12 +350,42 @@ export default function BlogDetailPage() {
                   required
                 />
 
-                <Input
-                  label="Slug (URL)"
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange("slug", e.target.value)}
-                  placeholder="blog-url-slug"
-                />
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Slug (URL)
+                  </label>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        handleInputChange("slug", e.target.value)
+                      }
+                      placeholder="blog-url-slug"
+                      className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800"
+                    />
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!formData.title.trim()) {
+                          addToast(
+                            "warning",
+                            "Missing Title",
+                            "Enter blog title first",
+                          );
+                          return;
+                        }
+                        handleInputChange("slug", generateSlug(formData.title));
+                      }}
+                    >
+                      Generate
+                    </Button>
+                  </div>
+                </div>
 
                 <Input
                   label="Author"

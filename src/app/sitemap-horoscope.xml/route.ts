@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/sitemap-horoscope.xml/route.ts
 import { NextResponse } from "next/server";
 
 const BASE_URL =

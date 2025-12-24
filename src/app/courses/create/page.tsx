@@ -27,6 +27,14 @@ interface Category {
   name: string;
 }
 
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // remove special chars
+    .replace(/\s+/g, "-") // spaces → hyphen
+    .replace(/-+/g, "-"); // clean multiple hyphens
+
 export default function CreateCoursePage() {
   const router = useRouter();
   const addToast = useToast();
@@ -85,7 +93,7 @@ export default function CreateCoursePage() {
     setUploading(true);
     try {
       const result = await uploadImage(file, "courses");
-      
+
       if (result.success) {
         setFormData((prev) => ({ ...prev, image: result.path }));
         addToast("success", "Success", "Image uploaded successfully");
@@ -101,18 +109,22 @@ export default function CreateCoursePage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    if (name === "name") {
-      const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-      setFormData((prev) => ({ ...prev, slug }));
+  const generateSlug = () => {
+    if (!formData.name.trim()) {
+      addToast("warning", "Warning", "Please enter course name first");
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      slug: slugify(prev.name),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,8 +168,8 @@ export default function CreateCoursePage() {
   };
 
   return (
-   <div className="min-h-screen bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
-      <div className="w-full mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/50 to-amber-50/50 p-4 dark:from-gray-900 dark:to-gray-800 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full space-y-6">
         <PageHeader
           title="Create Course"
           subtitle="Add a new course"
@@ -165,7 +177,7 @@ export default function CreateCoursePage() {
           actions={
             <Button
               variant="outline"
-              icon={<X className="w-4 h-4" />}
+              icon={<X className="h-4 w-4" />}
               onClick={() => router.push("/courses")}
             >
               Cancel
@@ -175,13 +187,13 @@ export default function CreateCoursePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#FF6B35]" />
+          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+              <BookOpen className="h-5 w-5 text-[#FF6B35]" />
               Basic Information
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <Input
                 label="Course Name"
                 name="name"
@@ -190,23 +202,41 @@ export default function CreateCoursePage() {
                 onChange={handleChange}
                 placeholder="Enter course name"
                 required
-                icon={<BookOpen className="w-4 h-4" />}
+                icon={<BookOpen className="h-4 w-4" />}
               />
 
-              <Input
-                label="Slug"
-                name="slug"
-                type="text"
-                value={formData.slug}
-                onChange={handleChange}
-                placeholder="course-slug"
-                required
-                icon={<Tag className="w-4 h-4" />}
-              />
+              <div>
+                <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Slug <span className="text-red-500">*</span>
+                </label>
+
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      name="slug"
+                      type="text"
+                      value={formData.slug}
+                      onChange={handleChange}
+                      placeholder="course-slug"
+                      required
+                      icon={<Tag className="h-4 w-4" />}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateSlug}
+                    className="shrink-0"
+                  >
+                    Generate
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
                 Category <span className="text-red-500">*</span>
               </label>
               <select
@@ -214,7 +244,7 @@ export default function CreateCoursePage() {
                 value={formData.category_id}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
@@ -236,12 +266,12 @@ export default function CreateCoursePage() {
 
             {/* Image Upload */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
                 Cover Image
               </label>
               <div className="space-y-3">
-                <label className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                  <Upload className="w-4 h-4 text-gray-500" />
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800">
+                  <Upload className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {uploading ? "Uploading..." : "Click to upload cover image"}
                   </span>
@@ -255,7 +285,7 @@ export default function CreateCoursePage() {
                 </label>
 
                 {formData.image && (
-                  <div className="relative flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <div className="relative flex items-center justify-center rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                     <img
                       src={avatar(formData.image)}
                       alt="Preview"
@@ -269,7 +299,7 @@ export default function CreateCoursePage() {
                       onClick={() =>
                         setFormData((prev) => ({ ...prev, image: "" }))
                       }
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      className="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white transition-colors hover:bg-red-600"
                     >
                       ✕
                     </button>
@@ -280,18 +310,18 @@ export default function CreateCoursePage() {
           </div>
 
           {/* Pricing */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-[#FF6B35]" />
+          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+              <DollarSign className="h-5 w-5 text-[#FF6B35]" />
               Pricing
             </h2>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
                 Course Type
               </label>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex cursor-pointer items-center gap-2">
                   <input
                     type="radio"
                     name="is_paid"
@@ -305,13 +335,13 @@ export default function CreateCoursePage() {
                         offer_price: "",
                       }))
                     }
-                    className="w-4 h-4 text-[#FF6B35] focus:ring-[#FF6B35]"
+                    className="h-4 w-4 text-[#FF6B35] focus:ring-[#FF6B35]"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Free Course
                   </span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex cursor-pointer items-center gap-2">
                   <input
                     type="radio"
                     name="is_paid"
@@ -320,7 +350,7 @@ export default function CreateCoursePage() {
                     onChange={() =>
                       setFormData((prev) => ({ ...prev, is_paid: 1 }))
                     }
-                    className="w-4 h-4 text-[#FF6B35] focus:ring-[#FF6B35]"
+                    className="h-4 w-4 text-[#FF6B35] focus:ring-[#FF6B35]"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Paid Course
@@ -330,7 +360,7 @@ export default function CreateCoursePage() {
             </div>
 
             {formData.is_paid === 1 && (
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <Input
                   label="Regular Price (₹)"
                   name="price"
@@ -340,7 +370,7 @@ export default function CreateCoursePage() {
                   placeholder="999"
                   min="0"
                   step="1"
-                  icon={<DollarSign className="w-4 h-4" />}
+                  icon={<DollarSign className="h-4 w-4" />}
                 />
 
                 <Input
@@ -352,32 +382,32 @@ export default function CreateCoursePage() {
                   placeholder="799"
                   min="0"
                   step="1"
-                  icon={<DollarSign className="w-4 h-4" />}
+                  icon={<DollarSign className="h-4 w-4" />}
                 />
               </div>
             )}
           </div>
 
           {/* SEO Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <button
               type="button"
               onClick={() => setShowSEO(!showSEO)}
-              className="w-full p-6 flex items-center justify-between text-left"
+              className="flex w-full items-center justify-between p-6 text-left"
             >
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Globe className="w-5 h-5 text-[#FF6B35]" />
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <Globe className="h-5 w-5 text-[#FF6B35]" />
                 SEO Settings (Optional)
               </h2>
               {showSEO ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
+                <ChevronUp className="h-5 w-5 text-gray-400" />
               ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
+                <ChevronDown className="h-5 w-5 text-gray-400" />
               )}
             </button>
 
             {showSEO && (
-              <div className="px-6 pb-6 space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="space-y-4 border-t border-gray-200 px-6 pb-6 pt-4 dark:border-gray-700">
                 <Input
                   label="Meta Title"
                   name="metaTitle"
@@ -420,7 +450,7 @@ export default function CreateCoursePage() {
             <Button
               type="submit"
               variant="primary"
-              icon={<Save className="w-4 h-4" />}
+              icon={<Save className="h-4 w-4" />}
               loading={loading}
             >
               Create Course
