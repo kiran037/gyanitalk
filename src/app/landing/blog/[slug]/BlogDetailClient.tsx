@@ -107,6 +107,146 @@ export default function BlogDetailClient({
   const prefersReducedMotion = useReducedMotion();
   /* ================= HELPERS ================= */
 
+  const convertTiptapJsonToHtml = (jsonString: string): string => {
+    try {
+      const json = JSON.parse(jsonString);
+
+      if (!json || !json.content) return jsonString; // Return as-is if not valid JSON
+
+      const convertNode = (node: any): string => {
+        if (!node) return "";
+
+        // Handle text nodes
+        if (node.type === "text") {
+          let text = node.text || "";
+
+          // Apply marks (bold, italic, etc.)
+          if (node.marks) {
+            node.marks.forEach((mark: any) => {
+              if (mark.type === "bold") text = `<strong>${text}</strong>`;
+              if (mark.type === "italic") text = `<em>${text}</em>`;
+              if (mark.type === "strike") text = `<s>${text}</s>`;
+              if (mark.type === "code") text = `<code>${text}</code>`;
+              if (mark.type === "link")
+                text = `<a href="${mark.attrs?.href || "#"}">${text}</a>`;
+              if (mark.type === "textStyle") {
+                let style = "";
+                if (mark.attrs?.color) style += `color: ${mark.attrs.color};`;
+                if (mark.attrs?.fontSize)
+                  style += `font-size: ${mark.attrs.fontSize};`;
+                if (style) text = `<span style="${style}">${text}</span>`;
+              }
+              if (mark.type === "highlight") {
+                text = `<mark style="background-color: ${mark.attrs?.color || "#ffff00"}">${text}</mark>`;
+              }
+            });
+          }
+
+          return text;
+        }
+
+        // Handle block nodes
+        const content = node.content?.map(convertNode).join("") || "";
+        const attrs = node.attrs || {};
+
+        switch (node.type) {
+          case "doc":
+            return content;
+
+          case "paragraph":
+            const textAlign = attrs.textAlign
+              ? `text-align: ${attrs.textAlign};`
+              : "";
+            return `<p style="${textAlign}">${content || "<br>"}</p>`;
+
+          case "heading":
+            const level = attrs.level || 1;
+            return `<h${level}>${content}</h${level}>`;
+
+          case "bulletList":
+            return `<ul>${content}</ul>`;
+
+          case "orderedList":
+            return `<ol>${content}</ol>`;
+
+          case "listItem":
+            return `<li>${content}</li>`;
+
+          case "blockquote":
+            return `<blockquote>${content}</blockquote>`;
+
+          case "codeBlock":
+            return `<pre><code>${content}</code></pre>`;
+
+          case "horizontalRule":
+            return "<hr>";
+
+          case "hardBreak":
+            return "<br>";
+
+          case "image":
+            const imgStyle = [];
+            if (attrs.width) imgStyle.push(`width: ${attrs.width}px`);
+            if (attrs.borderRadius)
+              imgStyle.push(`border-radius: ${attrs.borderRadius}px`);
+
+            imgStyle.push("max-width: 100%");
+            imgStyle.push("height: auto");
+
+            let imgContainerStyle = "margin: 16px 0; max-width: 100%;";
+            let containerClass = "blog-image-container";
+
+            if (attrs.float === "left") {
+              imgContainerStyle +=
+                " float: left; margin-right: 16px; margin-bottom: 8px; clear: left;";
+              containerClass += " blog-image-float-left";
+              // Add width constraint for floated images
+              if (attrs.width) {
+                imgContainerStyle += ` width: min(${attrs.width}px, 100%);`;
+              }
+            } else if (attrs.float === "right") {
+              imgContainerStyle +=
+                " float: right; margin-left: 16px; margin-bottom: 8px; clear: right;";
+              containerClass += " blog-image-float-right";
+              // Add width constraint for floated images
+              if (attrs.width) {
+                imgContainerStyle += ` width: min(${attrs.width}px, 100%);`;
+              }
+            } else if (attrs.float === "center") {
+              imgContainerStyle +=
+                " display: block; margin: 16px auto; text-align: center;";
+              containerClass += " blog-image-center";
+              // Add width constraint for centered images
+              if (attrs.width) {
+                imgContainerStyle += ` width: min(${attrs.width}px, 100%);`;
+              }
+            } else {
+              // Handle "none" - default block
+              imgContainerStyle += " display: block;";
+              if (attrs.width) {
+                imgContainerStyle += ` width: min(${attrs.width}px, 100%);`;
+              }
+            }
+
+            const imgHtml = `<img src="${attrs.src}" alt="${attrs.alt || ""}" style="${imgStyle.join("; ")}" />`;
+            const captionHtml = attrs.caption
+              ? `<p style="font-size: 13px; color: #666; text-align: center; font-style: italic; margin-top: 8px; line-height: 1.4;">${attrs.caption}</p>`
+              : "";
+
+            return `<div class="${containerClass}" style="${imgContainerStyle}">${imgHtml}${captionHtml}</div>`;
+
+          default:
+            return content;
+        }
+      };
+
+      return convertNode(json);
+    } catch (e) {
+      // If parsing fails, assume it's already HTML
+      return jsonString;
+    }
+  };
+
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -211,16 +351,6 @@ export default function BlogDetailClient({
           >
             {blog.title}
           </motion.h1>
-
-          {/* Excerpt */}
-          <motion.p
-            className="mb-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 sm:mb-8 sm:text-lg"
-            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {blog.seo.excerpt}
-          </motion.p>
 
           {/* Meta + Share */}
           <motion.div
@@ -457,11 +587,50 @@ export default function BlogDetailClient({
                 color: #d1d5db;
               }
 
-              .blog-content img {
-                border-radius: 1rem;
-                margin: 1.75rem 0;
-                width: 100%;
+              /* Image container styles */
+              .blog-content .blog-image-container {
+                position: relative;
+                display: block;
+                max-width: 100%;
+              }
+
+              .blog-content .blog-image-container img {
+                display: block;
+                max-width: 100%;
                 height: auto;
+                border-radius: 1rem;
+                margin: 0;
+              }
+
+              .blog-content .blog-image-float-left {
+                float: left;
+                margin-right: 16px;
+                margin-bottom: 8px;
+                clear: left;
+              }
+
+              .blog-content .blog-image-float-right {
+                float: right;
+                margin-left: 16px;
+                margin-bottom: 8px;
+                clear: right;
+              }
+
+              .blog-content .blog-image-center {
+                float: none;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 16px;
+                text-align: center;
+              }
+
+              /* Fallback for images without container */
+              .blog-content img:not(.blog-image-container img) {
+                border-radius: 1rem;
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 1.75rem 0;
               }
 
               .blog-content hr {
@@ -555,11 +724,31 @@ export default function BlogDetailClient({
               .dark .blog-content th {
                 background: #1f2937;
               }
+
+              .blog-content::after {
+                content: "";
+                display: table;
+                clear: both;
+              }
+
+              /* Mobile: Convert floats to block on small screens */
+              @media (max-width: 640px) {
+                .blog-content .blog-image-float-left,
+                .blog-content .blog-image-float-right {
+                  float: none !important;
+                  margin-left: auto !important;
+                  margin-right: auto !important;
+                  margin-bottom: 16px !important;
+                  clear: both !important;
+                }
+              }
             `}</style>
 
             <div
               className="blog-content"
-              dangerouslySetInnerHTML={{ __html: blog.description }}
+              dangerouslySetInnerHTML={{
+                __html: convertTiptapJsonToHtml(blog.description),
+              }}
             />
           </motion.article>
 

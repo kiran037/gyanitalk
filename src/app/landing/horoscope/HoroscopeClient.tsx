@@ -1,13 +1,14 @@
 // app/landing/horoscope/HoroscopeClient.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, Star } from "lucide-react";
 import ZodiacSelector from "@/components/landing/horoscope/ZodiacSelector";
 import HoroscopeDisplay from "@/components/landing/horoscope/HoroscopeDisplay";
 import TodayHighlights from "@/components/landing/horoscope/TodayHighlights";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 /* ---------- types ---------- */
 export type ZodiacSign =
@@ -26,14 +27,21 @@ export type ZodiacSign =
 
 export type HoroscopeType = "daily" | "weekly" | "yearly";
 
-/* ---------- component ---------- */
 export default function HoroscopeClient() {
-  const [selectedZodiac, setSelectedZodiac] =
-    useState<ZodiacSign | null>(null);
-  const [horoscopeType, setHoroscopeType] =
-    useState<HoroscopeType>("daily");
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const zodiac = params?.zodiac as ZodiacSign | undefined;
+
+  const [horoscopeType, setHoroscopeType] = useState<HoroscopeType>("daily");
 
   const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const type = searchParams.get("type") as HoroscopeType | null;
+    if (type) setHoroscopeType(type);
+  }, []);
 
   return (
     <LandingWrapper>
@@ -117,19 +125,21 @@ export default function HoroscopeClient() {
       <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
           {/* Zodiac Selector */}
-          <ZodiacSelector
-            selectedZodiac={selectedZodiac}
-            onSelectZodiac={setSelectedZodiac}
-          />
+       <ZodiacSelector selectedZodiac={zodiac ?? null} />
 
-          {/* Horoscope */}
-          {selectedZodiac && (
-            <HoroscopeDisplay
-              zodiac={selectedZodiac}
-              horoscopeType={horoscopeType}
-              onTypeChange={setHoroscopeType}
-            />
-          )}
+{zodiac && (
+  <HoroscopeDisplay
+    zodiac={zodiac}
+    horoscopeType={horoscopeType}
+    onTypeChange={(type) => {
+      setHoroscopeType(type);
+      router.push(
+        `/landing/horoscope/${zodiac}?type=${type}`,
+        { scroll: false }
+      );
+    }}
+  />
+)}
 
           {/* Highlights */}
           <TodayHighlights />

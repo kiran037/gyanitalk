@@ -22,13 +22,14 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
         { label: "Home", href: "/" },
         { label: "Astrologers", href: "/landing/astro" },
         { label: "Horoscope", href: "/landing/horoscope" },
+        { label: "Panchang", href: "/landing/panchang" },
         { label: "Mall", href: "/landing/mall" },
         { label: "Courses", href: "/landing/courses" },
         { label: "Blog", href: "/landing/blog" },
         { label: "About", href: "/landing/about-us" },
         { label: "Contact", href: "/landing/contact" },
       ],
-    [menuItems]
+    [menuItems],
   );
 
   // Handle scroll effect (throttled with rAF)
@@ -69,30 +70,31 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
     <>
       <nav
         aria-label="Main navigation"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl shadow-lg border-b border-gray-200 dark:border-gray-800"
-          : "bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-900"
-          }`}
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "border-b border-gray-200 bg-white/90 shadow-lg backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/90"
+            : "border-b border-gray-100 bg-white dark:border-gray-900 dark:bg-gray-950"
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-3">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group min-w-0">
-              <div className="w-8 h-8 rounded-lg overflow-hidden ring-2 ring-[#FF6B35]/20 group-hover:ring-[#FF6B35]/40 transition-all flex-shrink-0">
+            <Link href="/" className="group flex min-w-0 items-center gap-2">
+              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-[#FF6B35]/20 transition-all group-hover:ring-[#FF6B35]/40">
                 <img
                   src="https://gyanitalk.s3.ap-south-1.amazonaws.com/public/storage/images/astrologer_7851728112667.png"
                   alt="Gyani Talk"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   decoding="async"
                 />
               </div>
-              <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+              <span className="truncate text-base font-bold text-gray-900 dark:text-white sm:text-lg">
                 Gyani<span className="text-[#FF6B35]">Talk</span>
               </span>
             </Link>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center gap-1.5 lg:gap-2">
+            <div className="hidden items-center gap-1.5 md:flex lg:gap-2">
               {items.map((item) => {
                 const active = isActive(item.href);
                 return (
@@ -100,10 +102,11 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`px-3 lg:px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${active
-                      ? "bg-[#FF6B35] text-white shadow-sm"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-[#FF6B35] dark:hover:text-[#FF6B35]"
-                      }`}
+                    className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all lg:px-4 ${
+                      active
+                        ? "bg-[#FF6B35] text-white shadow-sm"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-[#FF6B35] dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-[#FF6B35]"
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -116,18 +119,18 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all flex items-center justify-center"
+                className="flex items-center justify-center rounded-lg bg-gray-100 p-2 transition-all hover:bg-gray-200 dark:bg-gray-900 dark:hover:bg-gray-800"
                 aria-label="Toggle theme"
               >
                 {theme === "dark" ? (
                   <Sun
-                    className="w-5 h-5 text-yellow-500"
+                    className="h-5 w-5 text-yellow-500"
                     aria-hidden="true"
                     focusable="false"
                   />
                 ) : (
                   <Moon
-                    className="w-5 h-5 text-gray-700"
+                    className="h-5 w-5 text-gray-700"
                     aria-hidden="true"
                     focusable="false"
                   />
@@ -137,18 +140,18 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all flex items-center justify-center"
+                className="flex items-center justify-center rounded-lg bg-gray-100 p-2 transition-all hover:bg-gray-200 dark:bg-gray-900 dark:hover:bg-gray-800 md:hidden"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
                   <X
-                    className="w-5 h-5 text-gray-700 dark:text-gray-300"
+                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
                     aria-hidden="true"
                     focusable="false"
                   />
                 ) : (
                   <Menu
-                    className="w-5 h-5 text-gray-700 dark:text-gray-300"
+                    className="h-5 w-5 text-gray-700 dark:text-gray-300"
                     aria-hidden="true"
                     focusable="false"
                   />
@@ -171,8 +174,8 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
           />
 
           {/* Menu Panel */}
-          <div className="absolute top-16 left-0 right-0 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 shadow-xl max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="absolute left-0 right-0 top-16 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-950">
+            <div className="mx-auto max-w-7xl px-4 py-4">
               <div className="flex flex-col gap-1.5">
                 {items.map((item) => {
                   const active = isActive(item.href);
@@ -182,10 +185,11 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${active
-                        ? "bg-[#FF6B35] text-white"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 active:bg-gray-200 dark:active:bg-gray-800"
-                        }`}
+                      className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                        active
+                          ? "bg-[#FF6B35] text-white"
+                          : "text-gray-700 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-900 dark:active:bg-gray-800"
+                      }`}
                     >
                       {item.label}
                     </Link>

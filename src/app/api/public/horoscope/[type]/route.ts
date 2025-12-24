@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/public/horoscope/[type]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 const ZODIAC_MAP: Record<number, string> = {

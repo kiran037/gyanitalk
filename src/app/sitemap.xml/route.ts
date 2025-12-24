@@ -8,6 +8,7 @@ export async function GET() {
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>${BASE_URL}/sitemap-static.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-horoscope.xml</loc></sitemap>
+  <sitemap><loc>${BASE_URL}/sitemap-panchang.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-blogs.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-courses.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-products.xml</loc></sitemap>

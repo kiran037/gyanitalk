@@ -7,7 +7,12 @@ import { PageHeader } from "@/components/adminUI/PageHeader";
 import { Button } from "@/components/adminUI/Button";
 import { Input } from "@/components/adminUI/Input";
 import { useToast } from "@/components/Toast/ToastProvider";
-import { RichTextEditor } from "@/components/courses/RichTextEditor";
+
+import {
+  ProBlogEditor,
+  type ProBlogEditorRef,
+} from "@/components/editor/ProBlogEditor";
+
 import { BlogImageGallery } from "@/components/blogs/BlogImageGallery";
 import { BlogSEOSection } from "@/components/blogs/BlogSEOSection";
 import {
@@ -19,15 +24,23 @@ import {
   User,
   Image as ImageIcon,
   Tag,
-  Globe
+  Globe,
 } from "lucide-react";
 import { uploadImage } from "@/upload";
-import { avatar } from "@/lib/images";
+import { avatar, ensureAbs } from "@/lib/images"; // ✅ Import ensureAbs
 
 interface Category {
   id: string;
   name: string;
 }
+
+const generateSlug = (value: string) => {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+};
 
 export default function BlogDetailPage() {
   const params = useParams();
@@ -40,16 +53,19 @@ export default function BlogDetailPage() {
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // Refs for file inputs (avoid document.querySelector)
+  // Refs for file inputs
   const blogImageInputRef = useRef<HTMLInputElement | null>(null);
   const previewImageInputRef = useRef<HTMLInputElement | null>(null);
+
+  // ✅ UPDATE REF TYPE:
+  const editorRef = useRef<ProBlogEditorRef>(null);
 
   const BackButton = () => (
     <button
       onClick={() => router.back()}
-      className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+      className="rounded-md p-2 transition hover:bg-gray-200 dark:hover:bg-gray-700"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+      <ArrowLeft className="h-5 w-5 text-gray-700 dark:text-gray-200" />
     </button>
   );
 
@@ -59,7 +75,7 @@ export default function BlogDetailPage() {
     slug: "",
     blogImage: "",
     previewImage: "",
-    description: "",
+    description: "", // ✅ This will now store JSON string
     author: "",
     postedOn: new Date().toISOString().split("T")[0],
     blogCategoryId: "",
@@ -110,14 +126,18 @@ export default function BlogDetailPage() {
 
       if (data.success) {
         const blog = data.data;
+
+        // ✅ Pass raw content - editor will handle conversion
         setFormData({
           title: blog.title || "",
           slug: blog.slug || "",
           blogImage: blog.blogImage || "",
           previewImage: blog.previewImage || "",
-          description: blog.description || "",
+          description: blog.description || "", // ✅ Pass as-is, editor handles it
           author: blog.author || "",
-          postedOn: blog.postedOn ? new Date(blog.postedOn).toISOString().split("T")[0] : "",
+          postedOn: blog.postedOn
+            ? new Date(blog.postedOn).toISOString().split("T")[0]
+            : "",
           blogCategoryId: blog.blogCategoryId || "",
           extension: blog.extension || "",
           isActive: blog.isActive,
@@ -144,29 +164,18 @@ export default function BlogDetailPage() {
     }
   };
 
-  // Use functional setState to avoid stale reads when auto-generating slug
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => {
-      const next = { ...prev, [field]: value };
-
-      // Auto-generate slug from title only if slug is currently empty
-      if (field === "title" && !prev.slug) {
-        const slug = String(value || "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-        next.slug = slug;
-      }
-
-      return next;
-    });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Accept File directly instead of React.ChangeEvent
-  const handleImageUpload = async (file: File | undefined, field: "blogImage" | "previewImage") => {
+  const handleImageUpload = async (
+    file: File | undefined,
+    field: "blogImage" | "previewImage",
+  ) => {
     if (!file) return;
 
-    const setUploading = field === "blogImage" ? setUploadingImage : setUploadingPreview;
+    const setUploading =
+      field === "blogImage" ? setUploadingImage : setUploadingPreview;
     setUploading(true);
 
     try {
@@ -175,7 +184,8 @@ export default function BlogDetailPage() {
         handleInputChange(field, result.path);
         addToast("success", "Success", "Image uploaded successfully");
       } else {
-        const errMsg = (result as any)?.error ?? (result as any)?.message ?? "Upload failed";
+        const errMsg =
+          (result as any)?.error ?? (result as any)?.message ?? "Upload failed";
         addToast("error", "Error", errMsg);
       }
     } catch (error) {
@@ -186,9 +196,28 @@ export default function BlogDetailPage() {
     }
   };
 
+  // ✅ NEW: Image upload handler for the editor
+  const handleEditorImageUpload = async (file: File): Promise<string> => {
+    try {
+      const result = await uploadImage(file, "blogs/content");
+      if (result?.success) {
+        return ensureAbs(result.path);
+      }
+      throw new Error("Upload failed");
+    } catch (error) {
+      console.error("Editor image upload failed:", error);
+      throw error;
+    }
+  };
+
   const handleSave = async () => {
     // Validation
-    if (!formData.title || !formData.description || !formData.author || !formData.blogImage) {
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.author ||
+      !formData.blogImage
+    ) {
       addToast("warning", "Warning", "Please fill in all required fields");
       return;
     }
@@ -207,7 +236,11 @@ export default function BlogDetailPage() {
       const data = await response.json();
 
       if (data.success) {
-        addToast("success", "Success", `Blog ${isNewBlog ? "created" : "updated"} successfully`);
+        addToast(
+          "success",
+          "Success",
+          `Blog ${isNewBlog ? "created" : "updated"} successfully`,
+        );
         if (isNewBlog) {
           router.push(`/blogs/${data.data.id}`);
         } else {
@@ -226,11 +259,11 @@ export default function BlogDetailPage() {
   if (loading) {
     return (
       <div className="p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
-            <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-8 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="h-64 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="h-96 rounded bg-gray-200 dark:bg-gray-700" />
           </div>
         </div>
       </div>
@@ -238,9 +271,9 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="w-full mx-auto">
-        {/* Hidden file inputs (one place for each upload) */}
+    <div className="space-y-6 p-6">
+      <div className="mx-auto w-full">
+        {/* Hidden file inputs */}
         <input
           ref={blogImageInputRef}
           type="file"
@@ -253,14 +286,20 @@ export default function BlogDetailPage() {
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => handleImageUpload(e.target.files?.[0], "previewImage")}
+          onChange={(e) =>
+            handleImageUpload(e.target.files?.[0], "previewImage")
+          }
         />
 
         {/* Header */}
         <div className="mb-3">
           <PageHeader
             title={isNewBlog ? "Create New Blog" : "Edit Blog"}
-            subtitle={isNewBlog ? "Create and publish a new blog post" : `Editing: ${formData.title}`}
+            subtitle={
+              isNewBlog
+                ? "Create and publish a new blog post"
+                : `Editing: ${formData.title}`
+            }
             badge={{ text: isNewBlog ? "New" : "Edit", variant: "blue" }}
             leftActions={<BackButton />}
             actions={
@@ -268,15 +307,20 @@ export default function BlogDetailPage() {
                 {!isNewBlog && (
                   <Button
                     variant="outline"
-                    icon={<Eye className="w-4 h-4" />}
-                    onClick={() => window.open(`/landing/blog/${formData.slug || blogId}`, "_blank")}
+                    icon={<Eye className="h-4 w-4" />}
+                    onClick={() =>
+                      window.open(
+                        `/landing/blog/${formData.slug || blogId}`,
+                        "_blank",
+                      )
+                    }
                   >
                     Preview
                   </Button>
                 )}
                 <Button
                   variant="primary"
-                  icon={<Save className="w-4 h-4" />}
+                  icon={<Save className="h-4 w-4" />}
                   onClick={handleSave}
                   loading={saving}
                 >
@@ -287,13 +331,13 @@ export default function BlogDetailPage() {
           />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Basic Info Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-[#FF6B35]" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <Tag className="h-5 w-5 text-[#FF6B35]" />
                 Basic Information
               </h3>
 
@@ -306,12 +350,42 @@ export default function BlogDetailPage() {
                   required
                 />
 
-                <Input
-                  label="Slug (URL)"
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange("slug", e.target.value)}
-                  placeholder="blog-url-slug"
-                />
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Slug (URL)
+                  </label>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        handleInputChange("slug", e.target.value)
+                      }
+                      placeholder="blog-url-slug"
+                      className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800"
+                    />
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!formData.title.trim()) {
+                          addToast(
+                            "warning",
+                            "Missing Title",
+                            "Enter blog title first",
+                          );
+                          return;
+                        }
+                        handleInputChange("slug", generateSlug(formData.title));
+                      }}
+                    >
+                      Generate
+                    </Button>
+                  </div>
+                </div>
 
                 <Input
                   label="Author"
@@ -319,25 +393,29 @@ export default function BlogDetailPage() {
                   onChange={(e) => handleInputChange("author", e.target.value)}
                   placeholder="Enter author name"
                   required
-                  icon={<User className="w-4 h-4" />}
+                  icon={<User className="h-4 w-4" />}
                 />
 
                 <Input
                   label="Posted Date"
                   type="date"
                   value={formData.postedOn}
-                  onChange={(e) => handleInputChange("postedOn", e.target.value)}
-                  icon={<Calendar className="w-4 h-4" />}
+                  onChange={(e) =>
+                    handleInputChange("postedOn", e.target.value)
+                  }
+                  icon={<Calendar className="h-4 w-4" />}
                 />
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
                     Category
                   </label>
                   <select
                     value={formData.blogCategoryId}
-                    onChange={(e) => handleInputChange("blogCategoryId", e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50"
+                    onChange={(e) =>
+                      handleInputChange("blogCategoryId", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   >
                     <option value="">Select category</option>
                     {categories.map((cat) => (
@@ -350,14 +428,16 @@ export default function BlogDetailPage() {
               </div>
             </div>
 
-            {/* Description */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            {/* ✅ REPLACE RichTextEditor WITH ProBlogEditor */}
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                 Content
               </h3>
-              <RichTextEditor
+              <ProBlogEditor
+                ref={editorRef}
                 value={formData.description}
                 onChange={(value) => handleInputChange("description", value)}
+                onUploadImage={handleEditorImageUpload}
                 placeholder="Write your blog content here..."
               />
             </div>
@@ -370,23 +450,28 @@ export default function BlogDetailPage() {
 
             {/* Image Gallery */}
             {!isNewBlog && (
-              <BlogImageGallery blogId={blogId} />
+              <BlogImageGallery
+                blogId={blogId}
+                onInsert={(url) => editorRef.current?.insertImage(url)}
+              />
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Status Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                 Status
               </h3>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
                   checked={formData.isActive}
-                  onChange={(e) => handleInputChange("isActive", e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
+                  onChange={(e) =>
+                    handleInputChange("isActive", e.target.checked)
+                  }
+                  className="h-5 w-5 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
                 />
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   Active (Published)
@@ -398,9 +483,9 @@ export default function BlogDetailPage() {
             </div>
 
             {/* Featured Image */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-[#FF6B35]" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <ImageIcon className="h-5 w-5 text-[#FF6B35]" />
                 Featured Image
               </h3>
 
@@ -409,13 +494,17 @@ export default function BlogDetailPage() {
                   <img
                     src={avatar(formData.blogImage)}
                     alt="Featured"
-                    className="w-full h-48 object-cover rounded-lg"
+                    className="h-48 w-full rounded-lg object-cover"
                   />
                   <div>
                     <Button
                       variant="outline"
                       size="sm"
-                      icon={uploadingImage ? undefined : <Upload className="w-4 h-4" />}
+                      icon={
+                        uploadingImage ? undefined : (
+                          <Upload className="h-4 w-4" />
+                        )
+                      }
                       loading={uploadingImage}
                       onClick={() => blogImageInputRef.current?.click()}
                       className="w-full"
@@ -428,9 +517,9 @@ export default function BlogDetailPage() {
                 <div>
                   <div
                     onClick={() => blogImageInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-[#FF6B35] transition-colors cursor-pointer"
+                    className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-[#FF6B35] dark:border-gray-600"
                   >
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <Upload className="mx-auto mb-2 h-8 w-8 text-gray-400" />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Click to upload
                     </p>
@@ -440,8 +529,8 @@ export default function BlogDetailPage() {
             </div>
 
             {/* Preview Image */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                 Preview Image (Optional)
               </h3>
 
@@ -450,12 +539,12 @@ export default function BlogDetailPage() {
                   <img
                     src={avatar(formData.previewImage)}
                     alt="Preview"
-                    className="w-full h-32 object-cover rounded-lg"
+                    className="h-32 w-full rounded-lg object-cover"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    icon={<Upload className="w-4 h-4" />}
+                    icon={<Upload className="h-4 w-4" />}
                     loading={uploadingPreview}
                     onClick={() => previewImageInputRef.current?.click()}
                     className="w-full"
@@ -467,7 +556,7 @@ export default function BlogDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  icon={<Upload className="w-4 h-4" />}
+                  icon={<Upload className="h-4 w-4" />}
                   loading={uploadingPreview}
                   onClick={() => previewImageInputRef.current?.click()}
                   className="w-full"

@@ -146,27 +146,28 @@ export default function CustomerDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
       <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Back Button */}
-        <div>
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/customers")}
-            icon={<ArrowLeft className="w-4 h-4" />}
-            size="sm"
-          >
-            Back to Customers
-          </Button>
-        </div>
+        {/* Top Action Bar */}
+<div className="flex items-center justify-between gap-4">
+  {/* Back Button */}
+  <Button
+    variant="ghost"
+    onClick={() => router.push("/customers")}
+    icon={<ArrowLeft className="w-4 h-4" />}
+    size="sm"
+  >
+    Back to Customers
+  </Button>
 
-        {/* Customer Header */}
-        <CustomerHeader customer={customer} />
+  {/* Quick Actions */}
+  <QuickActions
+    customerId={customer.id}
+    onEdit={() => setShowEditModal(true)}
+    onDelete={handleDelete}
+  />
+</div>
 
-        {/* Quick Actions */}
-        <QuickActions
-          customerId={customer.id}
-          onEdit={() => setShowEditModal(true)}
-          onDelete={handleDelete}
-        />
+{/* Customer Header */}
+<CustomerHeader customer={customer} />
 
         {/* Customer Info */}
         <CustomerInfo customer={customer} />

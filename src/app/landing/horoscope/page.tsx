@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import HoroscopeClient from "./HoroscopeClient";
 import { prisma } from "@/lib/prisma";
+import { Suspense } from "react";
 
 /* ================= SEO (SERVER ONLY) ================= */
 
@@ -101,7 +102,10 @@ export default function HoroscopePage() {
   return (
     <>
       <h1 className="sr-only">Daily Horoscope - Your Zodiac Predictions</h1>
-      <HoroscopeClient />
+
+      <Suspense fallback={null}>
+        <HoroscopeClient />
+      </Suspense>
     </>
   );
 }

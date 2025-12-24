@@ -56,7 +56,8 @@ const publicPrefixes = [
   "/landing/astro",
   "/landing/mall",
   "/landing/courses",
-  "/landing/horoscope"
+  "/landing/horoscope",
+  "/landing/panchang",
 ];
 
 export function AppShell({ children }: PropsWithChildren) {
