@@ -27,7 +27,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
       <head>
-        {/* ✅ Google Tag Manager */}
+        {/* Google Tag Manager */}
         <Script
           id="gtm-script"
           strategy="afterInteractive"
@@ -39,10 +39,11 @@ export default function RootLayout({ children }: PropsWithChildren) {
             })(window,document,'script','dataLayer','GTM-PC6L5693');`,
           }}
         />
+        {/* End Google Tag Manager */}
       </head>
 
       <body className="h-full">
-        {/* ✅ Google Tag Manager (noscript) */}
+        {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-PC6L5693"
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
+        {/* End Google Tag Manager (noscript) */}
 
         <Providers>
           <NextTopLoader color="#5750F1" showSpinner={false} />
