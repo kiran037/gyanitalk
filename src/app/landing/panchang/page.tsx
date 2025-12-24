@@ -1,5 +1,6 @@
 // app/landing/panchang/page.tsx
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PanchangClient from "./PanchangClient";
 
 /* ================= SEO (SERVER ONLY) ================= */
@@ -74,8 +75,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function PanchangPage() {
   return (
     <>
-      <h1 className="sr-only">Daily Panchang - Hindu Calendar & Auspicious Timings</h1>
-      <PanchangClient />
+      <h1 className="sr-only">
+        Daily Panchang - Hindu Calendar & Auspicious Timings
+      </h1>
+
+      <Suspense fallback={null}>
+        <PanchangClient />
+      </Suspense>
     </>
   );
 }
