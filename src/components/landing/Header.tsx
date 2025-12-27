@@ -8,7 +8,11 @@ import Link from "next/link";
 interface HeaderProps {
   theme: string;
   toggleTheme: () => void;
-  menuItems?: Array<{ label: string; href: string }>;
+  menuItems?: Array<{
+    label: string;
+    href?: string; // optional for dropdown parent
+    children?: { label: string; href: string }[];
+  }>;
 }
 
 export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
@@ -22,6 +26,13 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
         { label: "Home", href: "/" },
         { label: "Astrologers", href: "/landing/astro" },
         { label: "Horoscope", href: "/landing/horoscope" },
+        {
+          label: "Kundli",
+          children: [
+            { label: "Generate Kundli", href: "/landing/kundali/generate" },
+            { label: "Match Kundli", href: "/landing/kundali/match" },
+          ],
+        },
         { label: "Panchang", href: "/landing/panchang" },
         { label: "Mall", href: "/landing/mall" },
         { label: "Courses", href: "/landing/courses" },
@@ -96,15 +107,45 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
             {/* Desktop Menu */}
             <div className="hidden items-center gap-1.5 md:flex lg:gap-2">
               {items.map((item) => {
-                const active = isActive(item.href);
+                // DROPDOWN ITEM
+                if (item.children) {
+                  return (
+                    <div key={item.label} className="group relative">
+                      {/* Parent */}
+                      <div className="flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-[#FF6B35] dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-[#FF6B35]">
+                        {item.label}
+                      </div>
+
+                      {/* Dropdown */}
+                      <div className="pointer-events-auto absolute left-0 top-full z-50 hidden min-w-[200px] pt-2 group-hover:block">
+                        <div className="rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-950">
+                          <div className="flex flex-col p-2">
+                            {item.children.map((child) => (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className="rounded-lg px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-100 hover:text-[#FF6B35] dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-[#FF6B35]"
+                              >
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // NORMAL LINK
+                const active = isActive(item.href!);
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={item.href!}
                     aria-current={active ? "page" : undefined}
-                    className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all lg:px-4 ${
+                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                       active
-                        ? "bg-[#FF6B35] text-white shadow-sm"
+                        ? "bg-[#FF6B35] text-white"
                         : "text-gray-700 hover:bg-gray-100 hover:text-[#FF6B35] dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-[#FF6B35]"
                     }`}
                   >
@@ -178,17 +219,37 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
             <div className="mx-auto max-w-7xl px-4 py-4">
               <div className="flex flex-col gap-1.5">
                 {items.map((item) => {
-                  const active = isActive(item.href);
+                  if (item.children) {
+                    return (
+                      <div key={item.label} className="flex flex-col gap-1">
+                        <span className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white">
+                          {item.label}
+                        </span>
+
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="ml-4 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  const active = isActive(item.href!);
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
+                      href={item.href!}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                      className={`rounded-lg px-4 py-3 text-sm font-medium ${
                         active
                           ? "bg-[#FF6B35] text-white"
-                          : "text-gray-700 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-900 dark:active:bg-gray-800"
+                          : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
                       }`}
                     >
                       {item.label}

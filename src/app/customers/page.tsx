@@ -50,7 +50,7 @@ export default function CustomersPage() {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    perPage: 50,
+    perPage: 100,
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

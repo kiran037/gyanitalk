@@ -58,6 +58,8 @@ const publicPrefixes = [
   "/landing/courses",
   "/landing/horoscope",
   "/landing/panchang",
+  "/landing/kundali/generate",
+  "/landing/kundali/match"
 ];
 
 export function AppShell({ children }: PropsWithChildren) {

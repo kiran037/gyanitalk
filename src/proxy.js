@@ -13,6 +13,8 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/landing/courses",
   "/landing/horoscope",
   "/landing/panchang",
+  "/landing/kundali/generate",
+  "/landing/kundali/match"
 ];
 
 const PUBLIC_EXACT_ROUTES = [

@@ -26,7 +26,7 @@ if (status) {
 }
 
 
-    if (status) where.status = status;
+
     if (astrologerId) where.astrologerId = BigInt(astrologerId);
     
     if (startDate && endDate) {
