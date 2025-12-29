@@ -20,10 +20,6 @@ export const metadata: Metadata = {
     default: "Gyanitallk Admin",
     template: "%s | Gyanitallk Admin",
   },
-  robots: {
-    index: false,
-    follow: false,
-  },
   description: "Admin panel for the Gyanitallk astrology platform.",
   manifest: "/manifest.json",
   icons: {
