@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     "vedic astrology",
     "gyanitallk",
   ],
+   robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "Gyanitallk – Talk to Expert Astrologers Online",
     description:
