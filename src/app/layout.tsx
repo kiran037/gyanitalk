@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     template: "%s | Gyanitallk Admin",
   },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
   description: "Admin panel for the Gyanitallk astrology platform.",
   manifest: "/manifest.json",

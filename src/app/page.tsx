@@ -39,7 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
       alternates: {
         canonical: seo.canonicalUrl || SITE_URL,
       },
-
+      robots: {
+        index: true,
+        follow: true,
+      },
       openGraph: {
         title: seo.ogTitle || seo.metaTitle || seo.title,
         description: seo.ogDescription || seo.metaDescription,
