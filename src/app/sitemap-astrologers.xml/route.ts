@@ -74,7 +74,7 @@ export async function GET() {
 
       return `
   <url>
-    <loc>${BASE_URL}/landing/astro/${finalSlug}</loc>
+    <loc>${BASE_URL}/talk-to-astrologers/${finalSlug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

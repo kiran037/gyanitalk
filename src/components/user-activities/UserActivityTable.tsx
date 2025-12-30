@@ -214,7 +214,7 @@ export function UserActivityTable() {
                       variant="ghost"
                       size="sm"
                       icon={<Eye className="w-4 h-4" />}
-                      onClick={() => router.push(`/user-activities/${user.id}`)}
+                      onClick={() => router.push(`/admin/user-activities/${user.id}`)}
                       ariaLabel="View Details"
                     />
                   </td>

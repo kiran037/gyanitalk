@@ -6,26 +6,22 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-
       {
         protocol: "http",
         hostname: "localhost",
         port: "3000",
         pathname: "/**"
       },
-
       {
         protocol: "https",
         hostname: "gyanitalk.com",
         pathname: "/**"
       },
-
       {
         protocol: "https",
         hostname: "gyanitalk.s3.ap-south-1.amazonaws.com",
         pathname: "/**"
       },
-
       {
         protocol: "https",
         hostname: "cdn.sanity.io",
@@ -47,7 +43,93 @@ const nextConfig = {
         pathname: "/**"
       }
     ]
-  }
+  },
+
+  async redirects() {
+    return [
+      // Static page redirects
+      {
+        source: "/landing/about-us",
+        destination: "/about-us",
+        permanent: true, // 301 redirect
+      },
+      {
+        source: "/landing/terms-of-service",
+        destination: "/terms-of-service",
+        permanent: true,
+      },
+      {
+        source: "/landing/privacy-policy",
+        destination: "/privacy-policy",
+        permanent: true,
+      },
+      {
+        source: "/landing/contact",
+        destination: "/contact",
+        permanent: true,
+      },
+      
+      // Dynamic route redirects with path parameters
+      {
+        source: "/landing/blog/:path*",
+        destination: "/blog/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/astro/:path*",
+        destination: "/astro/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/mall/:path*",
+        destination: "/mall/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/courses/:path*",
+        destination: "/courses/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/horoscope/:path*",
+        destination: "/horoscope/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/panchang/:path*",
+        destination: "/panchang/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/kundali/generate/:path*",
+        destination: "/free-kundali/:path*",
+        permanent: true,
+      },
+      {
+        source: "/landing/kundali/match/:path*",
+        destination: "/kundali-matching/:path*",
+        permanent: true,
+      },
+      // Old URLs without /landing prefix to new URLs
+      {
+        source: "/kundali/generate/:path*",
+        destination: "/free-kundali/:path*",
+        permanent: true,
+      },
+      {
+        source: "/kundali/match/:path*",
+        destination: "/kundali-matching/:path*",
+        permanent: true,
+      },
+      
+      // Catch-all for any remaining /landing/* routes
+      {
+        source: "/landing/:path*",
+        destination: "/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

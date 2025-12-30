@@ -86,9 +86,9 @@ export default function Footer() {
             </h3>
             <ul className="space-y-1.5 sm:space-y-2">
               {[
-                { label: "Blog", href: "/landing/blog" },
-                { label: "Astrologers", href: "/landing/astro" },
-                { label: "Contact", href: "/landing/contact" },
+                { label: "Blog", href: "/blog" },
+                { label: "Astrologers", href: "/talk-to-astrologers" },
+                { label: "Contact", href: "/contact" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -109,9 +109,9 @@ export default function Footer() {
             </h3>
             <ul className="space-y-1.5 sm:space-y-2">
               {[
-                { label: "About Us", href: "/landing/about-us" },
-                { label: "Privacy Policy", href: "/landing/privacy-policy" },
-                { label: "Terms of Service", href: "/landing/terms-of-service" },
+                { label: "About Us", href: "/about-us" },
+                { label: "Privacy Policy", href: "/privacy-policy" },
+                { label: "Terms of Service", href: "/terms-of-service" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link

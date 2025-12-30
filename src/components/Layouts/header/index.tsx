@@ -185,7 +185,7 @@ export function Header() {
               <PanelLeftOpen className="h-5 w-5 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors" />
             </button>
 
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
               <div className="relative">
                 <div className="absolute inset-0 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
                 <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-white dark:ring-gray-900 ">
@@ -224,7 +224,7 @@ export function Header() {
 
             {/* Settings Button */}
             <Link
-              href="/settings"
+              href="/admin/settings"
               className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
               aria-label="Settings"
             >
@@ -302,7 +302,7 @@ export function Header() {
                     <div className="p-2">
                       {/* View Profile */}
                       <Link
-                        href="/profile"
+                        href="/admin/profile"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-[#FF6B35]/5 dark:hover:bg-[#FF6B35]/10 transition-all group"
                       >
@@ -318,7 +318,7 @@ export function Header() {
 
                       {/* Settings */}
                       <Link
-                        href="/settings"
+                        href="/admin/settings"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group"
                       >

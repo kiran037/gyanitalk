@@ -254,7 +254,7 @@ export default function ProductCarousel() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5 }}
             >
-                <Link href="/landing/mall">
+                <Link href="/mall">
                     <motion.button
                         className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2.5 sm:py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"
                         whileHover={{ scale: 1.05 }}

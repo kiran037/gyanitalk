@@ -1,20 +1,20 @@
-// /src/proxy.js
+// src/proxy.js
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const PUBLIC_ROUTE_PREFIXES = [
-  "/landing/about-us",
-  "/landing/terms-of-service",
-  "/landing/privacy-policy",
-  "/landing/contact",
-  "/landing/blog",
-  "/landing/astro",
-  "/landing/mall",
-  "/landing/courses",
-  "/landing/horoscope",
-  "/landing/panchang",
-  "/landing/kundali/generate",
-  "/landing/kundali/match"
+  "/about-us",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/contact",
+  "/blog",
+  "/talk-to-astrologers",
+  "/mall",
+  "/courses",
+  "/horoscope",
+  "/panchang",
+  "/free-kundali",
+  "/kundali-matching"
 ];
 
 const PUBLIC_EXACT_ROUTES = [
@@ -29,7 +29,8 @@ const PUBLIC_EXACT_ROUTES = [
   "/sitemap-astrologers.xml",
   "/sitemap-horoscope.xml",
 ];
-const PROTECTED_ROUTES = ["/dashboard", "/profile"];
+
+const PROTECTED_ROUTES = ["/admin/dashboard", "/profile"];
 
 function getSecret() {
   if (!process.env.JWT_SECRET) {
@@ -50,6 +51,7 @@ export async function proxy(req) {
   if (pathname === "/robots.txt" || pathname.startsWith("/sitemap")) {
     return NextResponse.next();
   }
+  
   // Allow open API endpoints
   if (
     pathname.startsWith("/api/landing") ||
@@ -82,10 +84,10 @@ export async function proxy(req) {
 
       const isAuthLandingHit = pathname === "/sign-in" || pathname === "/";
       if (isAuthLandingHit)
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
 
       if (role === "admin" && isPublicRoute) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
       }
 
       return NextResponse.next();

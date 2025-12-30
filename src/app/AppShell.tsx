@@ -1,3 +1,4 @@
+
 // app/AppShell.tsx
 "use client";
 
@@ -48,18 +49,18 @@ function LayoutContent({
 }
 
 const publicPrefixes = [
-  "/landing/about-us",
-  "/landing/terms-of-service",
-  "/landing/privacy-policy",
-  "/landing/contact",
-  "/landing/blog",
-  "/landing/astro",
-  "/landing/mall",
-  "/landing/courses",
-  "/landing/horoscope",
-  "/landing/panchang",
-  "/landing/kundali/generate",
-  "/landing/kundali/match"
+  "/about-us",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/contact",
+  "/blog",
+  "/talk-to-astrologers",
+  "/mall",
+  "/courses",
+  "/horoscope",
+  "/panchang",
+  "/free-kundali",
+  "/kundali-matching",
 ];
 
 export function AppShell({ children }: PropsWithChildren) {
@@ -83,9 +84,9 @@ export function AppShell({ children }: PropsWithChildren) {
 
     const token = getCookie("token");
 
-    // If already logged in and on public page, push to dashboard
+    // If already logged in and on public page, push to admin dashboard
     if (token && isPublicPage) {
-      router.push("/dashboard");
+      router.push("/admin/dashboard");
     }
   }, [pathname, router, isPublicPage]);
 

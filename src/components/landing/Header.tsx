@@ -24,21 +24,21 @@ export default function Header({ theme, toggleTheme, menuItems }: HeaderProps) {
     () =>
       menuItems || [
         { label: "Home", href: "/" },
-        { label: "Astrologers", href: "/landing/astro" },
-        { label: "Horoscope", href: "/landing/horoscope" },
+        { label: "Astrologers", href: "/talk-to-astrologers" },
+        { label: "Horoscope", href: "/horoscope" },
         {
           label: "Kundli",
           children: [
-            { label: "Generate Kundli", href: "/landing/kundali/generate" },
-            { label: "Match Kundli", href: "/landing/kundali/match" },
+            { label: "Free Kundali", href: "/free-kundali" },
+            { label: "Kundali Matching", href: "/kundali-matching" },
           ],
         },
-        { label: "Panchang", href: "/landing/panchang" },
-        { label: "Mall", href: "/landing/mall" },
-        { label: "Courses", href: "/landing/courses" },
-        { label: "Blog", href: "/landing/blog" },
-        { label: "About", href: "/landing/about-us" },
-        { label: "Contact", href: "/landing/contact" },
+        { label: "Panchang", href: "/panchang" },
+        { label: "Mall", href: "/mall" },
+        { label: "Courses", href: "/courses" },
+        { label: "Blog", href: "/blog" },
+        { label: "About", href: "/about-us" },
+        { label: "Contact", href: "/contact" },
       ],
     [menuItems],
   );

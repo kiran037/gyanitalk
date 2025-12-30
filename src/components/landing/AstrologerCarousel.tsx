@@ -255,7 +255,7 @@ export default function AstrologerCarousel() {
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <Link href="/landing/astro">
+        <Link href="/talk-to-astrologers">
           <motion.button
             aria-label="See all astrologers"
             className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"

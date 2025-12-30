@@ -160,14 +160,14 @@ function redirectToAppStore() {
             </motion.button>
             <div className="no-scrollbar flex items-center gap-2 overflow-x-auto text-xs text-gray-500 sm:text-sm">
               <Link
-                href="/landing/mall"
+                href="/mall"
                 className="flex-shrink-0 transition-colors hover:text-[#FF6B35]"
               >
                 Mall
               </Link>
               <ChevronRight className="h-4 w-4 flex-shrink-0" />
               <Link
-                href={`/landing/mall?categoryId=${product.category.id}`}
+                href={`/mall?categoryId=${product.category.id}`}
                 className="flex-shrink-0 transition-colors hover:text-[#FF6B35]"
               >
                 {product.category.name}
@@ -311,7 +311,7 @@ function redirectToAppStore() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Link href={`/landing/mall?categoryId=${product.category.id}`}>
+                <Link href={`/mall?categoryId=${product.category.id}`}>
                   <motion.span
                     className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-3 py-1.5 text-xs font-semibold text-[#FF6B35]"
                     whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
@@ -664,7 +664,7 @@ function redirectToAppStore() {
                   <TrendingUp className="h-6 w-6 text-[#FF6B35] sm:h-7 sm:w-7" />
                   You May Also Like
                 </h2>
-                <Link href="/landing/mall">
+                <Link href="/mall">
                   <motion.button
                     className="flex items-center gap-1 text-xs font-medium text-[#FF6B35] sm:text-sm"
                     whileHover={prefersReducedMotion ? {} : { x: 2 }}
@@ -683,7 +683,7 @@ function redirectToAppStore() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.06 }}
                   >
-                    <Link href={`/landing/mall/${related.slug}`}>
+                    <Link href={`/mall/${related.slug}`}>
                       <motion.article
                         itemScope
                         itemType="https://schema.org/Product"

@@ -6,11 +6,11 @@ const BASE_URL =
 export async function GET() {
   const pages = [
     "/",
-    "/landing/horoscope",
-    "/landing/about-us",
-    "/landing/contact",
-    "/landing/privacy-policy",
-    "/landing/terms-of-service",
+    "/horoscope",
+    "/about-us",
+    "/contact",
+    "/privacy-policy",
+    "/terms-of-service",
   ];
 
   const urls = pages

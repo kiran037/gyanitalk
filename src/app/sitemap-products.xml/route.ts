@@ -13,7 +13,7 @@ export async function GET() {
   const urls = products.map(
     (p) => `
   <url>
-    <loc>${BASE_URL}/landing/mall/${p.slug}</loc>
+    <loc>${BASE_URL}/mall/${p.slug}</loc>
     <lastmod>${p.updated_at?.toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

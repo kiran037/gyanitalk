@@ -457,7 +457,7 @@ const handleSearch = () => {
                       viewport={{ once: true, amount: 0.2 }}
                       transition={{ duration: 0.3, delay: index * 0.03 }}
                     >
-                      <Link href={`/landing/mall/${product.slug}`} className="group block h-full">
+                      <Link href={`/mall/${product.slug}`} className="group block h-full">
                         <motion.article
                           className="h-full bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl overflow-hidden flex flex-col"
                           whileHover={shouldReduceMotion ? {} : {

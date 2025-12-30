@@ -415,7 +415,7 @@ export default function AstrologersClient({
                       transition={{ duration: 0.35, delay: index * 0.04 }}
                     >
                       <Link
-                        href={`/landing/astro/${astro.slug}`}
+                        href={`/talk-to-astrologers/${astro.slug}`}
                         className="group block h-full"
                       >
                         <motion.article

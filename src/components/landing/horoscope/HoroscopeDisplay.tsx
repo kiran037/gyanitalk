@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ZodiacSign,
   HoroscopeType,
-} from "@/app/landing/horoscope/HoroscopeClient";
+} from "@/app/horoscope/HoroscopeClient";
 import {
   Heart,
   Briefcase,
@@ -106,7 +106,7 @@ const searchParams = useSearchParams();
   const handleTypeChange = (type: HoroscopeType) => {
   onTypeChange(type);
   router.push(
-    `/landing/horoscope/${zodiac}?type=${type}`,
+    `/horoscope/${zodiac}?type=${type}`,
     { scroll: false }
   );
 };

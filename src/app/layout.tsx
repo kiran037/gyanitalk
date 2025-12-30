@@ -17,14 +17,27 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://gyanitallk.com"
   ),
   title: {
-    default: "Gyanitallk Admin",
-    template: "%s | Gyanitallk Admin",
+    default: "Gyanitallk – Online Astrology, Kundli & Horoscope",
+    template: "%s | Gyanitallk",
   },
+  description:
+    "Gyanitallk offers astrology consultations, kundli readings, horoscopes, and remedies from verified astrologers. Chat or call live astrologers in your language.",
+  keywords: [
+    "online astrology",
+    "astrologer consultation",
+    "kundli reading",
+    "janam kundli",
+    "horoscope today",
+    "live astrologer chat",
+    "astrology app",
+    "matchmaking kundli",
+    "vedic astrology",
+    "gyanitallk",
+  ],
   robots: {
     index: true,
     follow: true,
   },
-  description: "Admin panel for the Gyanitallk astrology platform.",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -33,7 +46,21 @@ export const metadata: Metadata = {
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" }
     ],
     apple: "/apple-touch-icon.png"
-  }
+  },
+  openGraph: {
+    title: "Gyanitallk – Talk to Expert Astrologers Online",
+    description:
+      "Get instant astrology guidance, kundli analysis, and personalized remedies from expert astrologers on Gyanitallk.",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://gyanitallk.com",
+    siteName: "Gyanitallk",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gyanitallk – Online Astrology & Kundli",
+    description:
+      "Chat or call with expert astrologers, get daily horoscope and kundli insights on Gyanitallk.",
+  },
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {

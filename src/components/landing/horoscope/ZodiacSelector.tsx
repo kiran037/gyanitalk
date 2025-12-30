@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ZodiacSign } from "@/app/landing/horoscope/HoroscopeClient";
+import { ZodiacSign } from "@/app/horoscope/HoroscopeClient";
 import { ensureAbs } from "@/lib/images";
 import { useRouter } from "next/navigation";
 
@@ -53,7 +53,7 @@ export default function ZodiacSelector({
             <motion.button
               key={sign.name}
               onClick={() => {
-  router.push(`/landing/horoscope/${sign.name}`, { scroll: false });
+  router.push(`/horoscope/${sign.name}`, { scroll: false });
 }}
               className={`group relative overflow-hidden rounded-xl p-4 transition-all ${
                 isSelected
