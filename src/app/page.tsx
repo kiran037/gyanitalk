@@ -4,10 +4,6 @@ import HomeClient from "@/components/landing/HomeClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://gyanitalk.com";
 
-/**
- * ✅ Dynamic SEO for Home Page
- * DB → Metadata (2025–26 ready)
- */
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const res = await fetch(`${SITE_URL}/api/landing/home`, {

@@ -10,7 +10,7 @@ export interface BirthDetails {
   birthPlace: string;
   latitude: number;
   longitude: number;
-  timezone: string;
+  timezone: number | string; // Accept both, will be converted to string for DB
   language?: 'hi' | 'en' | 'ta' | 'te' | 'mr' | 'bn' | 'gu' | 'kn' | 'ml' | 'or' | 'pa';
 }
 
@@ -183,7 +183,7 @@ export interface SavedKundli {
   birthPlace: string;
   latitude: number;
   longitude: number;
-  timezone: string;
+  timezone: string; // Always string for consistency
   gender: 'male' | 'female' | 'other';
 }
 
@@ -217,6 +217,12 @@ export interface KundliGenerateResponse {
   };
   error?: string;
   message?: string;
+  meta?: {
+    totalApis: number;
+    successfulApis: number;
+    failedApis: number;
+    generationTime: string;
+  };
 }
 
 export interface PaidKundliResponse {
@@ -237,4 +243,19 @@ export interface PaidKundliResponse {
   requiresPayment?: boolean;
   currentBalance?: number;
   requiredAmount?: number;
+}
+
+// Helper function to normalize timezone
+export function normalizeTimezone(timezone: number | string): string {
+  if (typeof timezone === 'number') {
+    return timezone.toString();
+  }
+  return timezone;
+}
+
+// Helper function to parse timezone for API calls
+export function parseTimezoneForAPI(timezone: number | string): string {
+  const normalized = normalizeTimezone(timezone);
+  // Ensure it's in valid format (e.g., "5.5" not "5.50")
+  return parseFloat(normalized).toString();
 }

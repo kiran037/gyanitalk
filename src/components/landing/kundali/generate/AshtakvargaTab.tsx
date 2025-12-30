@@ -1,6 +1,6 @@
 // src/components/landing/kundali/generate/AshtakvargaTab.tsx
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Zap, AlertCircle, BarChart3 } from 'lucide-react';
 
 interface AshtakvargaTabProps {
   data: any;
@@ -12,7 +12,7 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
   if (!ashtakvarga) {
     return (
       <div className="rounded-xl border border-gray-200/60 bg-white/60 p-12 text-center backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5">
-        <div className="mb-4 text-6xl">⚡</div>
+        <Zap className="mx-auto mb-4 h-16 w-16 text-gray-400" />
         <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
           Ashtakvarga Data Not Available
         </h3>
@@ -58,14 +58,19 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
         animate={{ opacity: 1, y: 0 }}
         className="rounded-xl border border-blue-200/60 bg-blue-50/60 p-4 backdrop-blur-sm dark:border-blue-900/60 dark:bg-blue-900/10"
       >
-        <h3 className="mb-2 font-bold text-blue-900 dark:text-blue-100">
-          ⚡ What is Ashtakvarga?
-        </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          Ashtakvarga is a predictive system that measures the strength of planets and signs. 
-          Higher points (28+) indicate favorable results, while lower points suggest challenges. 
-          It helps identify the best timing for activities based on planetary transits.
-        </p>
+        <div className="flex gap-3">
+          <AlertCircle className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+          <div>
+            <h3 className="mb-2 font-bold text-blue-900 dark:text-blue-100">
+              What is Ashtakvarga?
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Ashtakvarga is a predictive system that measures the strength of planets and signs. 
+              Higher points (28+) indicate favorable results, while lower points suggest challenges. 
+              It helps identify the best timing for activities based on planetary transits.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Total Strength Summary */}
@@ -75,7 +80,8 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
         transition={{ delay: 0.1 }}
         className="rounded-xl border border-gray-200/60 bg-white/60 p-6 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
       >
-        <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+          <BarChart3 className="h-5 w-5 text-[#FF6B35]" />
           Sign Strength Summary
         </h3>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -94,7 +100,7 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
                     {strength.icon}
                   </span>
                 </div>
-                <div className="mb-1 text-2xl font-bold ${getStrengthColor(total)}">
+                <div className={`mb-1 text-2xl font-bold ${getStrengthColor(total)}`}>
                   {total}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -121,7 +127,8 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
         className="rounded-xl border border-gray-200/60 bg-white/60 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
       >
         <div className="p-4">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+            <Zap className="h-5 w-5 text-[#FF6B35]" />
             Detailed Ashtakvarga Points
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -217,8 +224,9 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
         transition={{ delay: 0.3 }}
         className="rounded-xl border border-purple-200/60 bg-purple-50/60 p-6 backdrop-blur-sm dark:border-purple-900/60 dark:bg-purple-900/10"
       >
-        <h3 className="mb-4 font-bold text-purple-900 dark:text-purple-100">
-          📚 How to Interpret
+        <h3 className="mb-4 flex items-center gap-2 font-bold text-purple-900 dark:text-purple-100">
+          <AlertCircle className="h-5 w-5" />
+          How to Interpret
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -226,10 +234,22 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
               Sign Strength (Total Points)
             </h4>
             <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-300">
-              <li>• <strong>32-48:</strong> Excellent - Very favorable period</li>
-              <li>• <strong>25-31:</strong> Good - Generally positive results</li>
-              <li>• <strong>20-24:</strong> Average - Mixed results</li>
-              <li>• <strong>Below 20:</strong> Weak - Challenges likely</li>
+              <li className="flex items-center gap-2">
+                <TrendingUp className="h-3 w-3" />
+                <strong>32-48:</strong> Excellent - Very favorable period
+              </li>
+              <li className="flex items-center gap-2">
+                <TrendingUp className="h-3 w-3" />
+                <strong>25-31:</strong> Good - Generally positive results
+              </li>
+              <li className="flex items-center gap-2">
+                <Minus className="h-3 w-3" />
+                <strong>20-24:</strong> Average - Mixed results
+              </li>
+              <li className="flex items-center gap-2">
+                <TrendingDown className="h-3 w-3" />
+                <strong>Below 20:</strong> Weak - Challenges likely
+              </li>
             </ul>
           </div>
           <div>
@@ -237,9 +257,18 @@ export default function AshtakvargaTab({ data }: AshtakvargaTabProps) {
               Planetary Contributions
             </h4>
             <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-300">
-              <li>• <strong>5-8:</strong> Strong positive influence</li>
-              <li>• <strong>3-4:</strong> Moderate support</li>
-              <li>• <strong>0-2:</strong> Minimal or adverse effect</li>
+              <li className="flex items-center gap-2">
+                <Zap className="h-3 w-3" />
+                <strong>5-8:</strong> Strong positive influence
+              </li>
+              <li className="flex items-center gap-2">
+                <Minus className="h-3 w-3" />
+                <strong>3-4:</strong> Moderate support
+              </li>
+              <li className="flex items-center gap-2">
+                <TrendingDown className="h-3 w-3" />
+                <strong>0-2:</strong> Minimal or adverse effect
+              </li>
             </ul>
           </div>
         </div>
