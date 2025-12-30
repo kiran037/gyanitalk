@@ -77,7 +77,7 @@ const nextConfig = {
       },
       {
         source: "/landing/astro/:path*",
-        destination: "/astro/:path*",
+        destination: "/talk-to-astrologers/:path*",
         permanent: true,
       },
       {
@@ -98,34 +98,6 @@ const nextConfig = {
       {
         source: "/landing/panchang/:path*",
         destination: "/panchang/:path*",
-        permanent: true,
-      },
-      {
-        source: "/landing/kundali/generate/:path*",
-        destination: "/free-kundali/:path*",
-        permanent: true,
-      },
-      {
-        source: "/landing/kundali/match/:path*",
-        destination: "/kundali-matching/:path*",
-        permanent: true,
-      },
-      // Old URLs without /landing prefix to new URLs
-      {
-        source: "/kundali/generate/:path*",
-        destination: "/free-kundali/:path*",
-        permanent: true,
-      },
-      {
-        source: "/kundali/match/:path*",
-        destination: "/kundali-matching/:path*",
-        permanent: true,
-      },
-      
-      // Catch-all for any remaining /landing/* routes
-      {
-        source: "/landing/:path*",
-        destination: "/:path*",
         permanent: true,
       },
     ];
