@@ -1,4 +1,3 @@
-///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/kundali/match/paid/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { WalletChecker } from '@/lib/wallet-check';
@@ -8,6 +7,10 @@ import { MATCHING_PRICING } from '@/types/kundli';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+
+// Use the same upload path as your S3 storage
+const UPLOAD_BASE = process.env.UPLOAD_PATH || 'public/storage/';
+const KUNDALI_SUBFOLDER = 'kundali';
 
 export async function POST(request: NextRequest) {
   try {
@@ -115,19 +118,24 @@ export async function POST(request: NextRequest) {
 
     const pdfUrl = pdfResponse.data.response;
 
-    // Download and save PDF
+    // Download and save PDF to UPLOAD_PATH/kundali/
     let localPdfPath = '';
     try {
       const timestamp = Date.now();
-      const filename = `match_${maleForm.name}_${femaleForm.name}_${timestamp}.pdf`.replace(/\s+/g, '_').toLowerCase();
-      const kundliDir = process.env.KUNDALI_PATH || './public/kundli';
-      const filePath = path.join(kundliDir, filename);
+      const filename = `match_${maleForm.name}_${femaleForm.name}_${timestamp}.pdf`
+        .replace(/\s+/g, '_')
+        .toLowerCase();
+      
+      // Build path using UPLOAD_PATH + kundali subfolder
+      const storageDir = path.join(process.cwd(), UPLOAD_BASE, KUNDALI_SUBFOLDER);
+      const filePath = path.join(storageDir, filename);
 
-      if (!fs.existsSync(kundliDir)) {
-        fs.mkdirSync(kundliDir, { recursive: true });
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(storageDir)) {
+        fs.mkdirSync(storageDir, { recursive: true });
       }
 
-      // Poll and download
+      // Poll and download PDF
       let pdfReady = false;
       let attempts = 0;
       const maxAttempts = 15;
@@ -142,10 +150,15 @@ export async function POST(request: NextRequest) {
             });
             fs.writeFileSync(filePath, downloadResponse.data);
             pdfReady = true;
-            localPdfPath = `/kundli/${filename}`;
+            
+            // Build public URL path (removing 'public/' prefix if it exists)
+            const publicPath = UPLOAD_BASE.startsWith('public/') 
+              ? UPLOAD_BASE.substring(7) // Remove 'public/'
+              : UPLOAD_BASE;
+            localPdfPath = `/${publicPath}${KUNDALI_SUBFOLDER}/${filename}`;
           }
         } catch (err) {
-          // Not ready
+          // PDF not ready yet
         }
 
         if (!pdfReady) {
@@ -160,7 +173,8 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
       console.error('PDF download error:', error);
-      // Refund - FIX: Use wallet ID
+      
+      // Refund on error
       if (walletCheck.walletId) {
         await prisma.wallettransaction.create({
           data: {
@@ -174,7 +188,7 @@ export async function POST(request: NextRequest) {
         });
 
         await prisma.user_wallets.update({
-          where: { id: walletCheck.walletId }, // ✅ FIX: Use id instead of userId
+          where: { id: walletCheck.walletId },
           data: { amount: { increment: MATCHING_PRICING.price } }
         });
       }
@@ -183,7 +197,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to kundali_matchings table
-    // ✅ FIX: Remove match_type field as it doesn't exist in schema
     const matching = await prisma.kundali_matchings.create({
       data: {
         userId: BigInt(userId),
@@ -197,7 +210,6 @@ export async function POST(request: NextRequest) {
         girlBirthDate: femaleForm.birthDate,
         girlBirthTime: femaleForm.birthTime,
         girlBirthPlace: femaleForm.birthPlace,
-        // match_type: matchType, // ❌ REMOVED - field doesn't exist
         isActive: true,
         isDelete: false,
         createdBy: userId,
@@ -215,7 +227,7 @@ export async function POST(request: NextRequest) {
       data: {
         matchingId: Number(matching.id),
         pdfUrl: `${process.env.NEXT_PUBLIC_APP_URL}${localPdfPath}`,
-        matchType: matchType, // ✅ Return in response but not save in DB
+        matchType: matchType,
         transactionId: Date.now()
       },
       payment: {

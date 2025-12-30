@@ -1,6 +1,11 @@
 "use client";
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -101,6 +106,54 @@ export default function CourseDetailClient({
   const [activeTab, setActiveTab] = useState<"overview" | "chapters" | "about">(
     "overview",
   );
+
+  useEffect(() => {
+    if (!course) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "course_schema",
+      // Course schema data
+      schema_type: "course",
+      name: course.name,
+      description: course.description?.replace(/<[^>]*>/g, "").slice(0, 200) || "",
+      provider: "Gyanitalk",
+      url: typeof window !== 'undefined' ? window.location.href : "",
+      price: course.offerPrice ?? course.price ?? 0,
+      currency: "INR",
+      is_paid: course.isPaid === 1,
+      is_free: course.isPaid === 0,
+      // Course statistics
+      total_chapters: course.statistics.totalChapters,
+      free_chapters: course.statistics.freeChapters,
+      paid_chapters: course.statistics.paidChapters,
+      total_enrollments: course.statistics.totalEnrollments,
+      active_enrollments: course.statistics.activeEnrollments,
+      success_rate: course.statistics.conversionRate,
+      // Category information
+      ...(course.category && {
+        category: course.category.name,
+        category_id: course.category.id,
+      }),
+      // Breadcrumb data
+      breadcrumb_home: "Home",
+      breadcrumb_home_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+      breadcrumb_parent: "Courses",
+      breadcrumb_parent_url: `${process.env.NEXT_PUBLIC_SITE_URL}/courses`,
+      ...(course.category && {
+        breadcrumb_category: course.category.name,
+        breadcrumb_category_url: `${process.env.NEXT_PUBLIC_SITE_URL}/courses`,
+      }),
+      breadcrumb_current: course.name,
+      breadcrumb_current_url: typeof window !== 'undefined' ? window.location.href : "",
+      // Pricing details
+      ...(course.discount > 0 && {
+        discount_percentage: course.discount,
+        original_price: course.price,
+        offer_price: course.offerPrice,
+      }),
+    });
+  }, [course]);
 
   const toggleChapter = (chapterId: number) => {
     setExpandedChapter((prev) => (prev === chapterId ? null : chapterId));

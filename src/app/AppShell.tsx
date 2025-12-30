@@ -1,5 +1,4 @@
 
-// app/AppShell.tsx
 "use client";
 
 import { PropsWithChildren, useEffect } from "react";
@@ -67,10 +66,16 @@ export function AppShell({ children }: PropsWithChildren) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicPage =
-    pathname === "/" ||
-    pathname === "/sign-in" ||
+  // Only exact matches for home and sign-in
+  const isLandingOrSignIn = pathname === "/" || pathname === "/sign-in";
+  
+  // Check if it's a known public route
+  const isKnownPublicRoute =
+    isLandingOrSignIn ||
     publicPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+  // For layout purposes, treat it as public if it's not an admin route
+  const isPublicPage = !pathname.startsWith("/admin") && !pathname.startsWith("/profile");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -84,11 +89,12 @@ export function AppShell({ children }: PropsWithChildren) {
 
     const token = getCookie("token");
 
-    // If already logged in and on public page, push to admin dashboard
-    if (token && isPublicPage) {
+    // ONLY redirect if logged in AND on landing/sign-in pages
+    // Don't redirect on other public pages or 404 pages
+    if (token && isLandingOrSignIn) {
       router.push("/admin/dashboard");
     }
-  }, [pathname, router, isPublicPage]);
+  }, [pathname, router, isLandingOrSignIn]);
 
   return <LayoutContent isPublicPage={isPublicPage}>{children}</LayoutContent>;
 }

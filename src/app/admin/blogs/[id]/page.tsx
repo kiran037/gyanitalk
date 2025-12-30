@@ -310,7 +310,7 @@ export default function BlogDetailPage() {
                     icon={<Eye className="h-4 w-4" />}
                     onClick={() =>
                       window.open(
-                        `/landing/blog/${formData.slug || blogId}`,
+                        `/blog/${formData.slug || blogId}`,
                         "_blank",
                       )
                     }

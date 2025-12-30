@@ -1,5 +1,10 @@
 "use client";
 
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
 import { useState, useEffect } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import {
@@ -106,6 +111,40 @@ export default function BlogDetailClient({
 
   const prefersReducedMotion = useReducedMotion();
   /* ================= HELPERS ================= */
+
+  // Add this after your existing useState declarations (around line 110)
+  useEffect(() => {
+    if (!blog) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "blog_schema",
+      // Blog schema data
+      schema_type: "blog",
+      title: blog.title,
+      description:
+        blog.seo?.excerpt ||
+        blog.description?.replace(/<[^>]*>/g, "").slice(0, 155) ||
+        "",
+      url: typeof window !== "undefined" ? window.location.href : "",
+      author: blog.author,
+      publish_date: blog.postedOn,
+      image: avatar(blog.previewImage || blog.blogImage),
+      // Breadcrumb data
+      breadcrumb_home: "Home",
+      breadcrumb_home_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+      breadcrumb_parent: "Blog",
+      breadcrumb_parent_url: `${process.env.NEXT_PUBLIC_SITE_URL}/blog`,
+      breadcrumb_current: blog.title,
+      breadcrumb_current_url:
+        typeof window !== "undefined" ? window.location.href : "",
+      // Optional: Add category if exists
+      ...(blog.category && {
+        category: blog.category.name,
+        category_id: blog.category.id,
+      }),
+    });
+  }, [blog]);
 
   const convertTiptapJsonToHtml = (jsonString: string): string => {
     try {

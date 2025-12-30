@@ -332,7 +332,7 @@ export default function PageManagementPage() {
                           variant="ghost"
                           size="sm"
                           icon={<Eye className="w-4 h-4" />}
-                          onClick={() => window.open(`/landing/${page.slug}`, "_blank")}
+                          onClick={() => window.open(`/${page.slug}`, "_blank")}
                           ariaLabel="View page"
                         />
                         <Button

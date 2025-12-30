@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/landing/LandingNotFound.tsx
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";

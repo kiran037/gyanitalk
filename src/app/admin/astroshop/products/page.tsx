@@ -186,7 +186,7 @@ export default function ProductsPage() {
             subtitle="Manage your product catalog"
             badge={{ text: `${pagination.total} Products`, variant: "purple" }}
             actions={
-              <Link href="/astroshop/products/create">
+              <Link href="/admin/astroshop/products/create">
                 <Button icon={<Plus className="w-4 h-4" />}>
                   Add Product
                 </Button>
@@ -316,7 +316,7 @@ export default function ProductsPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Try adjusting your filters or create a new product
             </p>
-            <Link href="/astroshop/products/create">
+            <Link href="/admin/astroshop/products/create">
               <Button>Create Product</Button>
             </Link>
           </div>
@@ -392,7 +392,7 @@ export default function ProductsPage() {
                         ₹{product.amount}
                       </div>
                       <div className="flex gap-2">
-                        <Link href={`/astroshop/products/${product.id}`}>
+                        <Link href={`/admin/astroshop/products/${product.id}`}>
                           <button className="p-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             <Edit className="w-4 h-4" />
                           </button>

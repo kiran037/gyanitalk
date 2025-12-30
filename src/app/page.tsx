@@ -1,80 +1,90 @@
-// app/page.tsx
+
+
 import type { Metadata } from "next";
 import HomeClient from "@/components/landing/HomeClient";
+import { prisma } from "@/lib/prisma";
+import { cache } from "react";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://gyanitalk.com";
+const getHomeSEO = cache(async () => {
+  const page = await prisma.pages.findFirst({
+    where: {
+      type: "home",
+      isActive: true,
+    },
+    select: {
+      title: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
+      canonicalUrl: true,
+      ogTitle: true,
+      ogDescription: true,
+      ogImage: true,
+      twitterTitle: true,
+      twitterDescription: true,
+      twitterImage: true,
+      schemaJson: true,
+    },
+  });
+
+  return page;
+});
 
 export async function generateMetadata(): Promise<Metadata> {
-  try {
-    const res = await fetch(`${SITE_URL}/api/landing/home`, {
-      // SEO should always be fresh
-      cache: "no-store",
-    });
+  const seo = await getHomeSEO();
 
-    if (!res.ok) throw new Error("SEO fetch failed");
+  const title =
+    seo?.metaTitle ??
+    "Gyanitalk – Talk to Astrologers Online | Horoscope & Kundli";
 
-    const json = await res.json();
-    const seo = json?.data;
+  const description =
+    seo?.metaDescription ??
+    "Talk to verified astrologers online. Get horoscope, kundli, astrology guidance & spiritual insights on Gyanitalk.";
 
-    // Fallback if page not created yet
-    if (!seo) {
-      return {
-        title: "Gyanitalk – Talk to Astrologers Online",
-        description:
-          "Talk to verified astrologers online. Get horoscope, kundli, astrology guidance & spiritual insights on Gyanitalk.",
-        alternates: {
-          canonical: SITE_URL,
+  const canonical =
+    seo?.canonicalUrl ?? process.env.NEXT_PUBLIC_SITE_URL!;
+
+  const ogImage =
+    seo?.ogImage ?? `${process.env.NEXT_PUBLIC_SITE_URL}/og-default.jpg`;
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
+
+    title,
+    description,
+
+    alternates: {
+      canonical,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+    },
+
+    openGraph: {
+      title: seo?.ogTitle ?? title,
+      description: seo?.ogDescription ?? description,
+      url: canonical,
+      siteName: "Gyanitalk",
+      type: "website",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
         },
-      };
-    }
+      ],
+    },
 
-    return {
-      title: seo.metaTitle || seo.title || "Gyanitalk",
-      description: seo.metaDescription || seo.description || "",
-
-      alternates: {
-        canonical: seo.canonicalUrl || SITE_URL,
-      },
-      robots: {
-        index: true,
-        follow: true,
-      },
-      openGraph: {
-        title: seo.ogTitle || seo.metaTitle || seo.title,
-        description: seo.ogDescription || seo.metaDescription,
-        url: seo.canonicalUrl || SITE_URL,
-        images: seo.ogImage
-          ? [{ url: seo.ogImage }]
-          : [{ url: "/og-default.jpg" }],
-        type: "website",
-      },
-
-      twitter: {
-        card: "summary_large_image",
-        title: seo.twitterTitle || seo.metaTitle || seo.title,
-        description:
-          seo.twitterDescription || seo.metaDescription || "",
-        images: seo.twitterImage
-          ? [seo.twitterImage]
-          : ["/og-default.jpg"],
-      },
-
-      // Helps Google understand freshness
-      other: {
-        "last-modified": seo.updated_at,
-      },
-    };
-  } catch (error) {
-    // Hard fallback (never break SEO)
-    return {
-      title: "Gyanitalk – Talk to Astrologers Online",
-      description:
-        "Talk to verified astrologers online. Get horoscope, kundli, astrology guidance & spiritual insights on Gyanitalk.",
-      alternates: {
-        canonical: SITE_URL,
-      },
-    };
-  }
+    twitter: {
+      card: "summary_large_image",
+      title: seo?.twitterTitle ?? title,
+      description: seo?.twitterDescription ?? description,
+      images: [seo?.twitterImage ?? ogImage],
+    },
+  };
 }
 
 export default function HomePage() {

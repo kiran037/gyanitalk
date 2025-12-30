@@ -2152,6 +2152,7 @@ enum pages_type {
   panchang
   kundali
   kundali_matching
+  contact_us
 }
 
 enum coupons_discount_type {

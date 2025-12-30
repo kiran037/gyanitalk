@@ -1,7 +1,12 @@
 ///Users/xeoren/Desktop/gyanitallk-admin/src/app/landing/astro/[slug]/AstrologerDetailClient.tsx
 "use client";
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import {
@@ -142,6 +147,55 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
       showAllReviews ? astrologer.reviews : astrologer.reviews.slice(0, 5),
     [astrologer.reviews, showAllReviews],
   );
+
+  useEffect(() => {
+    if (!astrologer) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "astrologer_schema",
+      // Astrologer schema data
+      schema_type: "astrologer",
+      name: astrologer.name,
+      url: typeof window !== 'undefined' ? window.location.href : "",
+      image: avatar(astrologer.profileImage),
+      experience: `${astrologer.experienceInYears}+ years`,
+      expertise: astrologer.allSkill || astrologer.primarySkill || "",
+      primary_skill: astrologer.primarySkill || "",
+      all_skills: astrologer.allSkill || "",
+      languages: astrologer.languageKnown || "",
+      rating: astrologer.avgRating ? astrologer.avgRating.toFixed(1) : "New",
+      review_count: astrologer.reviewsCount.toString(),
+      // Service rates
+      chat_rate: astrologer.charge,
+      call_rate: astrologer.charge,
+      video_rate: astrologer.videoCallRate,
+      report_rate: astrologer.reportRate,
+      // Status and badges
+      is_verified: astrologer.isVerified,
+      top_badge: astrologer.top_badge,
+      featured_badge: astrologer.featured_badge,
+      chat_status: astrologer.chatStatus,
+      call_status: astrologer.callStatus,
+      // Location and education
+      current_city: astrologer.currentCity,
+      highest_qualification: astrologer.highestQualification,
+      degree: astrologer.degree,
+      college: astrologer.college,
+      // Statistics
+      follower_count: astrologer.stats.followerCount,
+      chat_request_count: astrologer.stats.chatRequestCount,
+      call_request_count: astrologer.stats.callRequestCount,
+      order_count: astrologer.stats.orderCount,
+      // Breadcrumb data
+      breadcrumb_home: "Home",
+      breadcrumb_home_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+      breadcrumb_parent: "Astrologers",
+      breadcrumb_parent_url: `${process.env.NEXT_PUBLIC_SITE_URL}/talk-to-astrologers`,
+      breadcrumb_current: astrologer.name,
+      breadcrumb_current_url: typeof window !== 'undefined' ? window.location.href : "",
+    });
+  }, [astrologer]);
 
 function redirectToAppStore() {
   if (typeof window === "undefined") return;

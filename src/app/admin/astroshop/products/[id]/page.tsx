@@ -266,7 +266,7 @@ export default function ProductForm() {
           "Success",
           `Product ${isEdit ? "updated" : "created"} successfully`,
         );
-        router.push("/astroshop/products");
+        router.push("/admin/astroshop/products");
       } else {
         addToast("error", "Error", data.error || "Failed to save product");
       }
