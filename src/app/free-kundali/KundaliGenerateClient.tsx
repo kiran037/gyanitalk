@@ -8,7 +8,7 @@ import {
   Sparkles, Calendar, Clock, User, MapPin, 
   Loader2, Star, Phone, History, RotateCcw,
   Share2, Download, ChevronDown, Activity,
-  Eye, Shield, Award, Zap, TrendingUp, Heart, Hash
+  Eye, Shield, Award, Zap, Heart, Hash
 } from 'lucide-react';
 import LocationInput from '@/components/landing/kundali/LocationInput';
 import { LocationResult } from '@/lib/location-api';
@@ -286,23 +286,23 @@ export default function KundaliGenerateClient() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-5 py-2.5 backdrop-blur-sm">
-              <Sparkles className="h-4 w-4 text-[#FF6B35]" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-4 py-2 backdrop-blur-sm sm:px-5 sm:py-2.5">
+              <Sparkles className="h-3.5 w-3.5 text-[#FF6B35] sm:h-4 sm:w-4" />
+              <span className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
                 AI-POWERED VEDIC ASTROLOGY
               </span>
             </div>
 
-            <h1 className="text-4xl font-bold leading-tight sm:text-6xl lg:text-7xl">
+            <h1 className="text-3xl font-bold leading-tight sm:text-5xl lg:text-7xl">
               <span className="text-gray-900 dark:text-white">Your Complete </span>
               <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
                 Kundli Report
               </span>
             </h1>
 
-            <p className="mx-auto max-w-2xl text-base text-gray-600 dark:text-gray-400 sm:text-lg">
+            <p className="mx-auto max-w-2xl px-2 text-sm text-gray-600 dark:text-gray-400 sm:px-0 sm:text-lg">
               Comprehensive astrological analysis with 35+ data points • Planetary positions • Predictions • Remedies
             </p>
           </motion.div>
@@ -311,34 +311,34 @@ export default function KundaliGenerateClient() {
 
       {/* Form Section */}
       {step === 1 && (
-        <section className="px-4 py-8 sm:px-6 lg:px-8">
+        <section className="px-3 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl">
             <motion.div
-              className="rounded-3xl border border-gray-200/60 bg-white/70 p-8 backdrop-blur-xl dark:border-gray-700/60 dark:bg-gray-900/70 sm:p-10"
+              className="rounded-2xl sm:rounded-3xl border border-gray-200/60 bg-white/70 p-5 backdrop-blur-xl dark:border-gray-700/60 dark:bg-gray-900/70 sm:p-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="mb-8 text-center">
-                <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+              <div className="mb-6 sm:mb-8 text-center">
+                <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                   Enter Birth Details
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Accurate timing ensures precise predictions
                 </p>
               </div>
 
               {/* Saved Kundlis */}
               {savedKundlis.length > 0 && (
-                <div className="mb-8">
+                <div className="mb-6 sm:mb-8">
                   <button
                     onClick={() => setShowSavedList(!showSavedList)}
-                    className="flex w-full items-center justify-between rounded-2xl border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/5 to-[#FFB347]/5 px-5 py-4 text-sm font-semibold text-gray-900 transition-all hover:border-[#FF6B35]/40 dark:text-white"
+                    className="flex w-full items-center justify-between rounded-xl sm:rounded-2xl border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/5 to-[#FFB347]/5 px-4 py-3 sm:px-5 sm:py-4 text-sm font-semibold text-gray-900 transition-all hover:border-[#FF6B35]/40 dark:text-white"
                   >
-                    <div className="flex items-center gap-3">
-                      <History className="h-5 w-5 text-[#FF6B35]" />
-                      <span>Load Previous Details ({savedKundlis.length})</span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <History className="h-4 w-4 sm:h-5 sm:w-5 text-[#FF6B35]" />
+                      <span className="text-xs sm:text-sm">Load Previous Details ({savedKundlis.length})</span>
                     </div>
-                    <ChevronDown className={`h-5 w-5 transition-transform ${showSavedList ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform ${showSavedList ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -347,15 +347,15 @@ export default function KundaliGenerateClient() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 space-y-3 overflow-hidden"
+                        className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 overflow-hidden"
                       >
                         {savedKundlis.map((kundli, idx) => (
                           <button
                             key={idx}
                             onClick={() => loadSavedKundli(kundli)}
-                            className="w-full rounded-xl border border-gray-200/60 bg-white/60 p-4 text-left transition-all hover:border-[#FF6B35]/40 hover:bg-[#FF6B35]/5 dark:border-gray-700/60 dark:bg-white/5"
+                            className="w-full rounded-xl border border-gray-200/60 bg-white/60 p-3 sm:p-4 text-left transition-all hover:border-[#FF6B35]/40 hover:bg-[#FF6B35]/5 dark:border-gray-700/60 dark:bg-white/5"
                           >
-                            <p className="font-bold text-gray-900 dark:text-white">{kundli.name}</p>
+                            <p className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">{kundli.name}</p>
                             <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                               {kundli.contactNo} • {new Date(kundli.birthDate).toLocaleDateString()} • {kundli.birthTime}
                             </p>
@@ -367,7 +367,7 @@ export default function KundaliGenerateClient() {
                 </div>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 {/* Name */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -380,7 +380,7 @@ export default function KundaliGenerateClient() {
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="Enter your full name"
-                      className={`w-full rounded-xl border ${errors.name ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3.5 pl-12 pr-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
+                      className={`w-full rounded-xl border ${errors.name ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3 pl-11 pr-4 sm:py-3.5 sm:pl-12 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
                     />
                   </div>
                   {errors.name && <p className="mt-1.5 text-xs text-red-500">{errors.name}</p>}
@@ -391,11 +391,11 @@ export default function KundaliGenerateClient() {
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Mobile Number <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <select
                       value={formData.countryCode}
                       onChange={(e) => setFormData({...formData, countryCode: e.target.value})}
-                      className="w-28 rounded-xl border border-gray-200/60 bg-white/60 py-3.5 px-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
+                      className="w-24 sm:w-28 rounded-xl border border-gray-200/60 bg-white/60 py-3 px-2 sm:py-3.5 sm:px-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
                     >
                       <option value="+91">🇮🇳 +91</option>
                       <option value="+1">🇺🇸 +1</option>
@@ -408,9 +408,9 @@ export default function KundaliGenerateClient() {
                         type="tel"
                         value={formData.contactNo}
                         onChange={(e) => setFormData({...formData, contactNo: e.target.value.replace(/\D/g, '')})}
-                        placeholder="Enter mobile number"
+                        placeholder="Mobile number"
                         maxLength={10}
-                        className={`w-full rounded-xl border ${errors.contactNo ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3.5 pl-12 pr-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
+                        className={`w-full rounded-xl border ${errors.contactNo ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3 pl-11 pr-4 sm:py-3.5 sm:pl-12 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
                       />
                     </div>
                   </div>
@@ -422,13 +422,13 @@ export default function KundaliGenerateClient() {
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Gender <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     {(['male', 'female', 'other'] as const).map((g) => (
                       <button
                         key={g}
                         type="button"
                         onClick={() => setFormData({...formData, gender: g})}
-                        className={`rounded-xl border py-3 text-sm font-semibold capitalize transition-all ${
+                        className={`rounded-xl border py-2.5 sm:py-3 text-sm font-semibold capitalize transition-all ${
                           formData.gender === g
                             ? 'border-[#FF6B35] bg-[#FF6B35]/10 text-[#FF6B35] shadow-lg'
                             : 'border-gray-200/60 bg-white/60 text-gray-700 hover:bg-gray-50 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
@@ -441,7 +441,7 @@ export default function KundaliGenerateClient() {
                 </div>
 
                 {/* Date & Time */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Birth Date <span className="text-red-500">*</span>
@@ -453,7 +453,7 @@ export default function KundaliGenerateClient() {
                         value={formData.birthDate}
                         max={new Date().toISOString().split('T')[0]}
                         onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                        className={`w-full rounded-xl border ${errors.birthDate ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3.5 pl-12 pr-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
+                        className={`w-full rounded-xl border ${errors.birthDate ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3 pl-11 pr-4 sm:py-3.5 sm:pl-12 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
                       />
                     </div>
                     {errors.birthDate && <p className="mt-1.5 text-xs text-red-500">{errors.birthDate}</p>}
@@ -469,7 +469,7 @@ export default function KundaliGenerateClient() {
                         type="time"
                         value={formData.birthTime}
                         onChange={(e) => setFormData({...formData, birthTime: e.target.value})}
-                        className={`w-full rounded-xl border ${errors.birthTime ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3.5 pl-12 pr-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
+                        className={`w-full rounded-xl border ${errors.birthTime ? 'border-red-300' : 'border-gray-200/60'} bg-white/60 py-3 pl-11 pr-4 sm:py-3.5 sm:pl-12 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white`}
                       />
                     </div>
                     {errors.birthTime && <p className="mt-1.5 text-xs text-red-500">{errors.birthTime}</p>}
@@ -510,7 +510,7 @@ export default function KundaliGenerateClient() {
                   <select
                     value={formData.language}
                     onChange={(e) => setFormData({...formData, language: e.target.value})}
-                    className="w-full rounded-xl border border-gray-200/60 bg-white/60 py-3.5 px-4 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
+                    className="w-full rounded-xl border border-gray-200/60 bg-white/60 py-3 px-4 sm:py-3.5 text-sm backdrop-blur-sm focus:border-[#FF6B35]/50 focus:outline-none dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
                   >
                     <option value="en">🇬🇧 English</option>
                     <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
@@ -523,7 +523,7 @@ export default function KundaliGenerateClient() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-4 font-bold text-white shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3.5 sm:py-4 font-bold text-white shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-3">
@@ -560,44 +560,46 @@ export default function KundaliGenerateClient() {
 
       {/* Result Section */}
       {step === 2 && result && (
-        <section className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full">
+        <section className="px-3 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-green-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 p-6 backdrop-blur-sm dark:border-green-900/60 dark:from-green-900/20 dark:to-emerald-900/20"
+              className="mb-6 flex flex-col gap-4 rounded-2xl border border-green-200/60 bg-gradient-to-r from-green-50/80 to-emerald-50/80 p-5 backdrop-blur-sm dark:border-green-900/60 dark:from-green-900/20 dark:to-emerald-900/20 sm:flex-row sm:items-center sm:justify-between sm:p-6"
             >
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                   {result.data.kundli.basicDetails.name}'s Kundli
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {new Date().toLocaleDateString('en-GB')}
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={() => {
                     setStep(1);
                     setResult(null);
                     setActiveTab('basic');
                   }}
-                  className="flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-semibold transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 sm:flex-none sm:px-4"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  New
+                  <span className="hidden sm:inline">New</span>
+                  <span className="sm:hidden">New</span>
                 </button>
                 <button
                   onClick={handleDownloadPDF}
-                  className="flex items-center gap-2 rounded-xl border border-[#FF6B35]/40 bg-white px-4 py-2.5 text-sm font-semibold text-[#FF6B35] transition-all hover:bg-[#FF6B35]/5 dark:border-[#FF6B35]/60 dark:bg-gray-800"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#FF6B35]/40 bg-white px-3 py-2.5 text-sm font-semibold text-[#FF6B35] transition-all hover:bg-[#FF6B35]/5 dark:border-[#FF6B35]/60 dark:bg-gray-800 sm:flex-none sm:px-4"
                 >
                   <Download className="h-4 w-4" />
-                  PDF
+                  <span className="hidden sm:inline">PDF</span>
+                  <span className="sm:hidden">PDF</span>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-3 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl sm:flex-none sm:px-4"
                 >
                   <Share2 className="h-4 w-4" />
                   Share
@@ -607,7 +609,7 @@ export default function KundaliGenerateClient() {
 
             <div className="rounded-2xl border border-gray-200/60 bg-white/70 backdrop-blur-xl dark:border-gray-700/60 dark:bg-gray-900/70">
               {/* Tab Navigation */}
-              <div className="border-b border-gray-200/60 p-3 dark:border-gray-700/60">
+              <div className="border-b border-gray-200/60 p-2 sm:p-3 dark:border-gray-700/60">
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {MAIN_TABS.map((tab) => {
                     const Icon = tab.icon;
@@ -615,14 +617,14 @@ export default function KundaliGenerateClient() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                        className={`flex flex-shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-semibold transition-all ${
                           activeTab === tab.id
                             ? 'bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-lg'
                             : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
-                        <span className="hidden sm:inline">{tab.label}</span>
+                        <span>{tab.label}</span>
                       </button>
                     );
                   })}
@@ -630,7 +632,7 @@ export default function KundaliGenerateClient() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}

@@ -1,18 +1,28 @@
 "use client";
 
-import { Package, Star, Sparkles, ArrowRight } from "lucide-react";
+import { Package, Star, Sparkles, ArrowRight, ShoppingBag, Tag } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { avatar } from "@/lib/images";
 
+// Helper to clean HTML descriptions
 const stripHtml = (html: string | null | undefined): string => {
     if (!html) return "";
     return html
-        .replace(/<[^>]+>/g, " ")     // remove tags
-        .replace(/&nbsp;/gi, " ")     // replace &nbsp; with space
-        .replace(/\s+/g, " ")         // collapse extra spaces
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/\s+/g, " ")
         .trim();
+};
+
+// Helper for Currency Formatting
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+    }).format(amount);
 };
 
 interface Product {
@@ -36,240 +46,223 @@ interface Product {
 export default function ProductCarousel() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const shouldReduceMotion = useReducedMotion();
+    const prefersReducedMotion = useReducedMotion();
 
     useEffect(() => {
         let cancelled = false;
-
         const fetchProducts = async () => {
             try {
                 const res = await fetch("/api/landing/mall/featured");
                 const data = await res.json();
-
                 if (!cancelled) {
                     setProducts(data?.data || []);
                 }
             } catch (err) {
-                if (!cancelled) {
-                    console.error("Failed to fetch products:", err);
-                }
+                console.error("Failed to fetch products:", err);
             } finally {
                 if (!cancelled) setLoading(false);
             }
         };
-
         fetchProducts();
-        return () => {
-            cancelled = true;
-        };
+        return () => { cancelled = true; };
     }, []);
 
-    // ✅ Hooks must be BEFORE any early return
-
-    // Duplicate list once for seamless loop
-    const trackProducts = useMemo(
+    // Double the array for seamless infinite scroll
+    const carouselItems = useMemo(
         () => (products.length ? [...products, ...products] : []),
         [products]
     );
 
-    // Slower, smoother scroll – scales with product count
-    const baseDuration = useMemo(
-        () => Math.max(20, Math.min(45, products.length * 3)),
-        [products]
-    );
+    // Dynamic duration based on content length
+    const duration = Math.max(30, products.length * 5);
 
-    if (loading) {
-        return (
-            <section className="relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-8">
-                        <div className="h-5 w-40 max-w-full bg-gray-200 dark:bg-neutral-950 rounded mx-auto mb-3 animate-pulse" />
-                        <div className="h-8 w-60 max-w-full bg-gray-200 dark:bg-neutral-950 rounded mx-auto animate-pulse" />
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
+    if (loading) return <LoadingSkeleton />;
     if (!products.length) return null;
 
     return (
-        <section
-            aria-labelledby="featured-products-heading"
-            className="relative py-12 sm:py-16 md:py-20 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-white/[0.02] dark:to-white/[0.02] overflow-x-hidden">
-            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
+        <section className="relative py-16 sm:py-24 overflow-hidden bg-[#FFFBF5] dark:bg-[#050505]">
+            {/* --- 1. Cosmic Background Pattern --- */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.08]">
+                <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <pattern id="mall-stars" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                        <circle cx="2" cy="2" r="1" fill="currentColor" className="text-orange-900 dark:text-white" />
+                        <path d="M30 10 L32 15 L37 15 L33 19 L35 24 L30 21 L25 24 L27 19 L23 15 L28 15 Z" fill="currentColor" className="text-orange-900 dark:text-white" transform="scale(0.2)" />
+                    </pattern>
+                    <rect width="100%" height="100%" fill="url(#mall-stars)" />
+                </svg>
+            </div>
+            
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFFBF5] to-transparent dark:from-[#050505] z-10" />
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#FFFBF5] to-transparent dark:from-[#050505] z-10" />
+
+            <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* --- 2. Header --- */}
                 <motion.div
-                    className="text-center mb-10 sm:mb-14"
-                    initial={{ opacity: 0, y: 16 }}
+                    className="text-center mb-12 sm:mb-16"
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
+                    viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="inline-block mb-3 sm:mb-4">
-                        <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-[#FF6B35]">
-                            FEATURED PRODUCTS
-                        </span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 text-xs font-bold tracking-widest uppercase mb-4">
+                        <ShoppingBag className="w-3 h-3" />
+                        Astro Mall
                     </div>
-                    <h2
-                        id="featured-products-heading"
-                        className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3"
-                    >
-                        <span className="text-gray-900 dark:text-white">Shop from </span>
+                    
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
+                        <span className="text-gray-900 dark:text-white">Sacred </span>
                         <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                            AstroMall
+                            Treasures
                         </span>
                     </h2>
-                    <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto px-2">
-                        Discover premium astrology products & spiritual items handpicked for you
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                        Handpicked gemstones, rudraksha, and spiritual tools to enhance your cosmic energy.
                     </p>
                 </motion.div>
             </div>
 
-            {/* Marquee container */}
-            <div className="relative w-full overflow-hidden">
-                <motion.div
-                    className={`inline-flex gap-3 sm:gap-4 md:gap-5 py-2 whitespace-nowrap ${shouldReduceMotion ? "" : "will-change-transform"
-                        }`}
-                    animate={
-                        shouldReduceMotion
-                            ? {}
-                            : {
-                                x: ["-50%", "0%"], // left → right
-                            }
-                    }
-                    transition={
-                        shouldReduceMotion
-                            ? undefined
-                            : {
-                                x: {
-                                    repeat: Infinity,
-                                    repeatType: "loop",
-                                    duration: baseDuration,
-                                    ease: "linear",
-                                },
-                            }
-                    }
+            {/* --- 3. Infinite Carousel --- */}
+            <div className="relative w-full overflow-hidden z-20">
+                <div 
+                    className="flex"
+                    // Pause animation on hover for readability
+                    onMouseEnter={(e) => {
+                        const el = e.currentTarget;
+                        el.style.animationPlayState = 'paused';
+                    }}
+                    onMouseLeave={(e) => {
+                        const el = e.currentTarget;
+                        el.style.animationPlayState = 'running';
+                    }}
                 >
-                    {trackProducts.map((product, index) => (
-                        <div
-                            key={`${product.id}-${index}`}
-                            className="flex-shrink-0 w-[260px] xs:w-[280px] sm:w-[320px] md:w-[360px] group inline-block"
-                        >
-                            <motion.div
-                                whileHover={
-                                    shouldReduceMotion
-                                        ? undefined
-                                        : { scale: 1.02, y: -4 }
-                                }
-                                transition={{ duration: 0.2 }}
-                            >
-                                <div className="bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-black rounded-2xl overflow-hidden h-full shadow-md sm:shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-700 hover:border-[#FF6B35]/50 dark:hover:border-[#FF6B35]/50 transition-all">
-                                    {/* Product Image */}
-                                    <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-                                        <img
-                                            src={avatar(product.productImage)}
-                                            alt={product.name}
-                                            loading="lazy"
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-
-                                        {/* Gradient Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                                        {/* Badges - Top Left */}
-                                        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-                                            {product.isBestseller && (
-                                                <motion.div
-                                                    initial={{ scale: 0, rotate: -180 }}
-                                                    animate={{ scale: 1, rotate: 0 }}
-                                                    transition={{ delay: 0.15 }}
-                                                    className="px-2.5 py-1 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
-                                                >
-                                                    <Star className="w-3 h-3 fill-white" aria-hidden="true" focusable="false" />
-                                                    <span>BESTSELLER</span>
-                                                </motion.div>
-                                            )}
-                                            {product.isFeatured && (
-                                                <motion.div
-                                                    initial={{ scale: 0, rotate: 180 }}
-                                                    animate={{ scale: 1, rotate: 0 }}
-                                                    transition={{ delay: 0.2 }}
-                                                    className="px-2.5 py-1 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-md"
-                                                >
-                                                    <Sparkles className="w-3 h-3" aria-hidden="true" focusable="false" />
-                                                    <span>FEATURED</span>
-                                                </motion.div>
-                                            )}
-                                        </div>
-
-                                        {/* Category Badge - Top Right */}
-                                        {product.category && (
-                                            <div className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/60 backdrop-blur-md text-[10px] font-semibold text-white rounded-full border border-white/20">
-                                                {product.category.name}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Product Info */}
-                                    <div className="p-4 sm:p-5">
-                                        {/* Name */}
-                                        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white line-clamp-2 mb-2.5 group-hover:text-[#FF6B35] transition-colors min-h-[2.5rem]">
-                                            {product.name}
-                                        </h3>
-
-                                        {/* Description */}
-                                        {product.description && (
-                                            <p className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2.5 leading-relaxed">
-                                                {stripHtml(product.description).slice(0, 100)}…
-                                            </p>
-                                        )}
-
-                                        {/* Features Preview */}
-                                        {product.features && (
-                                            <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-500">
-                                                <Package
-                                                    className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#FF6B35]"
-                                                    aria-hidden="true"
-                                                    focusable="false"
-                                                />
-                                                <p className="line-clamp-2 leading-relaxed">
-                                                    {stripHtml(product.features).slice(0, 100)}…
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    ))}
-                </motion.div>
+                    <motion.div
+                        className="flex gap-5 sm:gap-8 px-4"
+                        animate={prefersReducedMotion ? {} : { x: ["0%", "-50%"] }}
+                        transition={
+                            prefersReducedMotion
+                                ? undefined
+                                : { repeat: Infinity, ease: "linear", duration: duration }
+                        }
+                    >
+                        {carouselItems.map((product, index) => (
+                            <ProductCard key={`${product.id}-${index}`} product={product} />
+                        ))}
+                    </motion.div>
+                </div>
             </div>
 
-            {/* CTA Button */}
-            <motion.div
-                className="relative z-20 text-center mt-8 sm:mt-10 px-4"
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5 }}
-            >
+            {/* --- 4. CTA --- */}
+            <div className="relative z-20 text-center mt-12 sm:mt-16">
                 <Link href="/mall">
                     <motion.button
-                        className="group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2.5 sm:py-3.5 bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white rounded-xl shadow-lg text-sm sm:text-base font-semibold"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        className="group relative inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full font-bold shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 transition-all"
                     >
-                        Explore AstroMall
-                        <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" focusable="false" />
-                        </motion.div>
+                        Visit AstroMall
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </motion.button>
                 </Link>
-            </motion.div>
+            </div>
+        </section>
+    );
+}
+
+// --- Component: Product Card ---
+function ProductCard({ product }: { product: Product }) {
+    return (
+        <div className="w-[280px] sm:w-[340px] flex-shrink-0 group">
+            <Link href={`/mall/${product.slug}`} className="block h-full">
+                <div className="h-full bg-white dark:bg-gray-900/80 border border-gray-100 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 hover:border-orange-200 dark:hover:border-orange-900/50 transition-all duration-300">
+                    
+                    {/* Image Section */}
+                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 dark:bg-gray-800">
+                        <img
+                            src={avatar(product.productImage)}
+                            alt={product.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        
+                        {/* Overlay Gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                        {/* Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-2">
+                            {product.isBestseller && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg">
+                                    <Star className="w-3 h-3 fill-white" />
+                                    Bestseller
+                                </span>
+                            )}
+                            {product.isFeatured && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg">
+                                    <Sparkles className="w-3 h-3" />
+                                    Featured
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Category Tag */}
+                        {product.category && (
+                            <div className="absolute top-3 right-3">
+                                <span className="px-3 py-1 bg-white/90 dark:bg-black/80 backdrop-blur-md text-gray-800 dark:text-gray-200 text-[10px] font-bold uppercase rounded-full shadow-sm">
+                                    {product.category.name}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="p-5 flex flex-col h-[200px]">
+                        {/* Title */}
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-[#FF6B35] transition-colors">
+                            {product.name}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-4">
+                            {stripHtml(product.description || product.features)}
+                        </p>
+
+                        {/* Footer: Price & Action */}
+                        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
+                            <div>
+                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Price</p>
+                                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                    {formatCurrency(product.amount)}
+                                </p>
+                            </div>
+                            
+                            <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-[#FF6B35] group-hover:bg-[#FF6B35] group-hover:text-white transition-colors">
+                                <ShoppingBag className="w-5 h-5" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </div>
+    );
+}
+
+// --- Loading Skeleton ---
+function LoadingSkeleton() {
+    return (
+        <section className="py-24 px-4 bg-[#FFFBF5] dark:bg-[#050505]">
+            <div className="max-w-4xl mx-auto text-center mb-12">
+                <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-4 animate-pulse" />
+                <div className="h-10 w-64 bg-gray-200 dark:bg-gray-800 rounded-lg mx-auto animate-pulse" />
+            </div>
+            <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="w-[300px] h-[400px] bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-4 flex-shrink-0 animate-pulse">
+                        <div className="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4" />
+                        <div className="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2" />
+                        <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-4" />
+                        <div className="mt-auto h-10 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+                    </div>
+                ))}
+            </div>
         </section>
     );
 }

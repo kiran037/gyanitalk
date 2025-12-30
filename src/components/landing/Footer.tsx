@@ -2,43 +2,52 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Youtube, Linkedin } from "lucide-react";
+import {
+  Instagram,
+  Facebook,
+  Youtube,
+  Linkedin,
+  ExternalLink,
+} from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer
-      className="bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800"
-      aria-label="Footer">
+      className="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-black"
+      aria-labelledby="footer-heading"
+    >
+      <h2 id="footer-heading" className="sr-only">
+        Footer
+      </h2>
 
-      {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
-          {/* Brand Section */}
-          <div>
-            <Link href="/" className="flex items-center gap-2 mb-3 group">
-              <div className="w-8 h-8 rounded-lg overflow-hidden ring-2 ring-[#FF6B35]/20 group-hover:ring-[#FF6B35]/40 transition-all">
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 lg:px-8 lg:pt-16">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          {/* Brand & Social Section */}
+          <div className="space-y-8 xl:col-span-1">
+            <Link href="/" className="group flex w-fit items-center gap-2.5">
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl ring-1 ring-gray-200 transition-all duration-300 group-hover:ring-[#FF6B35]/50 dark:ring-gray-800">
                 <Image
                   src="https://gyanitalk.s3.ap-south-1.amazonaws.com/public/storage/images/astrologer_7851728112667.png"
-                  alt="Gyani Talk"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  alt="Gyani Talk Logo"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
                 />
               </div>
-              <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                Gyani Talk
+              <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Gyani<span className="text-[#FF6B35]">Talk</span>
               </span>
             </Link>
 
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed max-w-xs">
-              Your trusted platform for astrology guidance.
+            <p className="max-w-sm text-sm leading-6 text-gray-600 dark:text-gray-400">
+              Your trusted companion for astrological guidance and spiritual
+              growth. Connect with expert astrologers and discover your cosmic
+              path.
             </p>
 
-            {/* Social Links */}
-            <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex gap-4">
               {[
                 {
                   href: "https://www.instagram.com/gyanitalkapp/",
@@ -66,85 +75,106 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 sm:w-8 sm:h-8 bg-gray-100 dark:bg-gray-900 hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-gray-600 dark:text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition-all"
+                  className="group flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-all duration-300 hover:bg-[#FF6B35] hover:text-white dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-[#FF6B35] dark:hover:text-white"
                   aria-label={label}
                 >
-                  <Icon
-                    className="w-4 h-4"
-                    aria-hidden="true"
-                    focusable="false"
-                  />
+                  <Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold text-[11px] sm:text-xs uppercase tracking-wider text-gray-900 dark:text-white mb-3">
-              Quick Links
-            </h3>
-            <ul className="space-y-1.5 sm:space-y-2">
-              {[
-                { label: "Blog", href: "/blog" },
-                { label: "Astrologers", href: "/talk-to-astrologers" },
-                { label: "Contact", href: "/contact" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links Section - Responsive Grid */}
+          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+            <div className="md:grid md:grid-cols-3 md:gap-8">
+              {/* Column 1: Quick Links */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
+                  Discover
+                </h3>
+                <ul role="list" className="mt-4 space-y-3">
+                  {[
+                    {
+                      label: "Talk to Astrologers",
+                      href: "/talk-to-astrologers",
+                    },
+                    { label: "Read Blog", href: "/blog" },
+                    { label: "Contact Support", href: "/contact" },
+                    { label: "Courses", href: "/courses" },
+                    { label: "Mall", href: "/mall" },
+                  ].map((item) => (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        className="group flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-[#FF6B35] dark:text-gray-400 dark:hover:text-[#FF6B35]"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          {/* Legal */}
-          <div>
-            <h3 className="font-semibold text-[11px] sm:text-xs uppercase tracking-wider text-gray-900 dark:text-white mb-3">
-              Legal
-            </h3>
-            <ul className="space-y-1.5 sm:space-y-2">
-              {[
-                { label: "About Us", href: "/about-us" },
-                { label: "Privacy Policy", href: "/privacy-policy" },
-                { label: "Terms of Service", href: "/terms-of-service" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              {/* Column 2: Legal (Hidden on mobile grid-cols-2, shown in md grid) */}
+              <div className="mt-10 md:mt-0">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
+                 Service
+                </h3>
+                <ul role="list" className="mt-4 space-y-3">
+                  {[
+                    { label: "Free Kundali", href: "/free-kundali" },
+                    { label: "Kundali Matching", href: "/kundali-matching" },
+                    { label: "Horoscope", href: "/horoscope" },
+                    { label: "Panchang", href: "/panchang" },
+                  ].map((item) => (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-gray-600 transition-colors hover:text-[#FF6B35] dark:text-gray-400 dark:hover:text-[#FF6B35]"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-10 md:mt-0">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
+                   Company
+                </h3>
+                <ul role="list" className="mt-4 space-y-3">
+                  {[
+                    { label: "About Us", href: "/about-us" },
+                    { label: "Terms of Service", href: "/terms-of-service" },
+                    { label: "Privacy Policy", href: "/privacy-policy" },
+                  ].map((item) => (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-gray-600 transition-colors hover:text-[#FF6B35] dark:text-gray-400 dark:hover:text-[#FF6B35]"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 text-center sm:text-left">
-            <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400">
-              © {currentYear} Gyani Talk. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-left">
+              &copy; {currentYear} Gyani Talk. All rights reserved.
             </p>
-            <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400">
-              Made with{" "}
-              <span
-                className="text-[#FF6B35]"
-                role="img"
-                aria-label="love"
-              >
-                ❤️
-              </span>{" "}
-              for spiritual seekers
-            </p>
+
+            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <span>Made with</span>
+              <span className="animate-pulse text-red-500">❤️</span>
+              <span>for spiritual seekers</span>
+            </div>
           </div>
         </div>
       </div>
