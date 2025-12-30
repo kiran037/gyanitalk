@@ -155,7 +155,7 @@ export default function LandingNotFound() {
                 </motion.div>
               </Link>
 
-              <Link href="/landing/blog" className="w-full sm:w-auto">
+              <Link href="/blog" className="w-full sm:w-auto">
                 <motion.div
                   role="button"
                   tabIndex={0}

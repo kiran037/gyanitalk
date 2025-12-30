@@ -6,14 +6,18 @@ import LandingNotFound from "@/components/landing/LandingNotFound";
 import AdminNotFound from "@/components/AdminNotFound";
 
 const PUBLIC_ROUTE_PREFIXES = [
-  "/landing/about-us",
-  "/landing/terms-of-service",
-  "/landing/privacy-policy",
-  "/landing/contact",
-  "/landing/blog",
-  "/landing/astro",
-  "/landing/mall",
-  "/landing/courses",
+  "/about-us",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/contact",
+  "/blog",
+  "/talk-to-astrologers",
+  "/mall",
+  "/courses",
+  "/horoscope",
+  "/panchang",
+  "/free-kundali",
+  "/kundali-matching",
 ];
 
 const PUBLIC_EXACT_ROUTES = ["/", "/sign-in"];

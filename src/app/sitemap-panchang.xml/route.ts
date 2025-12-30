@@ -18,7 +18,7 @@ export async function GET() {
   // Base Panchang page (Today)
   urls.push(`
   <url>
-    <loc>${BASE_URL}/landing/panchang</loc>
+    <loc>${BASE_URL}/panchang</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>`);
@@ -32,7 +32,7 @@ export async function GET() {
 
     urls.push(`
   <url>
-    <loc>${BASE_URL}/landing/panchang?date=${dateStr}</loc>
+    <loc>${BASE_URL}/panchang?date=${dateStr}</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>`);

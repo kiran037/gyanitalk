@@ -17,7 +17,7 @@ export async function GET() {
 
       return `
   <url>
-    <loc>${BASE_URL}/landing/blog/${b.slug}</loc>
+    <loc>${BASE_URL}/blog/${b.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

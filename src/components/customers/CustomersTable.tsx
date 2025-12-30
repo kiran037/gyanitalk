@@ -199,7 +199,7 @@ export default function CustomersTable({
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
-                <Link href={`/customers/${customer.id}`}>
+                <Link href={`/admin/customers/${customer.id}`}>
                   <Button variant="outline" size="sm" icon={<Eye className="w-4 h-4" />}>
                     View
                   </Button>

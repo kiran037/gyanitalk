@@ -13,7 +13,7 @@ export async function GET() {
   const urls = courses.map(
     (c) => `
   <url>
-    <loc>${BASE_URL}/landing/courses/${c.slug}</loc>
+    <loc>${BASE_URL}/courses/${c.slug}</loc>
     <lastmod>${c.updated_at.toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>

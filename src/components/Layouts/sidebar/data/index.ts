@@ -34,13 +34,13 @@ export const NAV_DATA = [
     items: [
       {
         title: "Dashboard",
-        url: "/dashboard",
+        url: "/admin/dashboard",
         icon: Home,
         items: [],
       },
       {
         title: "Customers",
-        url: "/customers",
+        url: "/admin/customers",
         icon: Users,
         items: [],
       },
@@ -50,24 +50,24 @@ export const NAV_DATA = [
         items: [
           {
             title: "Wallet Transactions",
-            url: "/transaction/wallet",
+            url: "/admin/transaction/wallet",
             icon: IndianRupee,
           },
           {
             title: "Payment Transactions",
-            url: "/transaction/payment",
+            url: "/admin/transaction/payment",
             icon: CreditCard,
           },
           {
             title: "Manual Transactions",
-            url: "/transaction/manual",
+            url: "/admin/transaction/manual",
             icon: CreditCard,
           },
         ],
       },
       {
         title: "Coupons",
-        url: "/coupons",
+        url: "/admin/coupons",
         icon: TicketPercent,
         items: [],
       },
@@ -77,32 +77,32 @@ export const NAV_DATA = [
         items: [
           {
             title: "Astrologers",
-            url: "/astro",
+            url: "/admin/astro",
             icon: Users,
           },
           {
             title: "AI Astrologers",
-            url: "/astro/ai",
+            url: "/admin/astro/ai",
             icon: Brain,
           },
           {
             title: "Block Astrologer",
-            url: "/astro/block-astro",
+            url: "/admin/astro/block-astro",
             icon: X,
           },
           {
             title: "Skills",
-            url: "/astro/skills",
+            url: "/admin/astro/skills",
             icon: PocketKnife,
           },
           {
             title: "Categories",
-            url: "/astro/categories",
+            url: "/admin/astro/categories",
             icon: Folder,
           },
           {
             title: "Groups",
-            url: "/astro/groups",
+            url: "/admin/astro/groups",
             icon: Folder,
           },
         ],
@@ -113,12 +113,12 @@ export const NAV_DATA = [
         items: [
           {
             title: "Category",
-            url: "/courses/categories",
+            url: "/admin/courses/categories",
             icon: Layers,
           },
           {
             title: "Courses",
-            url: "/courses",
+            url: "/admin/courses",
             icon: FileText,
           },
         ],
@@ -129,30 +129,30 @@ export const NAV_DATA = [
         items: [
           {
             title: "Dashboard",
-            url: "/astroshop",
+            url: "/admin/astroshop",
             icon: Folder,
           },
           {
             title: "Products Categories",
-            url: "/astroshop/categories",
+            url: "/admin/astroshop/categories",
             icon: PackageSearch,
           },
           {
             title: "Products",
-            url: "/astroshop/products",
+            url: "/admin/astroshop/products",
             icon: PackageSearch,
           },
 
           {
             title: "Orders",
-            url: "/astroshop/orders",
+            url: "/admin/astroshop/orders",
             icon: IndianRupee,
           },
         ],
       },
       {
         title: "Notifications",
-        url: "/notifications",
+        url: "/admin/notifications",
         icon: BellRing,
         items: [],
       },
@@ -162,22 +162,22 @@ export const NAV_DATA = [
         items: [
           {
             title: "Dashboard",
-            url: "/supports/dashboard",
+            url: "/admin/supports/dashboard",
             icon: Ticket,
           },
           {
             title: "Tickets",
-            url: "/supports/tickets",
+            url: "/admin/supports/tickets",
             icon: Ticket,
           },
           {
             title: "FAQs",
-            url: "/supports/faq",
+            url: "/admin/supports/faq",
             icon: List,
           },
           {
             title: "Contacts",
-            url: "/supports/contact",
+            url: "/admin/supports/contact",
             icon: Contact,
           },
         ],
@@ -188,24 +188,24 @@ export const NAV_DATA = [
         items: [
           {
             title: "Dashboard",
-            url: "/earnings",
+            url: "/admin/earnings",
           },
           {
             title: "Astrologer Earnings",
-            url: "/earnings/astrologer",
+            url: "/admin/earnings/astrologer",
           },
           {
             title: "Payment Methods",
-            url: "/earnings/payment-methods",
+            url: "/admin/earnings/payment-methods",
           },
-          { title: "Withdrawals", url: "/earnings/withdrawals" },
-          { title: "Commissions", url: "/earnings/commissions" },
-          { title: "Reports", url: "/earnings/reports" },
+          { title: "Withdrawals", url: "/admin/earnings/withdrawals" },
+          { title: "Commissions", url: "/admin/earnings/commissions" },
+          { title: "Reports", url: "/admin/earnings/reports" },
         ],
       },
       {
         title: "Blogs",
-        url: "/blogs",
+        url: "/admin/blogs",
         icon: Newspaper,
         items: [],
       },
@@ -216,14 +216,14 @@ export const NAV_DATA = [
     items: [
       {
         title: "Page Management",
-        url: "/pages",
+        url: "/admin/pages",
         icon: FileText,
         items: [],
       },
       {
         title: "User Analytics",
         icon: Activity,
-        url: "/user-activities",
+        url: "/admin/user-activities",
       },
       {
         title: "Extras",
@@ -231,22 +231,22 @@ export const NAV_DATA = [
         items: [
           {
             title: "News",
-            url: "/extras/news",
+            url: "/admin/extras/news",
             icon: Rss,
           },
           {
             title: "Videos",
-            url: "/extras/videos",
+            url: "/admin/extras/videos",
             icon: Video,
           },
           {
             title: "Stories",
-            url: "/extras/stories",
+            url: "/admin/extras/stories",
             icon: PlayCircle,
           },
           {
             title: "Feedback",
-            url: "/extras/feedback",
+            url: "/admin/extras/feedback",
             icon: Smile,
           },
         ],

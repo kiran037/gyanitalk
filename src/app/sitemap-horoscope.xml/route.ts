@@ -13,7 +13,7 @@ export async function GET() {
   const urls = ZODIACS.map(
     (z) => `
   <url>
-    <loc>${BASE_URL}/landing/horoscope/${z}</loc>
+    <loc>${BASE_URL}/horoscope/${z}</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>`
