@@ -1,13 +1,10 @@
-'use client';
+// src/components/landing/kundali/MatchingScore.tsx
+"use client";
 
 import { motion } from 'framer-motion';
 import { 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  TrendingUp,
-  Heart,
-  Users
+  CheckCircle2, XCircle, AlertTriangle, TrendingUp, 
+  Heart, Users, Trophy, Sparkles 
 } from 'lucide-react';
 
 interface MatchingScoreProps {
@@ -38,188 +35,181 @@ export default function MatchingScore({
   femaleData 
 }: MatchingScoreProps) {
   
-  const getCompatibilityLevel = (percentage: number) => {
-    if (percentage >= 75) return { text: 'Excellent', color: 'green', icon: CheckCircle2 };
-    if (percentage >= 60) return { text: 'Good', color: 'blue', icon: TrendingUp };
-    if (percentage >= 50) return { text: 'Average', color: 'yellow', icon: AlertTriangle };
-    return { text: 'Below Average', color: 'red', icon: XCircle };
+  // Helper to determine styling based on score
+  const getCompatibilityStyle = (percentage: number) => {
+    if (percentage >= 75) return { 
+      label: 'Excellent Match', 
+      color: 'text-emerald-600 dark:text-emerald-400', 
+      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+      border: 'border-emerald-200 dark:border-emerald-900/50',
+      icon: CheckCircle2 
+    };
+    if (percentage >= 50) return { 
+      label: 'Good Match', 
+      color: 'text-amber-600 dark:text-amber-400', 
+      bg: 'bg-amber-50 dark:bg-amber-900/20',
+      border: 'border-amber-200 dark:border-amber-900/50',
+      icon: TrendingUp 
+    };
+    if (percentage >= 36) return { 
+      label: 'Average Match', 
+      color: 'text-orange-600 dark:text-orange-400', 
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      border: 'border-orange-200 dark:border-orange-900/50',
+      icon: AlertTriangle 
+    };
+    return { 
+      label: 'Below Average', 
+      color: 'text-rose-600 dark:text-rose-400', 
+      bg: 'bg-rose-50 dark:bg-rose-900/20',
+      border: 'border-rose-200 dark:border-rose-900/50',
+      icon: XCircle 
+    };
   };
 
-  const basicCompat = getCompatibilityLevel(basic.percentage);
-  const BasicIcon = basicCompat.icon;
-
+  const basicStyle = getCompatibilityStyle(basic.percentage);
   const aggregatePercentage = (aggregate.score / aggregate.maxScore) * 100;
-  const aggregateCompat = getCompatibilityLevel(aggregatePercentage);
-  const AggregateIcon = aggregateCompat.icon;
+  const aggStyle = getCompatibilityStyle(aggregatePercentage);
 
   return (
-    <div className="space-y-4">
-      {/* Main Score Cards */}
+    <div className="space-y-6 sm:space-y-8">
+      
+      {/* 1. Score Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Basic Score */}
+        {/* Basic Score Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-[#FF6B35]/20 bg-gradient-to-br from-[#FF6B35]/10 to-[#FFB347]/10 p-6 backdrop-blur-sm"
+          className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md sm:p-6 ${basicStyle.bg} ${basicStyle.border}`}
         >
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2">
-                <BasicIcon className={`h-5 w-5 text-${basicCompat.color}-600`} />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className={`rounded-full p-1.5 bg-white/60 dark:bg-black/20 ${basicStyle.color}`}>
+                  <basicStyle.icon className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-bold uppercase tracking-wider opacity-70">
                   {matchType === 'north' ? 'Ashtakoot' : 'Dashakoot'} Score
                 </span>
               </div>
               
-              <div className="space-y-1">
-                <div className={`text-3xl font-bold text-${basicCompat.color}-600`}>
-                  {basic.score}/{basic.maxScore}
+              <div>
+                <div className={`text-4xl font-black ${basicStyle.color} sm:text-5xl`}>
+                  {basic.score}<span className="text-xl text-gray-400 sm:text-2xl">/{basic.maxScore}</span>
                 </div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {basic.percentage}% Compatible
+                <div className="mt-1 font-semibold text-gray-700 dark:text-gray-200">
+                  {basicStyle.label}
                 </div>
               </div>
 
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-400">
                 {basic.message}
               </p>
             </div>
 
             {/* Circular Progress */}
-            <div className="relative h-20 w-20">
-              <svg className="h-20 w-20 -rotate-90 transform">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="none"
-                  className="text-gray-200 dark:text-gray-700"
-                />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="url(#basicGradient)"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeDasharray={`${(basic.percentage / 100) * 226} 226`}
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="basicGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#FF6B35" />
-                    <stop offset="100%" stopColor="#FFB347" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  {basic.percentage}%
-                </span>
+            <div className="flex justify-center sm:justify-end">
+              <div className="relative h-20 w-20 sm:h-24 sm:w-24">
+                <svg className="h-full w-full -rotate-90 transform">
+                  <circle cx="50%" cy="50%" r="40%" stroke="currentColor" strokeWidth="8" fill="none" className="text-black/5 dark:text-white/5" />
+                  <circle
+                    cx="50%" cy="50%" r="40%"
+                    stroke="currentColor" strokeWidth="8" fill="none"
+                    strokeDasharray="251.2"
+                    strokeDashoffset={251.2 - (251.2 * basic.percentage) / 100}
+                    strokeLinecap="round"
+                    className={basicStyle.color}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold">{basic.percentage}%</span>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Aggregate Score */}
+        {/* Aggregate Score Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-xl border border-purple-200/60 bg-gradient-to-br from-purple-50/60 to-pink-50/60 p-6 backdrop-blur-sm dark:border-purple-900/60 dark:from-purple-900/10 dark:to-pink-900/10"
+          className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md sm:p-6 ${aggStyle.bg} ${aggStyle.border}`}
         >
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2">
-                <AggregateIcon className={`h-5 w-5 text-${aggregateCompat.color}-600`} />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className={`rounded-full p-1.5 bg-white/60 dark:bg-black/20 ${aggStyle.color}`}>
+                  <Trophy className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-bold uppercase tracking-wider opacity-70">
                   Overall Compatibility
                 </span>
               </div>
               
-              <div className="space-y-1">
-                <div className={`text-3xl font-bold text-${aggregateCompat.color}-600`}>
-                  {aggregate.score}/{aggregate.maxScore}
+              <div>
+                <div className={`text-4xl font-black ${aggStyle.color} sm:text-5xl`}>
+                  {aggregate.score}<span className="text-xl text-gray-400 sm:text-2xl">/{aggregate.maxScore}</span>
                 </div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {Math.round(aggregatePercentage)}% Match
+                <div className="mt-1 font-semibold text-gray-700 dark:text-gray-200">
+                  {aggStyle.label}
                 </div>
               </div>
 
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                {aggregate.message}
-              </p>
-
-              <div className="mt-3 flex gap-2 text-xs">
-                <div className="rounded-lg bg-white/60 px-2 py-1 dark:bg-gray-900/60">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    North: {aggregate.ashtakoot_score}
-                  </span>
-                </div>
-                <div className="rounded-lg bg-white/60 px-2 py-1 dark:bg-gray-900/60">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    South: {aggregate.dashkoot_score}
-                  </span>
-                </div>
+              <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wide sm:text-xs">
+                <span className="rounded-md bg-white/50 px-2 py-1 dark:bg-black/20">
+                  North: {aggregate.ashtakoot_score}
+                </span>
+                <span className="rounded-md bg-white/50 px-2 py-1 dark:bg-black/20">
+                  South: {aggregate.dashkoot_score}
+                </span>
               </div>
             </div>
 
             {/* Circular Progress */}
-            <div className="relative h-20 w-20">
-              <svg className="h-20 w-20 -rotate-90 transform">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="none"
-                  className="text-gray-200 dark:text-gray-700"
-                />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="url(#aggregateGradient)"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeDasharray={`${(aggregatePercentage / 100) * 226} 226`}
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="aggregateGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#9333EA" />
-                    <stop offset="100%" stopColor="#EC4899" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  {Math.round(aggregatePercentage)}%
-                </span>
+            <div className="flex justify-center sm:justify-end">
+              <div className="relative h-20 w-20 sm:h-24 sm:w-24">
+                <svg className="h-full w-full -rotate-90 transform">
+                  <circle cx="50%" cy="50%" r="40%" stroke="currentColor" strokeWidth="8" fill="none" className="text-black/5 dark:text-white/5" />
+                  <circle
+                    cx="50%" cy="50%" r="40%"
+                    stroke="currentColor" strokeWidth="8" fill="none"
+                    strokeDasharray="251.2"
+                    strokeDashoffset={251.2 - (251.2 * aggregatePercentage) / 100}
+                    strokeLinecap="round"
+                    className={aggStyle.color}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold">{Math.round(aggregatePercentage)}%</span>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Extended Message */}
+      {/* 2. Detailed Analysis Box */}
       {aggregate.extended_message && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
+          className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6"
         >
-          <div className="flex items-start gap-3">
-            <Heart className="h-5 w-5 flex-shrink-0 text-[#FF6B35]" />
-            <div className="flex-1">
-              <h3 className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
-                Detailed Analysis
+          <div className="flex gap-4">
+            <div className="hidden rounded-xl bg-pink-50 p-3 text-pink-500 dark:bg-pink-900/20 sm:block">
+              <Heart className="h-6 w-6" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-pink-600 dark:text-pink-400 sm:hidden">
+                <Heart className="h-5 w-5" />
+                <h3 className="font-bold">Relationship Insight</h3>
+              </div>
+              <h3 className="hidden text-lg font-bold text-gray-900 dark:text-white sm:block">
+                Detailed Relationship Analysis
               </h3>
-              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                 {aggregate.extended_message}
               </p>
             </div>
@@ -227,37 +217,25 @@ export default function MatchingScore({
         </motion.div>
       )}
 
-      {/* Compatibility Summary */}
+      {/* 3. Footer Summary */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
+        className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/50"
       >
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="h-4 w-4 text-[#FF6B35]" />
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-            Compatibility Summary
-          </h3>
+        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <Users className="h-4 w-4" />
+          Compatibility Summary
         </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-blue-200/60 bg-blue-50/60 p-3 dark:border-blue-900/60 dark:bg-blue-900/10">
-            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-              {maleData.name}
-            </div>
-            <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
-              Traditional Match: {basic.percentage}%
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-gray-800">
+            <div className="text-xs text-gray-500 mb-1">Boy: {maleData.name}</div>
+            <div className="font-semibold text-gray-900 dark:text-white">Traditional: {basic.percentage}%</div>
           </div>
-
-          <div className="rounded-lg border border-pink-200/60 bg-pink-50/60 p-3 dark:border-pink-900/60 dark:bg-pink-900/10">
-            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-              {femaleData.name}
-            </div>
-            <div className="text-sm font-bold text-pink-900 dark:text-pink-100">
-              Overall Match: {Math.round(aggregatePercentage)}%
-            </div>
+          <div className="rounded-xl bg-white p-3 shadow-sm dark:bg-gray-800">
+            <div className="text-xs text-gray-500 mb-1">Girl: {femaleData.name}</div>
+            <div className="font-semibold text-gray-900 dark:text-white">Overall: {Math.round(aggregatePercentage)}%</div>
           </div>
         </div>
       </motion.div>

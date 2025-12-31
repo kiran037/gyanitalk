@@ -1,12 +1,40 @@
 import { Metadata } from "next";
 import AstrologersClient from "@/components/landing/AstrologersClient";
+import { prisma } from "@/lib/prisma";
+import { cache } from "react";
 
 /* ================= CONSTANTS ================= */
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
-const OG_IMAGE = "/og/astrologers.jpg";
 
-/* ================= SERVER FETCH ================= */
+/* ================= DATABASE SEO FETCH ================= */
+
+const getAstrologersSEO = cache(async () => {
+  const page = await prisma.pages.findFirst({
+    where: {
+      type: "astrologers",
+      isActive: true,
+    },
+    select: {
+      title: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
+      canonicalUrl: true,
+      ogTitle: true,
+      ogDescription: true,
+      ogImage: true,
+      twitterTitle: true,
+      twitterDescription: true,
+      twitterImage: true,
+      schemaJson: true,
+    },
+  });
+
+  return page;
+});
+
+/* ================= SERVER FETCH FOR ASTROLOGERS DATA ================= */
 
 async function getAstrologers(params: {
   page: string;
@@ -29,41 +57,55 @@ async function getAstrologers(params: {
   return res.json();
 }
 
-/* ================= SEO FALLBACK ================= */
+/* ================= SEO BUILDER WITH DATABASE PRIORITY ================= */
 
-function buildFallbackSEO({
+function buildSEO({
   page,
   search,
+  dbSeo,
 }: {
   page: number;
   search?: string;
+  dbSeo: Awaited<ReturnType<typeof getAstrologersSEO>>;
 }) {
+  // Build dynamic parts for pagination/search
   const baseTitle = search
     ? `${search} Astrologers Online`
-    : "Top Verified Astrologers Online";
+    : dbSeo?.metaTitle ?? "Top Verified Astrologers Online | Gyanitalk";
 
   const title = page > 1 ? `${baseTitle} – Page ${page}` : baseTitle;
 
   const description = search
     ? `Browse verified astrologers for ${search}. Chat, call or video consult online.`
-    : `Connect with top verified astrologers for love, career, marriage & health guidance.`;
+    : dbSeo?.metaDescription ??
+      "Connect with top verified astrologers for love, career, marriage & health guidance.";
+
+  const canonicalBase =
+    dbSeo?.canonicalUrl ?? `${SITE_URL}/talk-to-astrologers`;
 
   const canonical =
-    `/talk-to-astrologers?page=${page}` +
-    (search ? `&search=${encodeURIComponent(search)}` : "");
+    page > 1 || search
+      ? `${canonicalBase}?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ""}`
+      : canonicalBase;
+
+  const ogImage =
+    dbSeo?.ogImage ?? `${SITE_URL}/og/astrologers.jpg`;
+
+  const keywords = dbSeo?.metaKeywords
+    ? dbSeo.metaKeywords.split(",").map((k) => k.trim())
+    : ["astrologers", "online astrology", "best astrologers", "astrology consultation"];
 
   return {
     metaTitle: title,
     metaDescription: description,
-    metaKeywords:
-      "astrologers, online astrology, best astrologers, astrology consultation",
+    metaKeywords: keywords,
     canonicalUrl: canonical,
-    ogTitle: title,
-    ogDescription: description,
-    ogImage: OG_IMAGE,
-    twitterTitle: title,
-    twitterDescription: description,
-    twitterImage: OG_IMAGE,
+    ogTitle: dbSeo?.ogTitle ?? title,
+    ogDescription: dbSeo?.ogDescription ?? description,
+    ogImage,
+    twitterTitle: dbSeo?.twitterTitle ?? title,
+    twitterDescription: dbSeo?.twitterDescription ?? description,
+    twitterImage: dbSeo?.twitterImage ?? ogImage,
   };
 }
 
@@ -80,13 +122,9 @@ export async function generateMetadata({
   const search =
     typeof resolved.search === "string" ? resolved.search : undefined;
 
-  const data = await getAstrologers({
-    page: String(page),
-    search,
-  });
+  const dbSeo = await getAstrologersSEO();
 
-  const fallbackSEO = buildFallbackSEO({ page, search });
-  const seo = { ...fallbackSEO, ...(data?.seo ?? {}) };
+  const seo = buildSEO({ page, search, dbSeo });
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -115,7 +153,7 @@ export async function generateMetadata({
       title: seo.ogTitle,
       description: seo.ogDescription,
       url: seo.canonicalUrl,
-      siteName: "AstroMall",
+      siteName: "Gyanitalk",
       type: "website",
       images: [
         {
@@ -154,14 +192,16 @@ export default async function AstrologersPage({
     search,
   });
 
-  const fallbackSEO = buildFallbackSEO({ page, search });
+  const dbSeo = await getAstrologersSEO();
+  const seo = buildSEO({ page, search, dbSeo });
 
+  // Use schema from database if available, otherwise generate from data
   const schema =
-    data?.seo?.structuredData ??
+    dbSeo?.schemaJson ??
     JSON.stringify({
       "@context": "https://schema.org",
       "@type": "ItemList",
-      name: fallbackSEO.metaTitle,
+      name: seo.metaTitle,
       itemListElement:
         data?.data?.map((astro: any, index: number) => ({
           "@type": "ListItem",
@@ -177,7 +217,7 @@ export default async function AstrologersPage({
   return (
     <>
       {/* ✅ ACCESSIBILITY: REQUIRED H1 */}
-      <h1 className="sr-only">{fallbackSEO.metaTitle}</h1>
+      <h1 className="sr-only">{seo.metaTitle}</h1>
 
       {/* ✅ STRUCTURED DATA */}
       <script

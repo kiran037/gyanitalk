@@ -1,3 +1,4 @@
+
 // src/proxy.js
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
@@ -30,7 +31,12 @@ const PUBLIC_EXACT_ROUTES = [
   "/sitemap-horoscope.xml",
 ];
 
-const PROTECTED_ROUTES = ["/admin/dashboard", "/profile"];
+// Define actual protected routes that require authentication
+const PROTECTED_ROUTE_PREFIXES = [
+  "/admin",
+  "/profile",
+  "/dashboard"
+];
 
 function getSecret() {
   if (!process.env.JWT_SECRET) {
@@ -70,6 +76,12 @@ export async function proxy(req) {
     PUBLIC_EXACT_ROUTES.includes(pathname) ||
     PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
+  // Check if this is actually a protected route (not just "not public")
+  const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) => 
+    pathname.startsWith(prefix)
+  );
+
+  // If user has token, verify and handle redirects
   if (token) {
     const secret = getSecret();
     if (!secret) {
@@ -82,32 +94,33 @@ export async function proxy(req) {
       const { payload } = await jwtVerify(token, secret);
       const role = payload?.role || payload?.roles || payload?.roleName || null;
 
+      // If logged in user hits landing/signin, redirect to dashboard
       const isAuthLandingHit = pathname === "/sign-in" || pathname === "/";
-      if (isAuthLandingHit)
+      if (isAuthLandingHit) {
         return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      }
 
+      // If admin hits public routes, redirect to dashboard
       if (role === "admin" && isPublicRoute) {
         return NextResponse.redirect(new URL("/admin/dashboard", req.url));
       }
 
       return NextResponse.next();
     } catch (err) {
+      // Invalid token - clear it and redirect to home
       const response = NextResponse.redirect(new URL("/", req.url));
       response.cookies.set("token", "", { path: "/", maxAge: 0 });
       return response;
     }
   }
 
-  const isProtectedRoute =
-    PROTECTED_ROUTES.some(
-      (r) => pathname === r || pathname.startsWith(`${r}/`),
-    ) ||
-    (!isPublicRoute && pathname !== "/" && pathname !== "/sign-in");
-
+  // No token - check if trying to access protected routes
   if (isProtectedRoute) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  // For all other routes (public or non-existent), let Next.js handle them
+  // This allows 404 pages to work properly
   return NextResponse.next();
 }
 

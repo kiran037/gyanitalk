@@ -1,22 +1,35 @@
-// app/landing/horoscope/page.tsx
 import type { Metadata } from "next";
 import HoroscopeClient from "./HoroscopeClient";
 import { prisma } from "@/lib/prisma";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 
-/* ================= SEO (SERVER ONLY) ================= */
-
-async function getHoroscopePageSeo() {
-  return prisma.pages.findFirst({
+const getHoroscopeSEO = cache(async () => {
+  const page = await prisma.pages.findFirst({
     where: {
-      type: "home", // You can create a separate "horoscope" type if needed
+      type: "horoscope",
       isActive: true,
     },
+    select: {
+      title: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
+      canonicalUrl: true,
+      ogTitle: true,
+      ogDescription: true,
+      ogImage: true,
+      twitterTitle: true,
+      twitterDescription: true,
+      twitterImage: true,
+      schemaJson: true,
+    },
   });
-}
+
+  return page;
+});
 
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getHoroscopePageSeo();
+  const seo = await getHoroscopeSEO();
 
   const title =
     seo?.metaTitle ??
@@ -34,33 +47,24 @@ export async function generateMetadata(): Promise<Metadata> {
     seo?.ogImage ??
     `${process.env.NEXT_PUBLIC_SITE_URL}/horoscope-og.jpg`;
 
+  const keywords = seo?.metaKeywords
+    ? seo.metaKeywords.split(",").map((k) => k.trim())
+    : [
+        "daily horoscope",
+        "zodiac predictions",
+        "astrology",
+        "horoscope today",
+        "free horoscope",
+        "weekly horoscope",
+        "yearly horoscope",
+      ];
+
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
 
     title,
     description,
-
-    keywords: [
-      "daily horoscope",
-      "zodiac predictions",
-      "astrology",
-      "horoscope today",
-      "free horoscope",
-      "weekly horoscope",
-      "yearly horoscope",
-      "aries horoscope",
-      "taurus horoscope",
-      "gemini horoscope",
-      "cancer horoscope",
-      "leo horoscope",
-      "virgo horoscope",
-      "libra horoscope",
-      "scorpio horoscope",
-      "sagittarius horoscope",
-      "capricorn horoscope",
-      "aquarius horoscope",
-      "pisces horoscope",
-    ].join(", "),
+    keywords,
 
     alternates: {
       canonical,
@@ -95,8 +99,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
-
-/* ================= PAGE ================= */
 
 export default function HoroscopePage() {
   return (

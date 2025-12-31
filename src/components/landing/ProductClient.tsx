@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
+
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import {
@@ -91,6 +97,39 @@ export default function ProductClient({
     () => [product.productImage, ...(product.gallery || [])],
     [product],
   );
+
+  useEffect(() => {
+    if (!product) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "product_schema",
+      // Product schema data
+      schema_type: "product",
+      name: product.name,
+      price: product.amount.toString(),
+      currency: "INR",
+      availability: "InStock",
+      image: avatar(product.productImage),
+      category: product.category.name,
+      category_id: product.category.id,
+      is_featured: product.isFeatured,
+      is_bestseller: product.isBestseller,
+      // Breadcrumb data
+      breadcrumb_home: "Home",
+      breadcrumb_home_url: `${process.env.NEXT_PUBLIC_SITE_URL}/`,
+      breadcrumb_parent: "Mall",
+      breadcrumb_parent_url: `${process.env.NEXT_PUBLIC_SITE_URL}/mall`,
+      breadcrumb_category: product.category.name,
+      breadcrumb_category_url: `${process.env.NEXT_PUBLIC_SITE_URL}/mall?categoryId=${product.category.id}`,
+      breadcrumb_current: product.name,
+      breadcrumb_current_url: typeof window !== 'undefined' ? window.location.href : "",
+      // Additional product details
+      total_orders: product.statistics.totalOrders,
+      completed_orders: product.statistics.completedOrders,
+      success_rate: product.statistics.successRate,
+    });
+  }, [product]);
 
   const handleShare = async () => {
     if (!navigator.share) return;

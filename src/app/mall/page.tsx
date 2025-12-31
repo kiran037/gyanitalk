@@ -1,4 +1,4 @@
-// app/landing/mall/page.tsx
+// app/mall/page.tsx
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { pages_type } from "@prisma/client";

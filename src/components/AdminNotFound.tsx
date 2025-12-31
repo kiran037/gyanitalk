@@ -1,4 +1,4 @@
-// components/errors/AdminNotFound.tsx
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/AdminNotFound.tsx
 "use client";
 
 import Link from "next/link";
@@ -119,7 +119,7 @@ export default function AdminNotFound() {
             className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center"
           >
             <Link
-              href="/dashboard"
+              href="/admin/dashboard"
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-orange-500/30 transition hover:shadow-lg sm:w-auto"
             >
               <LayoutDashboard className="h-4 w-4" />

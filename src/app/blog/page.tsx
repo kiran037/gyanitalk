@@ -1,6 +1,71 @@
-// app/landing/blog/page.tsx
+// app/blog/page.tsx
 import { Metadata } from "next";
 import BlogClient from "./BlogClient";
+import { prisma } from "@/lib/prisma";
+import { pages_type } from "@prisma/client";
+import { cache } from "react";
+
+const getBlogSEO = cache(async () => {
+  const page = await prisma.pages.findFirst({
+    where: {
+      type: "blogs" as pages_type,
+      isActive: true,
+    },
+    select: {
+      title: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
+      canonicalUrl: true,
+      ogTitle: true,
+      ogDescription: true,
+      ogImage: true,
+      twitterTitle: true,
+      twitterDescription: true,
+      twitterImage: true,
+      schemaJson: true,
+    },
+  });
+
+  // 🔁 fallback if admin has not set SEO
+  if (!page) {
+    return {
+      title: "Astrology Blog – Insights, Horoscopes & Remedies | Gyanitalk",
+      description: "Read astrology blogs, daily horoscope insights, remedies and spiritual guidance.",
+      keywords: [
+        "astrology blog",
+        "horoscope blog",
+        "vedic astrology",
+        "astrology remedies",
+        "spiritual guidance",
+        "gyanitalk blog",
+      ],
+      canonical: "/blog",
+    };
+  }
+
+  return {
+    title: page.metaTitle || page.title || "Astrology Blog – Insights, Horoscopes & Remedies | Gyanitalk",
+    description:
+      page.metaDescription ||
+      "Read astrology blogs, daily horoscope insights, remedies and spiritual guidance.",
+    keywords: page.metaKeywords
+      ? page.metaKeywords.split(",").map(k => k.trim())
+      : [],
+    canonical: page.canonicalUrl || "/blog",
+    og: {
+      title: page.ogTitle,
+      description: page.ogDescription,
+      image: page.ogImage,
+    },
+    twitter: {
+      title: page.twitterTitle,
+      description: page.twitterDescription,
+      image: page.twitterImage,
+    },
+    schemaJson: page.schemaJson,
+  };
+});
 
 async function getBlogs(
   searchParams: Promise<Record<string, string | string[] | undefined>>,
@@ -38,32 +103,17 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
-  const data = await getBlogs(searchParams);
-  const seo = data?.seo;
+  const seo = await getBlogSEO();
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
 
-    title:
-      seo?.title ||
-      "Astrology Blog – Insights, Horoscopes & Remedies | Gyanitalk",
-
-    description:
-      seo?.description ||
-      "Read astrology blogs, daily horoscope insights, remedies and spiritual guidance.",
-
-    keywords: [
-      "astrology blog",
-      "horoscope blog",
-      "vedic astrology",
-      "astrology remedies",
-      "spiritual guidance",
-      "gyanitalk blog",
-    ],
+    title: seo.title,
+    description: seo.description ?? undefined,
+    keywords: seo.keywords,
 
     alternates: {
-      canonical:
-        seo?.canonical || `${process.env.NEXT_PUBLIC_SITE_URL}/blog`,
+      canonical: seo.canonical,
     },
 
     robots: {
@@ -71,20 +121,26 @@ export async function generateMetadata({
       follow: true,
     },
 
-    openGraph: {
-      title: seo?.title || "Astrology Blog – Insights & Horoscopes",
-      description:
-        seo?.description || "Expert astrology blogs and spiritual insights.",
-      url: seo?.canonical || `${process.env.NEXT_PUBLIC_SITE_URL}/blog`,
-      type: "website",
-    },
+    openGraph: seo.og?.title
+      ? {
+          title: seo.og.title,
+          description: seo.og.description ?? undefined,
+          url: seo.canonical,
+          siteName: "Gyanitalk",
+          type: "website",
+          images: seo.og.image ? [seo.og.image] : undefined,
+        }
+      : undefined,
 
-    twitter: {
-      card: "summary_large_image",
-      title: seo?.title || "Astrology Blog – Insights & Horoscopes",
-      description:
-        seo?.description || "Expert astrology blogs and spiritual insights.",
-    },
+    twitter: seo.twitter?.title
+      ? {
+          card: "summary_large_image",
+          title: seo.twitter.title,
+          description: seo.twitter.description ?? undefined,
+          images: seo.twitter.image ? [seo.twitter.image] : undefined,
+        }
+      : undefined,
+
     other: {
       "content-language": "en",
     },

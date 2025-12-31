@@ -4,6 +4,51 @@ import { prisma } from '@/lib/prisma';
 
 type BlogType = Awaited<ReturnType<typeof prisma.blogs.findFirst>>;
 
+// Helper function to extract plain text from TipTap JSON or HTML
+function extractPlainText(content: string): string {
+    if (!content) return "";
+
+    const trimmed = content.trim();
+    
+    // Check if it's TipTap JSON
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed && parsed.type === "doc" && Array.isArray(parsed.content)) {
+                // Recursive function to extract text from TipTap nodes
+                const extractText = (node: any): string => {
+                    if (node.type === "text") {
+                        return node.text || "";
+                    }
+                    if (node.content && Array.isArray(node.content)) {
+                        return node.content.map(extractText).join(" ");
+                    }
+                    return "";
+                };
+                
+                return parsed.content
+                    .map(extractText)
+                    .join(" ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            }
+        } catch (e) {
+            // If JSON parsing fails, fall through to HTML handling
+        }
+    }
+    
+    // Handle as HTML
+    return content
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 // Helper function to generate comprehensive SEO metadata
 function generateCompleteSEO(
     blog: NonNullable<BlogType>,
@@ -12,19 +57,7 @@ function generateCompleteSEO(
 ) {
     const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
 
-    // Extract plain text from HTML
-    const getPlainText = (html: string) => {
-        return html
-            .replace(/<[^>]*>/g, '')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .trim();
-    };
-
-    const plainDescription = getPlainText(blog.description);
+    const plainDescription = extractPlainText(blog.description);
     const excerpt = plainDescription.substring(0, 160);
     const blogUrl = `${baseUrl}/blog/${blog.slug || blog.id}`;
     const fullImageUrl = blog.blogImage.startsWith('http')
@@ -342,17 +375,23 @@ export async function GET(
             })
         ]);
 
-        // Serialize with slug generation
-        const relatedBlogs = relatedBlogsQuery.map((b: any) => ({
-            ...b,
-            id: b.id.toString(),
-            slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-            viewer: b.viewer?.toString() || "0",
-            blogImage: b.blogImage.startsWith('http')
-                ? b.blogImage
-                : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`,
-            excerpt: b.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...'
-        }));
+        // Serialize with slug generation and PROPER excerpt extraction
+        const relatedBlogs = relatedBlogsQuery.map((b: any) => {
+            // Use the extractPlainText function for proper handling of TipTap JSON
+            const plainText = extractPlainText(b.description);
+            const excerpt = plainText.substring(0, 150) + (plainText.length > 150 ? '...' : '');
+            
+            return {
+                ...b,
+                id: b.id.toString(),
+                slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                viewer: b.viewer?.toString() || "0",
+                blogImage: b.blogImage.startsWith('http')
+                    ? b.blogImage
+                    : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`,
+                excerpt: excerpt
+            };
+        });
 
         const seo = generateCompleteSEO(blog, category?.name || null, relatedBlogs);
 
@@ -461,6 +500,6 @@ export async function POST(
             { status: 500 }
         );
     } finally {
-        await prisma.$disconnect();
+
     }
 }

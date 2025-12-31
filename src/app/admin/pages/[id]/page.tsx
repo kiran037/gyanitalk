@@ -205,7 +205,7 @@ export default function PageDetailPage() {
             <Button
               variant="primary"
               icon={<Eye className="w-4 h-4" />}
-              onClick={() => window.open(`/landing/${formData.slug}`, "_blank")}
+              onClick={() => window.open(`/${formData.slug}`, "_blank")}
             >
               Preview
             </Button>
