@@ -1224,3 +1224,395 @@ function ImageSettingsPanel({
     </div>
   );
 }
+
+
+
+
+
+
+// "use client";
+
+// import React, { useState, useCallback, useRef } from "react";
+// // 1. Core Imports
+// import {
+//   useEditor,
+//   EditorContent,
+//   NodeViewWrapper,
+//   ReactNodeViewRenderer,
+//   Editor,
+// } from "@tiptap/react";
+
+// // Tiptap v3: Import Menus from the specific subpath
+// import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
+
+// // 2. Extensions
+// import StarterKit from "@tiptap/starter-kit";
+// import ImageExtension from "@tiptap/extension-image";
+// import Link from "@tiptap/extension-link";
+// import { Youtube } from "@tiptap/extension-youtube";
+// import Underline from "@tiptap/extension-underline";
+// import TextAlign from "@tiptap/extension-text-align";
+// import { Table } from "@tiptap/extension-table";
+// import { TableRow } from "@tiptap/extension-table-row";
+// import { TableCell } from "@tiptap/extension-table-cell";
+// import { TableHeader } from "@tiptap/extension-table-header";
+// import Placeholder from "@tiptap/extension-placeholder";
+// import { Color } from "@tiptap/extension-color";
+// import { TextStyle } from "@tiptap/extension-text-style";
+// import Highlight from "@tiptap/extension-highlight";
+
+// // Import these separately
+// import Dropcursor from "@tiptap/extension-dropcursor";
+// import BubbleMenuExtension from "@tiptap/extension-bubble-menu";
+// import FloatingMenuExtension from "@tiptap/extension-floating-menu";
+
+// import classNames from "classnames";
+// import {
+//   Bold, Italic, Strikethrough, Underline as UnderlineIcon, Code,
+//   Heading1, Heading2, Quote, List, ListOrdered, Link as LinkIcon,
+//   Image as ImageIcon, Youtube as YoutubeIcon, Table as TableIcon,
+//   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
+//   Trash2, GripHorizontal, Layout, Maximize2, Minimize2
+// } from "lucide-react";
+
+// // ============================================================================
+// // 1. CUSTOM IMAGE COMPONENT
+// // ============================================================================
+
+// const ImageNode = ({ node, updateAttributes, selected }: any) => {
+//   const [isResizing, setIsResizing] = useState(false);
+//   const { src, alt, title, width, align, caption } = node.attrs;
+//   const resizeRef = useRef<HTMLDivElement>(null);
+
+//   const handleMouseDown = (e: React.MouseEvent) => {
+//     e.preventDefault();
+//     setIsResizing(true);
+//     const startX = e.clientX;
+//     const initialWidth = typeof width === 'number' ? width : parseInt(width, 10) || 400;
+
+//     const onMouseMove = (e: MouseEvent) => {
+//       const currentX = e.clientX;
+//       const diff = currentX - startX;
+//       const newWidth = Math.max(200, Math.min(1200, initialWidth + diff));
+//       updateAttributes({ width: newWidth });
+//     };
+
+//     const onMouseUp = () => {
+//       setIsResizing(false);
+//       document.removeEventListener("mousemove", onMouseMove);
+//       document.removeEventListener("mouseup", onMouseUp);
+//     };
+
+//     document.addEventListener("mousemove", onMouseMove);
+//     document.addEventListener("mouseup", onMouseUp);
+//   };
+
+//   const wrapperClass = classNames("flex my-6 transition-all duration-200", {
+//     "justify-start": align === "left",
+//     "justify-center": align === "center",
+//     "justify-end": align === "right",
+//   });
+
+//   return (
+//     <NodeViewWrapper className={wrapperClass}>
+//       <div 
+//         className={classNames("relative group transition-all", {
+//           "ring-2 ring-blue-500 rounded-md": selected || isResizing
+//         })}
+//         style={{ width: width ? `${width}px` : 'auto', maxWidth: '100%' }}
+//       >
+//         {/* eslint-disable-next-line @next/next/no-img-element */}
+//         <img
+//           src={src}
+//           alt={alt}
+//           title={title}
+//           className="rounded-lg shadow-sm w-full h-auto object-cover block"
+//         />
+//         <input
+//           className="w-full text-center text-sm text-gray-500 mt-2 bg-transparent border-none focus:ring-0 placeholder:text-gray-300 focus:outline-none"
+//           placeholder="Write a caption..."
+//           value={caption || ""}
+//           onChange={(e) => updateAttributes({ caption: e.target.value })}
+//         />
+//         <div
+//           ref={resizeRef}
+//           onMouseDown={handleMouseDown}
+//           className={classNames(
+//             "absolute -right-3 bottom-8 w-6 h-6 bg-white border border-gray-300 rounded-full shadow-md cursor-ew-resize flex items-center justify-center transition-opacity z-10",
+//             { "opacity-100": selected || isResizing, "opacity-0 group-hover:opacity-100": !selected && !isResizing }
+//           )}
+//         >
+//           <GripHorizontal className="w-3 h-3 text-gray-500" />
+//         </div>
+//       </div>
+//     </NodeViewWrapper>
+//   );
+// };
+
+// // ============================================================================
+// // 2. EXTENSIONS CONFIGURATION
+// // ============================================================================
+
+// const CustomImage = ImageExtension.extend({
+//   addAttributes() {
+//     return {
+//       ...this.parent?.(),
+//       width: { default: 600 },
+//       align: { default: "center" },
+//       caption: { default: "" },
+//     };
+//   },
+//   addNodeView() {
+//     return ReactNodeViewRenderer(ImageNode);
+//   },
+// });
+
+// const CustomVideo = Youtube.configure({
+//   controls: false,
+//   nocookie: true,
+// });
+
+// // ============================================================================
+// // 3. UI COMPONENTS
+// // ============================================================================
+
+// const MenuButton = ({ onClick, isActive, icon: Icon, title, disabled, className }: any) => (
+//   <button
+//     type="button"
+//     onClick={onClick}
+//     disabled={disabled}
+//     title={title}
+//     className={classNames(
+//       "p-2 rounded-md transition-colors flex items-center justify-center",
+//       {
+//         "bg-gray-200 text-black dark:bg-gray-700 dark:text-white": isActive,
+//         "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400": !isActive,
+//         "opacity-50 cursor-not-allowed": disabled,
+//       },
+//       className
+//     )}
+//   >
+//     <Icon className="w-4 h-4" />
+//   </button>
+// );
+
+// const Toolbar = ({ editor, onImageUpload, onAddYoutube }: any) => {
+//   if (!editor) return null;
+
+//   return (
+//     <div className="sticky top-0 z-20 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-2 flex flex-wrap items-center gap-1 shadow-sm">
+//       <div className="flex gap-1 border-r border-gray-200 dark:border-gray-700 pr-2 mr-1">
+//         <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} icon={Undo} title="Undo" />
+//         <MenuButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} icon={Redo} title="Redo" />
+//       </div>
+//       <div className="flex gap-1 border-r border-gray-200 dark:border-gray-700 pr-2 mr-1">
+//         <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} icon={Bold} title="Bold" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} icon={Italic} title="Italic" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} icon={UnderlineIcon} title="Underline" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} icon={Strikethrough} title="Strikethrough" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} icon={Code} title="Code" />
+//       </div>
+//       <div className="flex gap-1 border-r border-gray-200 dark:border-gray-700 pr-2 mr-1">
+//         <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive('heading', { level: 1 })} icon={Heading1} title="H1" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive('heading', { level: 2 })} icon={Heading2} title="H2" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} icon={Quote} title="Quote" />
+//       </div>
+//       <div className="flex gap-1 border-r border-gray-200 dark:border-gray-700 pr-2 mr-1">
+//         <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} icon={List} title="Bullet List" />
+//         <MenuButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} icon={ListOrdered} title="Ordered List" />
+//       </div>
+//       <div className="flex gap-1 border-r border-gray-200 dark:border-gray-700 pr-2 mr-1 hidden sm:flex">
+//         <MenuButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} icon={AlignLeft} title="Left" />
+//         <MenuButton onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} icon={AlignCenter} title="Center" />
+//         <MenuButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} icon={AlignRight} title="Right" />
+//       </div>
+//       <div className="flex gap-1 items-center">
+//         <label className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex items-center justify-center" title="Insert Image">
+//           <ImageIcon className="w-4 h-4" />
+//           <input type="file" accept="image/*" className="hidden" onChange={onImageUpload} />
+//         </label>
+//         <MenuButton onClick={onAddYoutube} icon={YoutubeIcon} title="Insert Video" />
+//         <MenuButton 
+//           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} 
+//           icon={TableIcon} 
+//           title="Insert Table" 
+//         />
+//       </div>
+//     </div>
+//   );
+// };
+
+// // ============================================================================
+// // 4. MAIN EDITOR COMPONENT
+// // ============================================================================
+
+// interface ProEditorProps {
+//   value: string;
+//   onChange: (value: string) => void;
+//   onImageUpload?: (file: File) => Promise<string>;
+// }
+
+// export default function ProBlogEditor({ value, onChange, onImageUpload }: ProEditorProps) {
+  
+//   const editor = useEditor({
+//     immediatelyRender: false,
+//     extensions: [
+//       // StarterKit includes History by default - just use it
+//       StarterKit.configure({
+//         heading: { levels: [1, 2, 3, 4, 5, 6] },
+//       }),
+      
+//       // Dropcursor as standalone
+//       Dropcursor.configure({ color: "#555", width: 2 }),
+      
+//       // Logic for Menus
+//       BubbleMenuExtension,
+//       FloatingMenuExtension,
+
+//       // Other Extensions
+//       CustomImage,
+//       Link.configure({ openOnClick: false, autolink: true }),
+//       CustomVideo,
+//       Underline,
+//       TextAlign.configure({ types: ["heading", "paragraph", "image"] }),
+//       Table.configure({ resizable: true }),
+//       TableRow,
+//       TableHeader,
+//       TableCell,
+//       TextStyle,
+//       Color,
+//       Highlight.configure({ multicolor: true }),
+//       Placeholder.configure({ placeholder: "Tell your story..." }),
+//     ],
+//     content: value,
+//     editorProps: {
+//       attributes: {
+//         class: "prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[500px] px-8 py-6",
+//       },
+//     },
+//     onUpdate: ({ editor }) => {
+//       onChange(editor.getHTML());
+//     },
+//   });
+
+//   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const file = e.target.files?.[0];
+//     if (!file || !editor) return;
+
+//     if (onImageUpload) {
+//       try {
+//         const url = await onImageUpload(file);
+//         editor.chain().focus().setImage({ src: url }).run();
+//       } catch (error) {
+//         console.error("Upload failed", error);
+//       }
+//     } else {
+//       const reader = new FileReader();
+//       reader.onload = () => {
+//         editor.chain().focus().setImage({ src: reader.result as string }).run();
+//       };
+//       reader.readAsDataURL(file);
+//     }
+//     e.target.value = "";
+//   }, [editor, onImageUpload]);
+
+//   const addYoutubeVideo = useCallback(() => {
+//     const url = prompt("Enter YouTube URL");
+//     if (url && editor) {
+//       editor.commands.setYoutubeVideo({ src: url });
+//     }
+//   }, [editor]);
+
+//   const setLink = useCallback(() => {
+//     const previousUrl = editor?.getAttributes('link').href;
+//     const url = window.prompt('URL', previousUrl);
+//     if (url === null) return;
+//     if (url === '') {
+//       editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+//       return;
+//     }
+//     editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+//   }, [editor]);
+
+//   if (!editor) return <div className="p-8 text-center text-gray-500">Loading editor...</div>;
+
+//   return (
+//     <div className="w-full max-w-5xl mx-auto border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-950 flex flex-col h-[85vh]">
+      
+//       <Toolbar editor={editor} onImageUpload={handleImageUpload} onAddYoutube={addYoutubeVideo} />
+
+//       {/* 
+//         TIPTAP V3 FIX:
+//         1. Removed `duration: 100` from `options` because floating-ui (v3) does not support it.
+//         2. Use `options` prop instead of `tippyOptions`.
+//       */}
+//       <BubbleMenu editor={editor}>
+//         <div className="bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg p-1 flex items-center gap-1">
+//           <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} icon={Bold} />
+//           <MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} icon={Italic} />
+//           <MenuButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} icon={Strikethrough} />
+//           <MenuButton onClick={() => editor.chain().focus().toggleHighlight().run()} isActive={editor.isActive('highlight')} icon={Layout} title="Highlight" />
+//           <div className="w-px h-4 bg-gray-300 mx-1" />
+//           <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive('heading', { level: 2 })} icon={Heading2} />
+//           <MenuButton onClick={setLink} isActive={editor.isActive('link')} icon={LinkIcon} />
+//         </div>
+//       </BubbleMenu>
+
+//       <FloatingMenu editor={editor}>
+//         <div className="bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 rounded-lg p-1 flex items-center gap-1">
+//            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} icon={Heading1} title="H1" />
+//            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} icon={Heading2} title="H2" />
+//            <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} icon={List} title="List" />
+//         </div>
+//       </FloatingMenu>
+
+//       <BubbleMenu 
+//         editor={editor} 
+//         options={{ placement: 'bottom' }} // placement is still valid in floating-ui
+//         shouldShow={({ editor }: { editor: Editor }) => editor.isActive('image')}
+//       >
+//         <div className="bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg p-1 flex items-center gap-1">
+//            <MenuButton onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left' }).run()} isActive={editor.isActive('image', { align: 'left' })} icon={AlignLeft} />
+//            <MenuButton onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center' }).run()} isActive={editor.isActive('image', { align: 'center' })} icon={AlignCenter} />
+//            <MenuButton onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right' }).run()} isActive={editor.isActive('image', { align: 'right' })} icon={AlignRight} />
+//            <div className="w-px h-4 bg-gray-300 mx-1" />
+//            <MenuButton onClick={() => {
+//               const currentWidth = parseInt(editor.getAttributes('image').width) || 400;
+//               editor.chain().focus().updateAttributes('image', { width: currentWidth + 50 }).run();
+//            }} icon={Maximize2} title="Bigger" />
+//            <MenuButton onClick={() => {
+//               const currentWidth = parseInt(editor.getAttributes('image').width) || 400;
+//               editor.chain().focus().updateAttributes('image', { width: Math.max(100, currentWidth - 50) }).run();
+//            }} icon={Minimize2} title="Smaller" />
+//            <div className="w-px h-4 bg-gray-300 mx-1" />
+//            <MenuButton onClick={() => editor.chain().focus().deleteSelection().run()} icon={Trash2} title="Remove" className="text-red-500 hover:bg-red-50" />
+//         </div>
+//       </BubbleMenu>
+
+//       <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+//         <EditorContent editor={editor} />
+//       </div>
+
+//       <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-2 text-xs text-gray-500 flex justify-between">
+//         <div className="flex gap-4">
+//             <span>{editor.storage.characterCount?.words?.() || 0} words</span>
+//             <span>{editor.getText().length} characters</span>
+//         </div>
+//         <div className="flex gap-2">
+//             <span>{editor.isFocused ? 'Writing...' : 'Saved'}</span>
+//         </div>
+//       </div>
+
+//       <style jsx global>{`
+//         .ProseMirror { min-height: 100%; outline: none; }
+//         .ProseMirror p.is-editor-empty:first-child::before { color: #adb5bd; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
+//         .ProseMirror table { border-collapse: collapse; table-layout: fixed; width: 100%; margin: 0; overflow: hidden; }
+//         .ProseMirror td, .ProseMirror th { min-width: 1em; border: 2px solid #ced4da; padding: 3px 5px; vertical-align: top; box-sizing: border-box; position: relative; }
+//         .ProseMirror th { font-weight: bold; text-align: left; background-color: #f1f3f5; }
+//         .ProseMirror .selectedCell:after { z-index: 2; position: absolute; content: ""; left: 0; right: 0; top: 0; bottom: 0; background: rgba(200, 200, 255, 0.4); pointer-events: none; }
+//         div[data-youtube-video] { cursor: move; padding-right: 24px; }
+//         .ProseMirror a { color: #3b82f6; cursor: pointer; text-decoration: underline; }
+//       `}</style>
+//     </div>
+//   );
+// }

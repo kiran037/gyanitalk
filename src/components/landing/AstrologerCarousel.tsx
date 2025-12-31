@@ -67,7 +67,9 @@ export default function AstrologerCarousel() {
   const carouselItems = [...astrologers, ...astrologers];
 
   return (
-    <section className="relative py-16 sm:py-24 overflow-hidden bg-[#FFFBF5] dark:bg-[#0a0a0a]">
+        <section
+        className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black/40 overflow-hidden"
+      >
       {/* --- Cosmic Background Elements --- */}
       <div className="absolute inset-0 pointer-events-none opacity-30 dark:opacity-20">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,107,53,0.05),transparent_70%)]" />
@@ -213,9 +215,6 @@ function AstrologerCard({ astro }: { astro: Astrologer }) {
                 <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-50 dark:fill-blue-900/30" />
               )}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-              {astro.primarySkill || "Vedic Astrologer"}
-            </p>
           </div>
 
           {/* Metrics Grid */}

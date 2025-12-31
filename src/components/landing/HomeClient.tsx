@@ -55,9 +55,10 @@ export default function HomeClient() {
       <HomeMain />
 
       {/* 2. FEATURES SECTION - COSMIC GRID */}
-      <section
+      
+        <section
         aria-labelledby="features-heading"
-        className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black/40 overflow-hidden"
       >
         {/* Zodiac Background Pattern */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]">
@@ -171,7 +172,7 @@ export default function HomeClient() {
       </section>
 
       {/* 3. DYNAMIC SECTIONS */}
-      <div className="space-y-16 sm:space-y-24 pb-16">
+      <div className="">
         <AstrologerCarousel />
         <ProductCarousel />
       </div>

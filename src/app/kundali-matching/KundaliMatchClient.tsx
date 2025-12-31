@@ -1,10 +1,9 @@
-
-
+// app/landing/kundali-matching/KundaliMatchClient.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
   Loader2,
@@ -12,6 +11,10 @@ import {
   RefreshCw,
   Clock,
   ChevronDown,
+  Sparkles,
+  ArrowRight,
+  History,
+  CheckCircle2
 } from "lucide-react";
 import PersonForm from "@/components/landing/kundali/PersonForm";
 import MatchingScore from "@/components/landing/kundali/MatchingScore";
@@ -75,7 +78,7 @@ export default function KundaliMatchClient() {
   const [previousMatches, setPreviousMatches] = useState<PreviousMatch[]>([]);
   const [showPrevious, setShowPrevious] = useState(false);
 
-  // Load previous matches from localStorage
+  // Load previous matches
   useEffect(() => {
     const stored = localStorage.getItem("kundli_previous_matches");
     if (stored) {
@@ -88,7 +91,6 @@ export default function KundaliMatchClient() {
     }
   }, []);
 
-  // Save to localStorage after successful match
   const savePreviousMatch = () => {
     const newMatch: PreviousMatch = {
       male: maleData,
@@ -96,8 +98,11 @@ export default function KundaliMatchClient() {
       matchType,
       timestamp: Date.now(),
     };
-
-    const updated = [newMatch, ...previousMatches].slice(0, 5);
+    // Avoid duplicates based on names
+    const filtered = previousMatches.filter(
+      m => !(m.male.name === maleData.name && m.female.name === femaleData.name)
+    );
+    const updated = [newMatch, ...filtered].slice(0, 5);
     setPreviousMatches(updated);
     localStorage.setItem("kundli_previous_matches", JSON.stringify(updated));
   };
@@ -111,25 +116,13 @@ export default function KundaliMatchClient() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-
-    // Male validations
-    if (!maleData.name || maleData.name.trim().length < 2) {
-      newErrors.maleName = "Name required (min 2 chars)";
-    }
-    if (!maleData.contactNo || maleData.contactNo.length < 10) {
-      newErrors.maleContactNo = "Valid mobile required (10 digits)";
-    }
+    
+    if (!maleData.name || maleData.name.trim().length < 2) newErrors.maleName = "Boy's name required";
     if (!maleData.birthDate) newErrors.maleBirthDate = "Date required";
     if (!maleData.birthTime) newErrors.maleBirthTime = "Time required";
     if (!maleData.birthPlace) newErrors.maleBirthPlace = "Place required";
 
-    // Female validations
-    if (!femaleData.name || femaleData.name.trim().length < 2) {
-      newErrors.femaleName = "Name required (min 2 chars)";
-    }
-    if (!femaleData.contactNo || femaleData.contactNo.length < 10) {
-      newErrors.femaleContactNo = "Valid mobile required (10 digits)";
-    }
+    if (!femaleData.name || femaleData.name.trim().length < 2) newErrors.femaleName = "Girl's name required";
     if (!femaleData.birthDate) newErrors.femaleBirthDate = "Date required";
     if (!femaleData.birthTime) newErrors.femaleBirthTime = "Time required";
     if (!femaleData.birthPlace) newErrors.femaleBirthPlace = "Place required";
@@ -141,8 +134,8 @@ export default function KundaliMatchClient() {
   const handleSubmit = async () => {
     if (!validate()) {
       const firstError = Object.keys(errors)[0];
-      const element = document.querySelector(`[name="${firstError}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const el = document.querySelector(`[name="${firstError}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -160,7 +153,6 @@ export default function KundaliMatchClient() {
       });
 
       const data = await response.json();
-
       if (data.success) {
         setResult(data);
         setStep(2);
@@ -180,298 +172,342 @@ export default function KundaliMatchClient() {
   const handleReset = () => {
     setStep(1);
     setResult(null);
-    setMaleData({
-      name: "",
-      contactNo: "",
-      countryCode: "+91",
-      gender: "male",
-      birthDate: "",
-      birthTime: "",
-      birthPlace: "",
-      latitude: 0,
-      longitude: 0,
-      timezone: "5.5",
-    });
-    setFemaleData({
-      name: "",
-      contactNo: "",
-      countryCode: "+91",
-      gender: "female",
-      birthDate: "",
-      birthTime: "",
-      birthPlace: "",
-      latitude: 0,
-      longitude: 0,
-      timezone: "5.5",
-    });
-    setErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <LandingWrapper>
-      {/* Hero */}
-      <section className="relative min-h-[40vh] overflow-hidden px-4 pb-6 pt-24 sm:min-h-[45vh] sm:px-6 sm:pb-8 sm:pt-28">
-        <div className="absolute inset-0">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.06) 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
-          />
+      {/* 1. Hero Section - Cosmic Theme */}
+      <section className="relative overflow-hidden px-4 pb-12 pt-24 sm:px-6 sm:pt-32 lg:px-8">
+        {/* Background Gradients */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-orange-200/20 dark:bg-orange-900/20 rounded-full blur-[100px] opacity-60" />
+          <div className="absolute inset-0 bg-[radial-gradient(#FF6B35_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.05] dark:opacity-[0.08]" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-7xl text-center">
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-4 sm:space-y-6"
+            className="flex flex-col items-center gap-5"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-3 py-1.5 backdrop-blur-sm">
-              <Heart className="h-3.5 w-3.5 text-[#FF6B35]" />
-              <span className="text-xs font-medium text-gray-900 dark:text-white">
-                COMPREHENSIVE KUNDLI MATCHING
-              </span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/60 bg-white/50 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-orange-600 backdrop-blur-sm dark:border-orange-900/30 dark:bg-black/30 dark:text-orange-400">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Vedic Compatibility Check</span>
             </div>
 
-            <h1 className="text-3xl font-bold sm:text-5xl lg:text-6xl">
-              <span className="text-gray-900 dark:text-white">Marriage </span>
+            <h1 className="text-4xl font-extrabold leading-tight text-gray-900 dark:text-white sm:text-6xl">
+              Find Your <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                Compatibility
+                Cosmic Soulmate
               </span>
             </h1>
 
-            <p className="mx-auto max-w-2xl text-sm text-gray-600 dark:text-gray-400 sm:text-lg">
-              Detailed analysis with Ashtakoot, Dashakoot, Dosha Check & more
+            <p className="max-w-2xl text-base text-gray-600 dark:text-gray-300 sm:text-lg">
+              Unlock the secrets of your relationship with detailed 
+              <strong> Ashtakoot & Dashakoot</strong> matching, Mangal Dosha analysis, and Guna Milan.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Form Section */}
-      {step === 1 && (
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              {/* Previous Matches */}
-              {previousMatches.length > 0 && (
-                <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5">
-                  <button
-                    type="button"
-                    onClick={() => setShowPrevious(!showPrevious)}
-                    className="flex w-full items-center justify-between text-left"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-[#FF6B35]" />
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        Previous Matches ({previousMatches.length})
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`h-4 w-4 text-gray-500 transition-transform ${showPrevious ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {showPrevious && (
-                    <div className="mt-3 space-y-2">
-                      {previousMatches.map((match, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => loadPreviousMatch(match)}
-                          className="w-full rounded-lg border border-gray-200/60 bg-white/60 p-3 text-left transition-all hover:border-[#FF6B35]/50 hover:bg-[#FF6B35]/5 dark:border-gray-700/60 dark:bg-white/5"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="font-medium text-gray-900 dark:text-white">
-                                {match.male.name}
-                              </span>
-                              <Heart className="h-3 w-3 text-[#FF6B35]" />
-                              <span className="font-medium text-gray-900 dark:text-white">
-                                {match.female.name}
-                              </span>
-                            </div>
-                            <span className="text-xs text-gray-500">
-                              {new Date(match.timestamp).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Match Type */}
-              <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5">
-                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-                  Matching System
-                </h3>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setMatchType("north")}
-                    className={`rounded-lg border p-3 text-left transition-all ${
-                      matchType === "north"
-                        ? "border-[#FF6B35] bg-[#FF6B35]/10 ring-1 ring-[#FF6B35]/20"
-                        : "border-gray-200/60 bg-white/60 hover:border-[#FF6B35]/50 dark:border-gray-700/60 dark:bg-white/5"
-                    }`}
-                  >
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                      North Indian (Ashtakoot)
-                    </div>
-                    <div className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-                      36 points system
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatchType("south")}
-                    className={`rounded-lg border p-3 text-left transition-all ${
-                      matchType === "south"
-                        ? "border-[#FF6B35] bg-[#FF6B35]/10 ring-1 ring-[#FF6B35]/20"
-                        : "border-gray-200/60 bg-white/60 hover:border-[#FF6B35]/50 dark:border-gray-700/60 dark:bg-white/5"
-                    }`}
-                  >
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                      South Indian (Dashakoot)
-                    </div>
-                    <div className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
-                      10 points system
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Forms */}
-              <div className="grid gap-4 lg:grid-cols-2">
-                <PersonForm
-                  data={maleData}
-                  onDataChange={setMaleData}
-                  title="Boy's Details"
-                  icon={Heart}
-                  prefix="male"
-                  errors={errors}
-                  colorScheme="blue"
-                />
-
-                <PersonForm
-                  data={femaleData}
-                  onDataChange={setFemaleData}
-                  title="Girl's Details"
-                  icon={Heart}
-                  prefix="female"
-                  errors={errors}
-                  colorScheme="pink"
-                />
-              </div>
-
-              {/* Language */}
-              <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5">
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Report Language
-                </label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200/60 bg-white/60 px-3 py-2.5 text-sm backdrop-blur-sm transition-colors focus:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
-                >
-                  <option value="en">English</option>
-                  <option value="hi">हिन्दी (Hindi)</option>
-                  <option value="ta">தமிழ் (Tamil)</option>
-                  <option value="te">తెలుగు (Telugu)</option>
-                </select>
-              </div>
-
-              {/* Submit */}
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full rounded-lg bg-gradient-to-r from-[#FF6B35] to-[#FFB347] py-3 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100"
+      {/* 2. Main Content Area */}
+      <section className="relative z-20 px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <AnimatePresence mode="wait">
+            
+            {/* STEP 1: FORM */}
+            {step === 1 ? (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyzing Compatibility...
-                  </span>
-                ) : (
-                  "Check Compatibility"
-                )}
-              </button>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* Results */}
-      {step === 2 && result && (
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl space-y-4">
-            {/* Matching Score */}
-            <MatchingScore
-              basic={result.data.basic}
-              aggregate={result.data.aggregate}
-              matchType={result.data.matchType}
-              maleData={maleData}
-              femaleData={femaleData}
-            />
-
-            {/* Guna Milan Details */}
-            <GunaMilan
-              matchDetails={result.data.basic.details}
-              maleData={maleData}
-              femaleData={femaleData}
-            />
-
-            {/* Dosha Analysis */}
-            <DoshaAnalysis
-              doshas={result.data.doshas}
-              papasamaya={result.data.papasamaya}
-              maleData={maleData}
-              femaleData={femaleData}
-            />
-
-            {/* Upsell */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="rounded-xl border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/5 to-[#FFB347]/5 p-6 backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-4">
-                <Download className="h-6 w-6 flex-shrink-0 text-[#FF6B35]" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Get Detailed PDF Report
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Comprehensive report with remedies, predictions, and personalized guidance
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button className="flex items-center gap-2 rounded-lg bg-[#FF6B35] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#FF6B35]/90">
-                      <Download className="h-4 w-4" />
-                      Unlock Premium - ₹199
-                    </button>
+                {/* Previous Matches (Collapsible) */}
+                {previousMatches.length > 0 && (
+                  <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
                     <button
-                      onClick={handleReset}
-                      className="flex items-center gap-2 rounded-lg border border-gray-300 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      onClick={() => setShowPrevious(!showPrevious)}
+                      className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      <RefreshCw className="h-4 w-4" />
-                      Match Another
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+                          <History className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          Recent Matches ({previousMatches.length})
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${showPrevious ? "rotate-180" : ""}`}
+                      />
                     </button>
+
+                    <AnimatePresence>
+                      {showPrevious && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden border-t border-gray-100 dark:border-gray-800"
+                        >
+                          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {previousMatches.map((match, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => loadPreviousMatch(match)}
+                                className="group flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/50 p-3 transition-all hover:border-orange-200 hover:bg-white hover:shadow-md dark:border-gray-800 dark:bg-gray-800/50 dark:hover:border-orange-900/50 dark:hover:bg-gray-800"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="flex -space-x-2">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 ring-2 ring-white dark:bg-blue-900 dark:text-blue-300 dark:ring-gray-800">
+                                      {match.male.name[0]}
+                                    </div>
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 text-xs font-bold text-pink-700 ring-2 ring-white dark:bg-pink-900 dark:text-pink-300 dark:ring-gray-800">
+                                      {match.female.name[0]}
+                                    </div>
+                                  </div>
+                                  <div className="text-left text-sm">
+                                    <div className="font-semibold text-gray-900 dark:text-white line-clamp-1">
+                                      {match.male.name} & {match.female.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {new Date(match.timestamp).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </div>
+                                <ArrowRight className="h-4 w-4 text-orange-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* Main Form Card */}
+                <div className="rounded-3xl border border-gray-100 bg-white/80 p-6 shadow-xl shadow-gray-200/20 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/80 dark:shadow-none sm:p-8">
+                  
+                  {/* Settings Row */}
+                  <div className="mb-8 grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Matching System
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setMatchType("north")}
+                          className={`relative overflow-hidden rounded-xl border p-3 text-center transition-all ${
+                            matchType === "north"
+                              ? "border-[#FF6B35] bg-orange-50/50 text-[#FF6B35] dark:bg-orange-900/20"
+                              : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          <div className="text-sm font-bold">North Indian</div>
+                          <div className="text-[10px] opacity-70">Ashtakoot (36 Guna)</div>
+                          {matchType === "north" && <CheckCircle2 className="absolute right-2 top-2 h-3 w-3 text-[#FF6B35]" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMatchType("south")}
+                          className={`relative overflow-hidden rounded-xl border p-3 text-center transition-all ${
+                            matchType === "south"
+                              ? "border-[#FF6B35] bg-orange-50/50 text-[#FF6B35] dark:bg-orange-900/20"
+                              : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          <div className="text-sm font-bold">South Indian</div>
+                          <div className="text-[10px] opacity-70">Dashakoot (10 Poruthams)</div>
+                          {matchType === "south" && <CheckCircle2 className="absolute right-2 top-2 h-3 w-3 text-[#FF6B35]" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Report Language
+                      </label>
+                      <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="w-full h-[54px] rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm font-semibold text-gray-900 outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                      >
+                        <option value="en">🇬🇧 English</option>
+                        <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                        <option value="ta">தமிழ் (Tamil)</option>
+                        <option value="te">తెలుగు (Telugu)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative mb-8 text-center">
+                    <div className="absolute top-1/2 w-full border-t border-gray-200 dark:border-gray-800" />
+                    <span className="relative bg-white px-4 text-xs font-bold uppercase tracking-widest text-gray-400 dark:bg-gray-900">
+                      Enter Birth Details
+                    </span>
+                  </div>
+
+                  {/* Input Forms */}
+                  <div className="grid gap-8 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-1 dark:border-blue-900/30 dark:bg-blue-900/5">
+                      <PersonForm
+                        data={maleData}
+                        onDataChange={setMaleData}
+                        title="Boy's Details"
+                        icon={Heart}
+                        prefix="male"
+                        errors={errors}
+                        colorScheme="blue"
+                      />
+                    </div>
+                    <div className="rounded-2xl border border-pink-100 bg-pink-50/30 p-1 dark:border-pink-900/30 dark:bg-pink-900/5">
+                      <PersonForm
+                        data={femaleData}
+                        onDataChange={setFemaleData}
+                        title="Girl's Details"
+                        icon={Heart}
+                        prefix="female"
+                        errors={errors}
+                        colorScheme="pink"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="mt-8">
+                    <button
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF6B35] to-[#FF9057] py-4 text-base font-bold text-white shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.01] hover:shadow-orange-500/40 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Aligning Stars...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Calculate Match Score</span>
+                          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                        </>
+                      )}
+                    </button>
+                    <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                      100% Privacy Protected. We do not store your personal details permanently.
+                    </p>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+              </motion.div>
+            ) : (
+              // STEP 2: RESULTS DASHBOARD
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                {/* Header with Match Info */}
+                <div className="sticky top-[70px] z-30 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white/95 px-5 py-4 shadow-sm backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/90">
+                  <div className="flex items-center gap-4">
+                    <div className="flex -space-x-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 ring-2 ring-white dark:bg-blue-900 dark:text-blue-200 dark:ring-gray-900">
+                        {maleData.name[0]}
+                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100 text-sm font-bold text-pink-700 ring-2 ring-white dark:bg-pink-900 dark:text-pink-200 dark:ring-gray-900">
+                        {femaleData.name[0]}
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                        {maleData.name} <span className="text-gray-400">&</span> {femaleData.name}
+                      </h2>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{matchType === 'north' ? 'Ashtakoot' : 'Dashakoot'} Match</span>
+                        <span>•</span>
+                        <span>{new Date().toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-[#FF6B35] hover:text-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-[#FF6B35] dark:hover:text-white"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="hidden sm:inline">New Match</span>
+                  </button>
+                </div>
+
+                <div className="space-y-8">
+                  {result && (
+                    <>
+                      {/* Overall Score Card */}
+                      <MatchingScore
+                        basic={result.data.basic}
+                        aggregate={result.data.aggregate}
+                        matchType={result.data.matchType}
+                        maleData={maleData}
+                        femaleData={femaleData}
+                      />
+                      
+                      {/* Detailed Analysis Grid */}
+                      <div className="grid gap-6 lg:grid-cols-1">
+                        <GunaMilan
+                          matchDetails={result.data.basic.details}
+                          maleData={maleData}
+                          femaleData={femaleData}
+                        />
+                        <DoshaAnalysis
+                          doshas={result.data.doshas}
+                          papasamaya={result.data.papasamaya}
+                          maleData={maleData}
+                          femaleData={femaleData}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Premium Upsell - Dark Cosmic Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-black p-6 text-white shadow-2xl sm:p-10"
+                >
+                  {/* Decorative Glows */}
+                  <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#FF6B35] opacity-20 blur-[80px]" />
+                  <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-600 opacity-20 blur-[80px]" />
+
+                  <div className="relative z-10 flex flex-col items-center gap-6 text-center lg:flex-row lg:text-left">
+                    <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-inner">
+                      <Download className="h-10 w-10 text-[#FF6B35]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-2 inline-flex rounded-full bg-[#FF6B35]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF6B35] border border-[#FF6B35]/30">
+                        Premium Report
+                      </div>
+                      <h3 className="text-2xl font-bold">Unlock 50+ Page In-Depth Analysis</h3>
+                      <p className="mt-3 text-base text-gray-300 max-w-xl">
+                        Go beyond the basics. Get detailed insights on mental compatibility, childbirth, financial prosperity, and personalized remedies for a happy married life.
+                      </p>
+                    </div>
+                    <button className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#FF6B35] px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:bg-[#ff8052] active:scale-95 lg:w-auto">
+                      <span>Download PDF</span>
+                      <Download className="h-5 w-5 transition-transform group-hover:translate-y-1" />
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
     </LandingWrapper>
   );
 }

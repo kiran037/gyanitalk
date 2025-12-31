@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, KeyboardEvent } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import {
   Search,
@@ -11,11 +11,13 @@ import {
   X,
   TrendingUp,
   BookOpen,
+  Filter,
+  CheckCircle2,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { avatar } from "@/lib/images";
 import { motion, useReducedMotion } from "framer-motion";
-import type { KeyboardEvent } from "react";
 import Image from "next/image";
 
 /* ================= TYPES ================= */
@@ -171,10 +173,16 @@ export default function AstrologersClient({
     if (!status) return null;
     const s = status.toLowerCase();
 
+    // Common styling classes
+    const baseClasses = "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border";
+
     if (s === "online" || s === "available") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+        <span className={`${baseClasses} border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400`}>
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          </span>
           Online
         </span>
       );
@@ -182,7 +190,7 @@ export default function AstrologersClient({
 
     if (s === "busy") {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-900/20 dark:text-amber-300">
+        <span className={`${baseClasses} border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400`}>
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
           Busy
         </span>
@@ -190,502 +198,354 @@ export default function AstrologersClient({
     }
 
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-gray-800/80 dark:text-gray-300">
+      <span className={`${baseClasses} border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400`}>
         <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
         Offline
       </span>
     );
   };
 
-  /* ================= UI (UNCHANGED) ================= */
+  /* ================= UI ================= */
 
   return (
     <LandingWrapper>
-      <main id="main-content">
-        {/* Hero Section */}
-        <section className="relative flex min-h-[42vh] items-center justify-center overflow-hidden px-4 pb-6 pt-24 sm:min-h-[45vh] sm:px-6 sm:pb-8 sm:pt-28 lg:px-8">
-          {/* Animated Grid Background */}
-          <div className="absolute inset-0">
+      <main id="main-content" className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50">
+        
+        {/* === Hero Section === */}
+        <section className="relative flex flex-col items-center justify-center overflow-hidden px-4 pt-28 pb-10 sm:pt-32 sm:pb-14 lg:px-8">
+          
+          {/* Background Effects */}
+          <div className="absolute inset-0 z-0">
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 opacity-[0.4] dark:opacity-[0.2]"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.06) 1px, transparent 0)",
-                backgroundSize: "40px 40px",
+                  "radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.15) 1px, transparent 0)",
+                backgroundSize: "32px 32px",
               }}
             />
+            {/* Gradient Blobs */}
+            <div className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-orange-200/20 blur-[100px] filter dark:bg-orange-900/10" />
           </div>
 
-          {/* Floating Particles (reduced for performance on low-end / reduced motion) */}
-          {!prefersReducedMotion &&
-            [...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="pointer-events-none absolute"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0.12, 0.35, 0.12],
-                  scale: [1, 1.6, 1],
-                  x: [0, Math.random() * 60 - 30, 0],
-                  y: [0, Math.random() * 60 - 30, 0],
-                }}
-                transition={{
-                  duration: 10 + i * 1.2,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: "easeInOut",
-                }}
-                style={{
-                  left: `${5 + (i % 4) * 25}%`,
-                  top: `${10 + Math.floor(i / 4) * 30}%`,
-                }}
-              >
-                <div className="relative">
-                  <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#FFB347] opacity-60 blur-[2px]" />
-                  <div className="absolute inset-0 h-2.5 w-2.5 animate-ping rounded-full bg-gradient-to-br from-[#FF6B35] to-[#FFB347] opacity-25" />
-                </div>
-              </motion.div>
-            ))}
-
-          {/* Gradient Orbs */}
-          {!prefersReducedMotion && (
-            <>
-              <motion.div
-                className="absolute -left-1/4 top-1/4 h-80 w-80 rounded-full bg-[#FF6B35] opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10 sm:h-96 sm:w-96"
-                animate={{
-                  scale: [1, 1.15, 1],
-                  x: [0, 40, 0],
-                  y: [0, 20, 0],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute -right-1/4 top-1/3 h-80 w-80 rounded-full bg-[#FFB347] opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10 sm:h-96 sm:w-96"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  x: [0, -30, 0],
-                  y: [0, 40, 0],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.8,
-                }}
-              />
-            </>
-          )}
-
-          <div className="relative z-10 mx-auto w-full max-w-7xl text-center">
+          <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
+            
+            {/* Badge */}
             <motion.div
-              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 24 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-4 sm:space-y-6"
+              className="mb-6 flex justify-center"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-3 py-1.5 backdrop-blur-sm sm:px-4 sm:py-2">
-                <TrendingUp className="h-3.5 w-3.5 text-[#FF6B35] sm:h-4 sm:w-4" />
-                <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
-                  TOP ASTROLOGERS
-                </span>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/40 bg-white/50 px-3 py-1 text-[11px] font-bold tracking-wider text-orange-600 shadow-sm backdrop-blur-md dark:border-orange-900/40 dark:bg-white/5 dark:text-orange-400 sm:px-4 sm:py-1.5 sm:text-xs">
+                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                TOP RATED EXPERTS
               </div>
+            </motion.div>
 
-              <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                <span className="text-gray-900 dark:text-white">Meet Our </span>
-                <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                  Expert Astrologers
-                </span>
-              </h1>
+            {/* Heading */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-4 text-3xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl"
+            >
+              Consult with 
+              <span className="block bg-gradient-to-r from-[#FF6B35] to-[#FF9F2E] bg-clip-text text-transparent sm:inline sm:pl-2">
+                Vedic Astrologers
+              </span>
+            </motion.h1>
 
-              <p className="mx-auto max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-                Connect with{" "}
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {total}
-                </span>{" "}
-                + verified astrologers for personalized guidance.
-              </p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg"
+            >
+              Get accurate predictions regarding your Future, Career, Love Life, and Health from <span className="font-semibold text-gray-900 dark:text-white">{total}+ verified experts</span>.
+            </motion.p>
 
-              {/* Search Bar */}
-              <div className="mx-auto max-w-2xl">
-                <div className="relative">
-                  <label htmlFor="astro-search" className="sr-only">
-                    Search astrologers
-                  </label>
+            {/* Search Bar - Responsive */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mx-auto max-w-xl"
+            >
+              <div className="relative group">
+                <div className="pointer-events-none absolute inset-0 -inset-x-1 rounded-2xl bg-gradient-to-r from-[#FF6B35]/20 to-[#FF9F2E]/20 blur-lg transition-opacity opacity-50 group-hover:opacity-100" />
+                <div className="relative flex items-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg shadow-orange-900/5 transition-all focus-within:ring-2 focus-within:ring-[#FF6B35]/20 dark:border-gray-700 dark:bg-gray-800">
+                  <div className="flex h-10 w-10 items-center justify-center text-gray-400">
+                    <Search className="h-5 w-5" />
+                  </div>
                   <input
-                    id="astro-search"
                     type="text"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    placeholder="Search by name, skill, or language..."
-                    className="w-full rounded-xl border border-gray-200/70 bg-white/70 px-4 py-3 pr-11 text-sm text-gray-900 backdrop-blur-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700/70 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 sm:px-5 sm:py-3.5 sm:pr-12 sm:text-base"
+                    // text-base prevents iOS zoom on focus
+                    className="flex-1 bg-transparent px-1 py-2 text-base font-medium text-gray-900 placeholder-gray-400 outline-none dark:text-white"
+                    placeholder="Search name, language, or skill..."
                   />
-                  {searchInput ? (
-                    <button
-                      aria-label="Clear search"
-                      onClick={clearSearch}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                    >
-                      <X className="h-4 w-4 text-gray-400" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSearch}
-                      aria-label="Search astrologers"
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-r from-[#FF6B35] to-[#FFB347] p-1.5 text-white transition-all hover:scale-105 sm:p-2"
-                    >
-                      <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {searchInput && (
+                    <button onClick={clearSearch} className="p-2 text-gray-400 hover:text-gray-600">
+                      <X className="h-5 w-5" />
                     </button>
                   )}
+                  <button
+                    onClick={handleSearch}
+                    className="hidden rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-6 py-2.5 text-sm font-bold text-white shadow-md transition-transform hover:scale-105 active:scale-95 sm:block"
+                  >
+                    Search
+                  </button>
+                  {/* Mobile Search Button Icon */}
+                  <button
+                    onClick={handleSearch}
+                    className="ml-1 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-md sm:hidden"
+                  >
+                    <Search className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Main Content */}
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto w-full">
+        {/* === Main Content Grid === */}
+        <section className="px-3 pb-12 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            
             {/* Loading State */}
             {loading ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div
-                    key={i}
-                    className="h-[140px] animate-pulse overflow-hidden rounded-xl border border-gray-200/60 bg-white/60 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 sm:h-[150px]"
-                  >
-                    <div className="space-y-3 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="h-14 w-14 flex-shrink-0 rounded-full bg-gray-200 dark:bg-gray-700 sm:h-16 sm:w-16" />
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
-                          <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
-                        </div>
+                  <div key={i} className="h-48 animate-pulse rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:h-56">
+                    <div className="flex gap-4">
+                      <div className="h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                        <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
                       </div>
-                      <div className="space-y-2">
-                        <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
-                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-3 w-5/6 rounded bg-gray-200 dark:bg-gray-700" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : astrologers.length === 0 ? (
-              <motion.div
-                className="rounded-2xl border border-gray-200/60 bg-white/70 py-14 text-center backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 sm:py-16"
-                initial={{
-                  opacity: 0,
-                  scale: prefersReducedMotion ? 1 : 0.95,
-                }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25 }}
-              >
-                <BookOpen className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600 sm:h-16 sm:w-16" />
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
-                  No Astrologers Found
-                </h3>
-                <p className="mb-6 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-                  Try adjusting your search terms or filters.
+              // Empty State
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-white/50 px-4 py-20 text-center dark:border-gray-700 dark:bg-gray-800/50">
+                <div className="mb-4 rounded-full bg-orange-50 p-4 dark:bg-orange-900/20">
+                  <Filter className="h-8 w-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">No Astrologers Found</h3>
+                <p className="mt-1 text-gray-500 dark:text-gray-400">
+                  We couldn't find any experts matching "{search}"
                 </p>
-                <motion.button
+                <button
                   onClick={clearSearch}
-                  className="rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-5 py-2.5 text-sm font-medium text-white shadow-lg sm:px-6 sm:py-3 sm:text-base"
-                  whileHover={prefersReducedMotion ? {} : { scale: 1.04 }}
-                  whileTap={prefersReducedMotion ? {} : { scale: 0.96 }}
+                  className="mt-6 font-semibold text-[#FF6B35] hover:underline"
                 >
-                  Clear Search
-                </motion.button>
-              </motion.div>
+                  Clear all filters
+                </button>
+              </div>
             ) : (
               <>
-                {/* Astrologers Grid */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                {/* Result Count Mobile */}
+                <div className="mb-4 flex items-center justify-between px-1 sm:hidden">
+                  <span className="text-xs font-semibold text-gray-500">{total} Astrologers</span>
+                  <div className="h-px flex-1 bg-gray-200 ml-4 dark:bg-gray-700"></div>
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {astrologers.map((astro, index) => (
                     <motion.div
                       key={astro.id}
-                      initial={{
-                        opacity: 0,
-                        y: prefersReducedMotion ? 0 : 20,
-                      }}
+                      initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.35, delay: index * 0.04 }}
+                      viewport={{ once: true, margin: "50px" }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
                     >
-                      <Link
-                        href={`/talk-to-astrologers/${astro.slug}`}
-                        className="group block h-full"
-                      >
-                        <motion.article
-                          className="relative flex h-full flex-col rounded-xl border border-gray-200/60 bg-white/70 p-3.5 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 sm:p-4"
-                          whileHover={
-                            prefersReducedMotion
-                              ? {}
-                              : {
-                                  scale: 1.02,
-                                  borderColor: "rgba(255, 107, 53, 0.5)",
-                                  boxShadow:
-                                    "0 10px 30px rgba(255, 107, 53, 0.15)",
-                                }
-                          }
-                          transition={{ duration: 0.18 }}
-                        >
-                          <div className="mb-3 flex gap-3">
-                            {/* Avatar + TOP Badge */}
-                            <div className="relative flex-shrink-0">
-                              {astro.badges?.top_badge && (
-                                <div className="absolute -right-1.5 -top-1.5 z-10 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-[#FF6B35] to-[#FFB347] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-md">
-                                  <Award className="h-2.5 w-2.5" />
-                                  <span>TOP</span>
-                                </div>
-                              )}
-                              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full sm:h-16 sm:w-16">
+                      <Link href={`/talk-to-astrologers/${astro.slug}`} className="group block h-full">
+                        <article className="relative flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-300 hover:border-orange-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-800 dark:hover:border-gray-700 sm:p-5">
+                          
+                          {/* Card Header: Avatar + Main Info */}
+                          <div className="mb-3 flex gap-3 sm:gap-4">
+                            {/* Avatar Section */}
+                            <div className="relative shrink-0">
+                              <div className="relative h-[68px] w-[68px] overflow-hidden rounded-full border-2 border-white shadow-md ring-1 ring-gray-100 dark:border-gray-700 dark:ring-gray-800 sm:h-[72px] sm:w-[72px]">
                                 <Image
                                   src={avatar(astro.profileImage || "")}
                                   alt={astro.name}
                                   fill
-                                  sizes="(max-width: 640px) 56px, 64px"
-                                  className="object-cover"
-                                  priority={false}
+                                  sizes="72px"
+                                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
                               </div>
+                              {/* Top Badge Absolute */}
+                              {astro.badges?.top_badge && (
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#FF6B35] to-[#FF9F2E] px-2 py-0.5 text-[8px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-gray-800">
+                                  TOP RATED
+                                </div>
+                              )}
                             </div>
 
-                            {/* Content */}
-                            <div className="min-w-0 flex-1">
-                              {/* Name + Verified + Status */}
-                              <div className="mb-1.5 flex items-center justify-between gap-2">
-                                <div className="flex min-w-0 items-center gap-1.5">
-                                  <h2 className="truncate text-sm font-bold text-gray-900 transition-colors group-hover:text-[#FF6B35] dark:text-white sm:text-base">
-                                    {astro.name}
-                                  </h2>
-                                  {astro.isVerified && (
-                                    <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-[#FF6B35] to-[#FFB347] text-[9px] font-bold text-white shadow-sm">
-                                      ✓
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="hidden sm:block">
-                                  {getStatusChip(
-                                    astro.chatStatus || astro.callStatus,
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Skills */}
-                              <div className="mb-1.5 flex flex-wrap gap-1">
-                                {astro.allSkill &&
-                                  astro.allSkill
-                                    .split(",")
-                                    .slice(0, 2)
-                                    .map((skill, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="rounded bg-[#FF6B35]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#FF6B35]"
-                                      >
-                                        {skill.trim()}
-                                      </span>
-                                    ))}
-                              </div>
-
-                              {/* Meta Row: Exp + Lang + Country */}
-                              <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-600 dark:text-gray-400">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{astro.experienceInYears}y exp.</span>
-                                </div>
-                                {astro.languageKnown && (
-                                  <div className="flex items-center gap-1">
-                                    <Languages className="h-3 w-3" />
-                                    <span className="max-w-[80px] truncate">
-                                      {astro.languageKnown
-                                        .split(",")
-                                        .slice(0, 2)
-                                        .join(", ")}
-                                    </span>
-                                  </div>
-                                )}
-                                {astro.country && (
-                                  <span className="hidden rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-800/80 dark:text-gray-300 sm:inline-flex">
-                                    {astro.country}
-                                  </span>
+                            {/* Name & Basic Info */}
+                            <div className="flex min-w-0 flex-1 flex-col justify-center">
+                              <div className="flex items-center justify-between">
+                                <h2 className="truncate text-base font-bold text-gray-900 transition-colors group-hover:text-[#FF6B35] dark:text-white sm:text-lg">
+                                  {astro.name}
+                                </h2>
+                                {astro.isVerified && (
+                                  <CheckCircle2 className="ml-1 h-4 w-4 text-blue-500" fill="currentColor" color="white" />
                                 )}
                               </div>
+                              
+                              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-gray-400" />
+                                  {astro.experienceInYears} Yrs Exp
+                                </span>
+                              </div>
 
-                              {/* Small status chip for mobile under meta row */}
-                              <div className="mt-1 sm:hidden">
-                                {getStatusChip(
-                                  astro.chatStatus || astro.callStatus,
-                                )}
+                              {/* Status Chip (Mobile/Desktop unified location) */}
+                              <div className="mt-2">
+                                {getStatusChip(astro.chatStatus || astro.callStatus)}
                               </div>
                             </div>
                           </div>
 
-                          {/* Bio / tagline */}
-                          {astro.loginBio && (
-                            <p className="mb-2 line-clamp-2 text-[11px] text-gray-600 dark:text-gray-400 sm:text-xs">
-                              {astro.loginBio}
-                            </p>
-                          )}
+                          {/* Body Content */}
+                          <div className="flex-1 space-y-3">
+                            {/* Skills - Wrapped properly */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {astro.allSkill && astro.allSkill.split(",").slice(0, 4).map((skill, idx) => (
+                                <span 
+                                  key={idx} 
+                                  className="rounded-md bg-orange-50 px-2 py-1 text-[10px] font-medium text-orange-700 dark:bg-orange-900/20 dark:text-orange-300"
+                                >
+                                  {skill.trim()}
+                                </span>
+                              ))}
+                              {astro.allSkill && astro.allSkill.split(",").length > 4 && (
+                                <span className="rounded-md bg-gray-50 px-2 py-1 text-[10px] font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                  +{astro.allSkill.split(",").length - 4}
+                                </span>
+                              )}
+                            </div>
 
-                          {/* Followers / Earnings (optional small stats row) */}
-                          <div className="mb-2 flex items-center justify-between text-[10px] text-gray-500 sm:text-[11px]">
-                            <span>
-                              {astro.followerCount.toLocaleString()} followers
-                            </span>
-                            {astro.monthlyEarning && (
-                              <span>
-                                Est. ₹{astro.monthlyEarning}
-                                <span className="hidden sm:inline">/month</span>
+                            {/* Languages */}
+                            <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                              <Languages className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <span className="line-clamp-1 break-all">
+                                {astro.languageKnown.replace(/,/g, ", ")}
                               </span>
+                            </div>
+                            
+                            {/* Bio */}
+                            {astro.loginBio && (
+                              <p className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                                {astro.loginBio}
+                              </p>
                             )}
                           </div>
 
-                          {/* Bottom Row - Rating & Price */}
-                          <div className="mt-auto flex items-center justify-between border-t border-gray-200/60 pt-2.5 dark:border-gray-700/60 sm:pt-3">
-                            <div className="flex items-center gap-1.5">
-                              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
-                                {astro.avgRating
-                                  ? astro.avgRating.toFixed(1)
-                                  : "New"}
-                              </span>
-                              <span className="text-[10px] text-gray-500 sm:text-xs">
-                                ({astro.reviewCount})
-                              </span>
+                          {/* Separator */}
+                          <div className="my-3 h-px w-full bg-gray-100 dark:bg-gray-700" />
+
+                          {/* Card Footer: Stats & Action */}
+                          <div className="flex items-center justify-between">
+                            {/* Ratings & Followers */}
+                            <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-1">
+                                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                        {astro.avgRating ? astro.avgRating.toFixed(1) : "New"}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500">
+                                        ({astro.reviewCount})
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                                    <Users className="h-3 w-3" />
+                                    {astro.followerCount > 1000 
+                                        ? `${(astro.followerCount/1000).toFixed(1)}k` 
+                                        : astro.followerCount} 
+                                </div>
                             </div>
 
-                            <div className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
-                              ₹{astro.charge}
-                              <span className="text-[10px] font-normal text-gray-500 sm:text-xs">
-                                /min
-                              </span>
+                            {/* Price */}
+                            <div className="text-right">
+                                <div className="flex items-baseline justify-end gap-1">
+                                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                        ₹{astro.charge}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500">/min</span>
+                                </div>
+                                {astro.videoCallRate && (
+                                    <p className="text-[9px] text-gray-400">Video: ₹{astro.videoCallRate}/m</p>
+                                )}
                             </div>
                           </div>
-                        </motion.article>
+
+                        </article>
                       </Link>
                     </motion.div>
                   ))}
                 </div>
 
-                {/* Stats Bar */}
-                {total > 0 && (
-                  <motion.div
-                    className="mt-7 border-t border-gray-200/60 pt-5 dark:border-gray-700/60 sm:mt-8 sm:pt-6"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
-                        Showing{" "}
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {astrologers.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {total}
-                        </span>{" "}
-                        astrologers
-                      </p>
-                      {search && (
-                        <button
-                          aria-label="Clear search"
-                          onClick={clearSearch}
-                          className="text-xs font-medium text-[#FF6B35] transition-colors hover:text-[#FF6B35]/80 sm:text-sm"
-                        >
-                          Clear filters
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Pagination */}
+                {/* === Pagination === */}
                 {totalPages > 1 && (
-                  <motion.div
-                    className="mt-7 flex items-center justify-center gap-2 sm:mt-8"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                  >
-                    <motion.button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="rounded-xl border border-gray-200/60 bg-white/70 px-3.5 py-2 text-xs font-medium text-gray-700 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300 sm:px-4 sm:text-sm"
-                      whileHover={
-                        page === 1 || prefersReducedMotion
-                          ? {}
-                          : { scale: 1.05 }
-                      }
-                      whileTap={
-                        page === 1 || prefersReducedMotion
-                          ? {}
-                          : { scale: 0.95 }
-                      }
-                    >
-                      Previous
-                    </motion.button>
+                  <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="flex h-10 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Previous
+                      </button>
 
-                    <div className="flex items-center gap-1">
-                      {Array.from(
-                        { length: Math.min(totalPages, 5) },
-                        (_, i) => {
+                      <div className="hidden items-center gap-1 sm:flex">
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                           let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (page <= 3) {
-                            pageNum = i + 1;
-                          } else if (page >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = page - 2 + i;
-                          }
+                          if (totalPages <= 5) pageNum = i + 1;
+                          else if (page <= 3) pageNum = i + 1;
+                          else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                          else pageNum = page - 2 + i;
+
                           return (
-                            <motion.button
+                            <button
                               key={pageNum}
                               onClick={() => setPage(pageNum)}
-                              className={`h-8 w-8 rounded-xl text-xs font-medium transition-all sm:h-10 sm:w-10 sm:text-sm ${
+                              className={`h-10 w-10 rounded-xl text-sm font-medium transition-all ${
                                 page === pageNum
-                                  ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-lg"
-                                  : "border border-gray-200/60 bg-white/70 text-gray-700 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300"
+                                  ? "bg-[#FF6B35] text-white shadow-md"
+                                  : "bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300"
                               }`}
-                              whileHover={
-                                prefersReducedMotion ? {} : { scale: 1.1 }
-                              }
-                              whileTap={
-                                prefersReducedMotion ? {} : { scale: 0.9 }
-                              }
                             >
                               {pageNum}
-                            </motion.button>
+                            </button>
                           );
-                        },
-                      )}
-                    </div>
+                        })}
+                      </div>
+                      
+                      {/* Mobile Page Indicator */}
+                      <span className="flex h-10 items-center px-2 text-sm font-medium text-gray-600 dark:text-gray-400 sm:hidden">
+                        Page {page} of {totalPages}
+                      </span>
 
-                    <motion.button
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page === totalPages}
-                      className="rounded-xl border border-gray-200/60 bg-white/70 px-3.5 py-2 text-xs font-medium text-gray-700 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300 sm:px-4 sm:text-sm"
-                      whileHover={
-                        page === totalPages || prefersReducedMotion
-                          ? {}
-                          : { scale: 1.05 }
-                      }
-                      whileTap={
-                        page === totalPages || prefersReducedMotion
-                          ? {}
-                          : { scale: 0.95 }
-                      }
-                    >
-                      Next
-                    </motion.button>
-                  </motion.div>
+                      <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="flex h-10 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 )}
               </>
             )}

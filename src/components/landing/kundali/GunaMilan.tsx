@@ -1,7 +1,8 @@
-'use client';
+// src/components/landing/kundali/GunaMilan.tsx
+"use client";
 
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Circle } from 'lucide-react';
+import { CheckCircle2, XCircle, Minus, Layers, User, Heart } from 'lucide-react';
 
 interface GunaMilanProps {
   matchDetails: Array<{
@@ -19,135 +20,130 @@ interface GunaMilanProps {
 
 export default function GunaMilan({ matchDetails, maleData, femaleData }: GunaMilanProps) {
   
-  const getScoreIcon = (score: number, fullScore: number) => {
+  // Helper for scoring logic styles
+  const getScoreStyles = (score: number, fullScore: number) => {
     const percentage = (score / fullScore) * 100;
-    if (percentage >= 75) return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-    if (percentage >= 50) return <Circle className="h-4 w-4 text-yellow-600" />;
-    return <XCircle className="h-4 w-4 text-red-600" />;
-  };
-
-  const getScoreColor = (score: number, fullScore: number) => {
-    const percentage = (score / fullScore) * 100;
-    if (percentage >= 75) return 'text-green-600';
-    if (percentage >= 50) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getProgressColor = (score: number, fullScore: number) => {
-    const percentage = (score / fullScore) * 100;
-    if (percentage >= 75) return 'text-green-500';
-    if (percentage >= 50) return 'text-yellow-500';
-    return 'text-red-500';
+    if (percentage === 100) return {
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500",
+      border: "border-emerald-100 dark:border-emerald-900/30",
+      lightBg: "bg-emerald-50 dark:bg-emerald-900/10",
+      icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+    };
+    if (percentage >= 50) return {
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500",
+      border: "border-amber-100 dark:border-amber-900/30",
+      lightBg: "bg-amber-50 dark:bg-amber-900/10",
+      icon: <Minus className="h-5 w-5 text-amber-500" />
+    };
+    return {
+      color: "text-rose-600 dark:text-rose-400",
+      bg: "bg-rose-500",
+      border: "border-rose-100 dark:border-rose-900/30",
+      lightBg: "bg-rose-50 dark:bg-rose-900/10",
+      icon: <XCircle className="h-5 w-5 text-rose-500" />
+    };
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-gray-200/60 bg-white/60 p-6 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
+      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6"
     >
-      <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-        Detailed Guna Milan Analysis ({matchDetails.length} Parameters)
-      </h2>
+      {/* Section Header */}
+      <div className="mb-6 flex flex-col gap-2 border-b border-gray-100 pb-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-indigo-50 p-2.5 text-indigo-600 dark:bg-indigo-900/20">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              Guna Milan Details
+            </h2>
+            <p className="text-xs text-gray-500">
+              Breakdown of the 8 Kootas (Ashtakoot)
+            </p>
+          </div>
+        </div>
+        <div className="hidden text-xs font-medium text-gray-400 sm:block">
+          {matchDetails.length} Parameters Analyzed
+        </div>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Grid Layout */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {matchDetails.map((detail, idx) => {
+          const styles = getScoreStyles(detail.score, detail.full_score);
           const percentage = (detail.score / detail.full_score) * 100;
 
           return (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.05 }}
-              className="rounded-lg border border-gray-200/60 bg-white/60 p-4 transition-all hover:border-[#FF6B35]/30 hover:shadow-md dark:border-gray-700/60 dark:bg-white/5"
+              className={`flex flex-col justify-between rounded-xl border p-4 transition-all hover:shadow-md ${styles.border} ${styles.lightBg}`}
             >
-              {/* Header */}
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {getScoreIcon(detail.score, detail.full_score)}
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              {/* Card Header */}
+              <div>
+                <div className="mb-3 flex items-start justify-between">
+                  <h3 className="font-bold text-gray-900 dark:text-white">
                     {detail.title}
                   </h3>
-                </div>
-                <div className={`text-lg font-bold ${getScoreColor(detail.score, detail.full_score)}`}>
-                  {detail.score}
-                  <span className="text-xs text-gray-500">/{detail.full_score}</span>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-                {detail.description}
-              </p>
-
-              {/* Circular Progress */}
-              <div className="mb-3 flex items-center gap-3">
-                <div className="relative h-14 w-14 flex-shrink-0">
-                  <svg className="h-14 w-14 -rotate-90 transform">
-                    <circle
-                      cx="28"
-                      cy="28"
-                      r="24"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                      className="text-gray-200 dark:text-gray-700"
-                    />
-                    <circle
-                      cx="28"
-                      cy="28"
-                      r="24"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                      strokeDasharray={`${(percentage / 100) * 150.8} 150.8`}
-                      strokeLinecap="round"
-                      className={getProgressColor(detail.score, detail.full_score)}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      {percentage.toFixed(0)}%
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-lg font-black ${styles.color}`}>
+                      {detail.score}
+                    </span>
+                    <span className="text-xs font-medium text-gray-400">
+                      / {detail.full_score}
                     </span>
                   </div>
                 </div>
 
-                {/* Values */}
+                {/* Progress Bar */}
+                <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-white dark:bg-black/20">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${percentage}%` }}
+                    transition={{ duration: 0.8, delay: 0.2 + (idx * 0.05) }}
+                    className={`h-full rounded-full ${styles.bg}`}
+                  />
+                </div>
+
+                {/* Comparison Box */}
                 {(detail.boy_value || detail.girl_value) && (
-                  <div className="flex-1 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-blue-900 dark:text-blue-300">
-                        {maleData.name}:
-                      </span>
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-900 dark:bg-blue-900/30 dark:text-blue-100">
-                        {String(detail.boy_value || 'N/A')}
-                      </span>
+                  <div className="mb-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 dark:border-gray-700 dark:bg-gray-700">
+                    {/* Boy */}
+                    <div className="bg-white p-2 text-center dark:bg-gray-800">
+                      <div className="mb-1 flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-blue-500">
+                        <User className="h-3 w-3" />
+                        Boy
+                      </div>
+                      <div className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100" title={String(detail.boy_value)}>
+                        {detail.boy_value || '-'}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-pink-900 dark:text-pink-300">
-                        {femaleData.name}:
-                      </span>
-                      <span className="rounded-full bg-pink-100 px-2 py-0.5 text-xs font-bold text-pink-900 dark:bg-pink-900/30 dark:text-pink-100">
-                        {String(detail.girl_value || 'N/A')}
-                      </span>
+                    {/* Girl */}
+                    <div className="bg-white p-2 text-center dark:bg-gray-800">
+                      <div className="mb-1 flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-pink-500">
+                        <Heart className="h-3 w-3" />
+                        Girl
+                      </div>
+                      <div className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100" title={String(detail.girl_value)}>
+                        {detail.girl_value || '-'}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Progress Bar */}
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    percentage >= 75
-                      ? 'bg-green-500'
-                      : percentage >= 50
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                  }`}
-                  style={{ width: `${percentage}%` }}
-                />
+              {/* Description Footer */}
+              <div className="mt-2 border-t border-gray-200/50 pt-2 dark:border-gray-700/30">
+                <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                  {detail.description}
+                </p>
               </div>
             </motion.div>
           );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import {
   BookOpen,
@@ -67,47 +67,22 @@ interface ApiResponse {
 
 /* ================= COMPONENT ================= */
 
-export default function BlogClient({
-  initialData,
-}: {
-  initialData: ApiResponse;
-}) {
+export default function BlogClient({ initialData }: { initialData: ApiResponse }) {
   /* ================= STATE ================= */
 
   const [blogs, setBlogs] = useState<Blog[]>(initialData.data || []);
-  const [categories, setCategories] = useState<Category[]>(
-    initialData.categories || [],
-  );
-  const [popularBlogs, setPopularBlogs] = useState<PopularBlog[]>(
-    initialData.popularBlogs || [],
-  );
-  const [pagination, setPagination] = useState<Pagination>(
-    initialData.pagination,
-  );
+  const [categories, setCategories] = useState<Category[]>(initialData.categories || []);
+  const [popularBlogs, setPopularBlogs] = useState<PopularBlog[]>(initialData.popularBlogs || []);
+  const [pagination, setPagination] = useState<Pagination>(initialData.pagination);
 
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [sortBy, setSortBy] = useState("latest");
-  const [currentPage, setCurrentPage] = useState(
-    initialData.pagination?.currentPage || 1,
-  );
+  const [currentPage, setCurrentPage] = useState(initialData.pagination?.currentPage || 1);
 
   const prefersReducedMotion = useReducedMotion();
-
-  /* ================= PARTICLES ================= */
-
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 12 }).map((_, i) => ({
-        left: 5 + (i % 4) * 25,
-        top: 10 + Math.floor(i / 4) * 30,
-        xOffset: (i % 2 === 0 ? 1 : -1) * 30,
-        yOffset: (i % 3 === 0 ? 1 : -1) * 30,
-      })),
-    [],
-  );
 
   /* ================= FETCH (CLIENT UPDATES) ================= */
 
@@ -115,44 +90,42 @@ export default function BlogClient({
     const controller = new AbortController();
 
     async function fetchBlogs() {
-      if (!blogs.length) setLoading(true);
+      // Show loading skeleton only on first client-side fetch, not for pagination
+      const isInitialFetch = currentPage === 1 && !selectedCategory && !appliedSearch && sortBy === "latest";
+      if (!isInitialFetch) setLoading(true);
+
       try {
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: "9",
           sortBy,
         });
+        if (selectedCategory) params.append("categoryId", selectedCategory);
+        if (appliedSearch.trim()) params.append("search", appliedSearch.trim());
 
-        if (selectedCategory) {
-          params.append("categoryId", selectedCategory);
-        }
-
-        if (appliedSearch.trim()) {
-          params.append("search", appliedSearch.trim());
-        }
-
-        const res = await fetch(`/api/landing/blog?${params}`, {
-          signal: controller.signal,
-        });
-
+        const res = await fetch(`/api/landing/blog?${params}`, { signal: controller.signal });
         const data = await res.json();
 
         if (data?.success) {
           setBlogs(data.data || []);
-          setCategories(data.categories || []);
-          setPopularBlogs(data.popularBlogs || []);
+          if(data.categories) setCategories(data.categories);
+          if(data.popularBlogs) setPopularBlogs(data.popularBlogs);
           setPagination(data.pagination);
         }
       } catch (err: any) {
-        if (err?.name !== "AbortError") {
-          console.error("Blog fetch failed:", err);
-        }
+        if (err?.name !== "AbortError") console.error("Blog fetch failed:", err);
       } finally {
         setLoading(false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
+    
+    // Don't refetch if it's the initial server-rendered data
+    const hasFilters = selectedCategory || appliedSearch || sortBy !== 'latest' || currentPage > 1;
+    if (hasFilters) {
+      fetchBlogs();
+    }
 
-    fetchBlogs();
     return () => controller.abort();
   }, [selectedCategory, currentPage, sortBy, appliedSearch]);
 
@@ -163,516 +136,258 @@ export default function BlogClient({
     setAppliedSearch(searchQuery);
   };
 
-  // const stripHtml = (html: string) =>
-  //   html
-  //     .replace(/<[^>]*>/g, "")
-  //     .replace(/&nbsp;/g, " ")
-  //     .trim();
-
-  // const truncateText = (text: string, max: number) => {
-  //   const clean = stripHtml(text);
-  //   return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
-  // };
-
   const stripHtml = (html: string) => {
-  // If it's JSON from TipTap editor
-  try {
-    const parsed = JSON.parse(html);
-    if (parsed && parsed.type === "doc" && parsed.content) {
-      // Extract text from TipTap JSON structure
-      const extractText = (node: any): string => {
-        if (node.type === "text") return node.text || "";
-        if (node.content) {
-          return node.content.map(extractText).join(" ");
+    // If it's JSON from TipTap editor
+    const trimmedHtml = html.trim();
+    if (trimmedHtml.startsWith("{") && trimmedHtml.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(trimmedHtml);
+        if (parsed && parsed.type === "doc" && parsed.content) {
+          const extractText = (node: any): string => {
+            if (node.type === "text") return node.text || "";
+            if (node.content) return node.content.map(extractText).join(" ");
+            return "";
+          };
+          return parsed.content.map(extractText).join(" ").replace(/\s+/g, " ").trim();
         }
-        return "";
-      };
-      const text = parsed.content.map(extractText).join(" ");
-      return text.replace(/\s+/g, " ").trim();
+      } catch (e) { /* Fallback to HTML stripping */ }
     }
-  } catch (e) {
-    // Not JSON, treat as HTML
-  }
+    return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  };
+
+  const truncateText = (text: string, max: number) => {
+    const clean = stripHtml(text);
+    return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
+  };
   
-  // Strip HTML tags
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-};
+  /* ================= SIDEBAR COMPONENT (FOR REUSE) ================= */
 
-const truncateText = (text: string, max: number) => {
-  const clean = stripHtml(text);
-  return clean.length <= max ? clean : clean.slice(0, max).trim() + "...";
-};
-
-  /* ================= UI ================= */
+  const SidebarContent = () => (
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="mb-4 flex items-center gap-2">
+        <TrendingUp className="h-5 w-5 text-[#FF6B35]" />
+        <h3 className="text-base font-bold text-gray-900 dark:text-white">Trending Articles</h3>
+      </div>
+      <div className="space-y-3">
+        {popularBlogs.slice(0, 5).map((blog, index) => (
+          <Link href={`/blog/${blog.slug || blog.id}`} key={blog.id} className="group flex gap-4 items-center rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <span className="text-lg font-bold text-gray-300 dark:text-gray-600 group-hover:text-[#FF6B35]">
+              0{index + 1}
+            </span>
+            <div className="min-w-0">
+              <h4 className="line-clamp-2 text-sm font-semibold text-gray-800 group-hover:text-[#FF6B35] dark:text-white">
+                {blog.title}
+              </h4>
+              <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                <Eye className="h-3 w-3" />
+                <span>{blog.viewer} views</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      <LandingWrapper>
-        {/* Hero Section */}
-        <section className="relative flex min-h-[40vh] items-center justify-center overflow-hidden px-4 pb-6 pt-24 sm:min-h-[45vh] sm:px-6 sm:pb-8 sm:pt-28 lg:px-8">
-          {/* Animated Grid Background */}
-          <div className="absolute inset-0">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 1px 1px, rgba(255, 107, 53, 0.06) 1px, transparent 0)",
-                backgroundSize: "40px 40px",
-              }}
-            />
+    <LandingWrapper>
+      {/* === HERO SECTION === */}
+      <section className="relative flex min-h-[40vh] items-center justify-center overflow-hidden px-4 pt-28 pb-12 sm:min-h-[45vh]">
+        <div className="absolute inset-0 bg-gradient-to-b from-orange-50/50 to-transparent dark:from-orange-950/20" />
+        <div className="relative z-10 w-full max-w-4xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/50 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#FF6B35] shadow-sm backdrop-blur-md dark:border-orange-900/40 dark:bg-white/5">
+              <BookOpen className="h-4 w-4" />
+              Our Blog
+            </span>
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+              Astrology{" "}
+              <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
+                Insights & Wisdom
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-base text-gray-600 dark:text-gray-400 sm:text-lg">
+              Explore the cosmos, understand your destiny, and find guidance in our curated articles.
+            </p>
+          </motion.div>
           </div>
+        </section>
 
-          {/* Floating Particles - only on md+ and if motion allowed */}
-          {!prefersReducedMotion && (
-            <div className="absolute inset-0 hidden md:block">
-              {particles.map((p, i) => (
-                <motion.div
-                  key={i}
-                  className="pointer-events-none absolute"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{
-                    opacity: [0.15, 0.4, 0.15],
-                    scale: [1, 1.8, 1],
-                    x: [0, p.xOffset, 0],
-                    y: [0, p.yOffset, 0],
-                  }}
-                  transition={{
-                    duration: 12 + i * 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.4,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    left: `${p.left}%`,
-                    top: `${p.top}%`,
-                  }}
-                >
-                  <div className="relative">
-                    <div className="h-3 w-3 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#FFB347] opacity-60 blur-[2px]" />
-                    <div className="absolute inset-0 h-3 w-3 animate-ping rounded-full bg-gradient-to-br from-[#FF6B35] to-[#FFB347] opacity-30" />
+      {/* === MAIN CONTENT === */}
+      <section className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+            
+            {/* Main Content Area */}
+            <main className="lg:col-span-8">
+              
+              {/* Mobile Sidebar (Visible on < lg screens) */}
+              {popularBlogs.length > 0 && (
+                <div className="mb-8 lg:hidden">
+                  <SidebarContent />
+                </div>
+              )}
+
+              {/* Filters & Controls */}
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Showing <span className="font-bold text-gray-900 dark:text-white">{blogs.length}</span> of <span className="font-bold text-gray-900 dark:text-white">{pagination.totalCount}</span> articles
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <input
+                      type="text"
+                      placeholder="Search articles..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 pr-10 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-800"
+                    />
+                    <button onClick={handleSearch} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-orange-500">
+                      <Search className="h-4 w-4" />
+                    </button>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {/* Gradient Orbs - only on sm+ */}
-          {!prefersReducedMotion && (
-            <>
-              <motion.div
-                className="absolute -left-1/4 top-1/4 hidden h-72 w-72 rounded-full bg-[#FF6B35] opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10 sm:block sm:h-96 sm:w-96"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  x: [0, 50, 0],
-                  y: [0, 30, 0],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute -right-1/4 top-1/3 hidden h-72 w-72 rounded-full bg-[#FFB347] opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10 sm:block sm:h-96 sm:w-96"
-                animate={{
-                  scale: [1, 1.3, 1],
-                  x: [0, -30, 0],
-                  y: [0, 50, 0],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1,
-                }}
-              />
-            </>
-          )}
-
-          <div className="relative z-10 mx-auto w-full max-w-7xl text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="space-y-5 sm:space-y-6"
-            >
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-gradient-to-r from-[#FF6B35]/10 to-[#FFB347]/10 px-4 py-2 backdrop-blur-sm">
-                <BookOpen className="h-4 w-4 text-[#FF6B35]" />
-                <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
-                  BLOG &amp; INSIGHTS
-                </span>
-              </div>
-
-              <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                <span className="text-gray-900 dark:text-white">
-                  Astrology{" "}
-                </span>
-                <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">
-                  Insights
-                </span>
-              </h1>
-
-              <p className="mx-auto max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-                Discover wisdom from ancient texts and modern interpretations
-              </p>
-
-              {/* Search Bar */}
-              <div className="mx-auto max-w-2xl">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search articles, topics, or authors..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="w-full rounded-xl border border-gray-200/60 bg-white/70 px-4 py-3.5 pr-11 text-sm text-gray-900 backdrop-blur-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700/60 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 sm:px-5 sm:pr-12 sm:text-base"
-                  />
-                  <button
-                    onClick={handleSearch}
-                    aria-label="Search blogs"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg bg-gradient-to-r from-[#FF6B35] to-[#FFB347] p-2 text-white transition-all hover:scale-105"
+                  <select
+                    value={sortBy}
+                    onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+                    className="rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-medium focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-800"
                   >
-                    <Search className="h-4 w-4" />
-                  </button>
+                    <option value="latest">Latest</option>
+                    <option value="popular">Popular</option>
+                    <option value="oldest">Oldest</option>
+                  </select>
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
 
-        {/* Main Content */}
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="grid gap-8 lg:grid-cols-12">
-              {/* Main Content - 8 columns */}
-              <div className="lg:col-span-8">
-                {/* Filters Bar */}
-                <motion.div
-                  className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-gray-200/60 pb-4 dark:border-gray-700/60"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+              {/* Category Pills (Scrollable on mobile) */}
+              <div className="scrollbar-hide mb-8 flex gap-2 overflow-x-auto pb-2">
+                <button
+                  onClick={() => { setSelectedCategory(""); setCurrentPage(1); }}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${selectedCategory === "" ? "bg-[#FF6B35] text-white shadow" : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300"}`}
                 >
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {pagination.totalCount}
-                    </span>{" "}
-                    articles
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="blog-sort"
-                      className="text-xs text-gray-600 dark:text-gray-400"
-                    >
-                      Sort:
-                    </label>
-
-                    <select
-                      id="blog-sort"
-                      value={sortBy}
-                      onChange={(e) => {
-                        setSortBy(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="rounded-lg border border-gray-200/60 bg-white/70 px-3 py-1.5 text-xs font-medium text-gray-900 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700/60 dark:bg-white/5 dark:text-white"
-                    >
-                      <option value="latest">Latest</option>
-                      <option value="popular">Popular</option>
-                      <option value="oldest">Oldest</option>
-                    </select>
-                  </div>
-                </motion.div>
-
-                {/* Category Filter Pills */}
-                {categories.length > 0 && (
-                  <motion.div
-                    className="mb-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                  All
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setCurrentPage(1); }}
+                    className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${selectedCategory === cat.id ? "bg-[#FF6B35] text-white shadow" : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300"}`}
                   >
-                    <div className="flex flex-wrap gap-2">
-                      <motion.button
-                        onClick={() => {
-                          setSelectedCategory("");
-                          setCurrentPage(1);
-                        }}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                          selectedCategory === ""
-                            ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-lg"
-                            : "border border-gray-200/60 bg-white/70 text-gray-700 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300"
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        All Topics
-                      </motion.button>
-                      {categories.map((category) => (
-                        <motion.button
-                          key={category.id}
-                          onClick={() => {
-                            setSelectedCategory(category.id);
-                            setCurrentPage(1);
-                          }}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                            selectedCategory === category.id
-                              ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-lg"
-                              : "border border-gray-200/60 bg-white/70 text-gray-700 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300"
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {category.name}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Loading / Empty / List */}
-                {loading ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className="animate-pulse overflow-hidden rounded-xl border border-gray-200/60 bg-white/70 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
-                      >
-                        <div className="h-40 w-full bg-gray-200 dark:bg-gray-700" />
-                        <div className="space-y-3 p-4">
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
-                          <div className="h-3 rounded bg-gray-200 dark:bg-gray-700" />
-                          <div className="h-3 w-5/6 rounded bg-gray-200 dark:bg-gray-700" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : blogs.length === 0 ? (
-                  <motion.div
-                    className="rounded-2xl border border-gray-200/60 bg-white/70 py-12 text-center backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 sm:py-16"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    <BookOpen className="mx-auto mb-4 h-14 w-14 text-gray-300 dark:text-gray-600 sm:h-16 sm:w-16" />
-                    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
-                      No Articles Found
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-                      Try adjusting your filters or search query
-                    </p>
-                  </motion.div>
-                ) : (
-                  <>
-                    {/* Blog Grid */}
-                    <div className="mb-8 grid gap-4 sm:grid-cols-2">
-                      {blogs.map((blog, index) => (
-                        <motion.div
-                          key={blog.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                        >
-                          <Link
-                            href={`/blog/${blog.slug || blog.id}`}
-                            className="group block h-full"
-                          >
-                            <motion.article
-                              className="h-full overflow-hidden rounded-xl border border-gray-200/60 bg-white/70 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
-                              whileHover={{
-                                scale: 1.02,
-                                borderColor: "rgba(255, 107, 53, 0.5)",
-                                boxShadow:
-                                  "0 10px 30px rgba(255, 107, 53, 0.15)",
-                              }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              {/* Image */}
-                              <div className="relative h-40 overflow-hidden">
-                                <Image
-                                  src={avatar(blog.blogImage)}
-                                  alt={blog.title}
-                                  fill
-                                  sizes="(max-width: 768px) 100vw, 50vw"
-                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                                {blog.categoryName && (
-                                  <div className="absolute left-2 top-2 rounded-lg bg-white/95 px-2 py-0.5 text-[10px] font-bold text-[#FF6B35] backdrop-blur-sm dark:bg-gray-900/95">
-                                    {blog.categoryName}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Content */}
-                              <div className="p-4">
-                                <h3 className="mb-2 line-clamp-2 text-sm font-bold text-gray-900 transition-colors group-hover:text-[#FF6B35] dark:text-white sm:text-base">
-                                  {blog.title}
-                                </h3>
-
-                                <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                                  {blog.seo?.excerpt ||
-                                    truncateText(blog.description, 100)}
-                                </p>
-
-                                {/* Meta Info */}
-                                <div className="flex items-center justify-between border-t border-gray-200/60 pt-3 text-[10px] text-gray-500 dark:border-gray-700/60">
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1">
-                                      <User className="h-3 w-3" />
-                                      <span className="max-w-[80px] truncate">
-                                        {blog.author}
-                                      </span>
-                                    </div>
-                                    {blog.seo?.readingTime && (
-                                      <div className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        <span>{blog.seo.readingTime}m</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Eye className="h-3 w-3" />
-                                    <span>{blog.viewer}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.article>
-                          </Link>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Pagination */}
-                    {pagination.totalPages > 1 && (
-                      <motion.div
-                        className="flex items-center justify-center gap-2"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                      >
-                        <motion.button
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(prev - 1, 1))
-                          }
-                          disabled={!pagination.hasPrevPage}
-                          className="rounded-xl border border-gray-200/60 bg-white/70 px-4 py-2 text-xs font-medium text-gray-700 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300 sm:text-sm"
-                          whileHover={{
-                            scale: !pagination.hasPrevPage ? 1 : 1.05,
-                          }}
-                          whileTap={{
-                            scale: !pagination.hasPrevPage ? 1 : 0.95,
-                          }}
-                        >
-                          Previous
-                        </motion.button>
-
-                        <div className="flex items-center gap-1">
-                          {Array.from(
-                            { length: Math.min(pagination.totalPages, 5) },
-                            (_, i) => {
-                              let pageNum;
-                              if (pagination.totalPages <= 5) {
-                                pageNum = i + 1;
-                              } else if (currentPage <= 3) {
-                                pageNum = i + 1;
-                              } else if (
-                                currentPage >=
-                                pagination.totalPages - 2
-                              ) {
-                                pageNum = pagination.totalPages - 4 + i;
-                              } else {
-                                pageNum = currentPage - 2 + i;
-                              }
-
-                              return (
-                                <motion.button
-                                  key={pageNum}
-                                  onClick={() => setCurrentPage(pageNum)}
-                                  className={`h-8 w-8 rounded-xl text-xs font-medium transition-all sm:h-10 sm:w-10 sm:text-sm ${
-                                    currentPage === pageNum
-                                      ? "bg-gradient-to-r from-[#FF6B35] to-[#FFB347] text-white shadow-lg"
-                                      : "border border-gray-200/60 bg-white/70 text-gray-700 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300"
-                                  }`}
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                >
-                                  {pageNum}
-                                </motion.button>
-                              );
-                            },
-                          )}
-                        </div>
-
-                        <motion.button
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(prev + 1, pagination.totalPages),
-                            )
-                          }
-                          disabled={!pagination.hasNextPage}
-                          className="rounded-xl border border-gray-200/60 bg-white/70 px-4 py-2 text-xs font-medium text-gray-700 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700/60 dark:bg-white/5 dark:text-gray-300 sm:text-sm"
-                          whileHover={{
-                            scale: !pagination.hasNextPage ? 1 : 1.05,
-                          }}
-                          whileTap={{
-                            scale: !pagination.hasNextPage ? 1 : 0.95,
-                          }}
-                        >
-                          Next
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </>
-                )}
+                    {cat.name}
+                  </button>
+                ))}
               </div>
 
-              {/* Sidebar - 4 columns */}
-              <aside className="lg:col-span-4">
-                {popularBlogs.length > 0 && (
-                  <motion.div
-                    className="rounded-xl border border-gray-200/60 bg-white/70 p-5 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5 lg:sticky lg:top-24"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <div className="mb-4 flex items-center gap-2 sm:mb-5">
-                      <TrendingUp className="h-4 w-4 text-[#FF6B35]" />
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
-                        Trending
-                      </h3>
+              {/* Blog Grid */}
+              {loading ? (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse space-y-3 rounded-xl bg-white p-4 dark:bg-gray-800">
+                      <div className="aspect-video w-full rounded-lg bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
                     </div>
-                    <div className="space-y-3">
-                      {popularBlogs.slice(0, 5).map((blog, index) => (
-                        <Link
-                          href={`/blog/${blog.slug || blog.id}`}
-                          key={blog.id}
-                          className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/50"
-                        >
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FFB347] text-xs font-bold text-white">
-                            {index + 1}
+                  ))}
+                </div>
+              ) : blogs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 py-20 text-center dark:border-gray-700">
+                  <Search className="mb-4 h-12 w-12 text-gray-300" />
+                  <h3 className="text-xl font-bold">No Articles Found</h3>
+                  <p className="mt-1 text-gray-500">Try adjusting your search or filters.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                  {blogs.map((blog, index) => (
+                    <motion.div
+                      key={blog.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Link href={`/blog/${blog.slug || blog.id}`} className="group block h-full">
+                        <article className="flex h-full flex-col">
+                          <div className="relative mb-4 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                            <Image
+                              src={avatar(blog.blogImage)}
+                              alt={blog.title}
+                              width={400}
+                              height={225}
+                              className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="mb-1 line-clamp-2 text-xs font-semibold text-gray-900 transition-colors group-hover:text-[#FF6B35] dark:text-white sm:text-sm">
+                          <div className="flex flex-1 flex-col">
+                            {blog.categoryName && (
+                              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#FF6B35]">
+                                {blog.categoryName}
+                              </p>
+                            )}
+                            <h3 className="flex-1 text-lg font-bold text-gray-900 group-hover:text-[#FF6B35] dark:text-white">
                               {blog.title}
-                            </h4>
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                              <Eye className="h-2.5 w-2.5" />
-                              <span>{blog.viewer}</span>
+                            </h3>
+                            <p className="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                              {blog.seo?.excerpt || truncateText(blog.description, 100)}
+                            </p>
+                            <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                              <span className="font-medium">{blog.author}</span>
+                              <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {blog.viewer}</span>
                             </div>
                           </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </aside>
-            </div>
+                        </article>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-12 flex items-center justify-center gap-2">
+                  <button onClick={() => setCurrentPage(p => p - 1)} disabled={!pagination.hasPrevPage} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-50 dark:border-gray-700">
+                    Previous
+                  </button>
+                  <span className="px-2 text-sm text-gray-500 sm:hidden">Page {currentPage} of {pagination.totalPages}</span>
+                  <div className="hidden items-center gap-1 sm:flex">
+                    {Array.from({ length: Math.min(pagination.totalPages, 5)}, (_, i) => {
+                       let pageNum;
+                       if (pagination.totalPages <= 5) pageNum = i + 1;
+                       else if (currentPage <= 3) pageNum = i + 1;
+                       else if (currentPage >= pagination.totalPages - 2) pageNum = pagination.totalPages - 4 + i;
+                       else pageNum = currentPage - 2 + i;
+                       return pageNum;
+                    }).map(pageNum => (
+                      <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`h-9 w-9 rounded-lg text-sm font-medium ${currentPage === pageNum ? 'bg-[#FF6B35] text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+                        {pageNum}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setCurrentPage(p => p + 1)} disabled={!pagination.hasNextPage} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium disabled:opacity-50 dark:border-gray-700">
+                    Next
+                  </button>
+                </div>
+              )}
+            </main>
+
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:col-span-4 lg:block">
+              <div className="sticky top-24">
+                <SidebarContent />
+              </div>
+            </aside>
           </div>
-        </section>
-      </LandingWrapper>
-    </>
+        </div>
+      </section>
+      
+      {/* Utility to hide scrollbar */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </LandingWrapper>
   );
 }

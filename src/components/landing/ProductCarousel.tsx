@@ -80,7 +80,9 @@ export default function ProductCarousel() {
     if (!products.length) return null;
 
     return (
-        <section className="relative py-16 sm:py-24 overflow-hidden bg-[#FFFBF5] dark:bg-[#050505]">
+        <section
+        className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black/40 overflow-hidden"
+      >
             {/* --- 1. Cosmic Background Pattern --- */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.08]">
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
