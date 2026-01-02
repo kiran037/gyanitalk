@@ -1,3 +1,4 @@
+
 // app/api/astrologers/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -154,15 +155,10 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Custom sorting logic:
-    // 1. Top badge + Verified (top_select=1 AND isVerified=true)
-    // 2. Only Verified (isVerified=true AND top_select=0)
-    // 3. Remaining astrologers
-    // Within each group: sort by follower count (highest first), then by date
     const sortedAstrologers = astrologersWithWallet.sort((a, b) => {
       const aTopAndVerified = a.top_select === 1 && a.isVerified;
       const bTopAndVerified = b.top_select === 1 && b.isVerified;
-      
+
       const aOnlyVerified = a.isVerified && a.top_select === 0;
       const bOnlyVerified = b.isVerified && b.top_select === 0;
 
@@ -217,6 +213,175 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to fetch astrologers",
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// ✅ NEW: POST method for creating astrologer
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate required fields
+    const requiredFields = [
+      "name",
+      "email",
+      "contactNo",
+      "gender",
+      "birthDate",
+      "primarySkill",
+      "allSkill",
+      "languageKnown",
+      "charge",
+      "experienceInYears",
+      "dailyContribution",
+      "whyOnBoard",
+      "interviewSuitableTime",
+      "mainSourceOfBusiness",
+      "highestQualification",
+      "astrologerCategoryId",
+      "minimumEarning",
+      "maximumEarning",
+      "NoofforeignCountriesTravel",
+      "currentlyworkingfulltimejob",
+      "goodQuality",
+      "whatwillDo",
+    ];
+
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Missing required field: ${field}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if user exists or create new user
+    let userId: bigint;
+
+    if (body.userId) {
+      userId = BigInt(body.userId);
+      const existingUser = await prisma.users.findUnique({
+        where: { id: userId },
+      });
+
+      if (!existingUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "User not found",
+          },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Create new user
+      const newUser = await prisma.users.create({
+        data: {
+          name: body.name,
+          email: body.email,
+          contactNo: body.contactNo,
+          gender: body.gender,
+          birthDate: new Date(body.birthDate),
+          isActive: true,
+          isDelete: false,
+        },
+      });
+      userId = newUser.id;
+    }
+
+    // Create astrologer
+    const newAstrologer = await prisma.astrologers.create({
+      data: {
+        users: {
+          connect: {
+            id: userId,
+          },
+        },
+        name: body.name,
+        email: body.email,
+        contactNo: body.contactNo,
+        gender: body.gender,
+        birthDate: new Date(body.birthDate),
+        primarySkill: body.primarySkill,
+        allSkill: body.allSkill,
+        languageKnown: body.languageKnown,
+        profileImage:
+          body.profileImage && body.profileImage.trim() !== ""
+            ? body.profileImage
+            : null,
+        charge: parseInt(body.charge),
+        actualCharge: parseInt(body.actualCharge ?? body.charge),
+        experienceInYears: parseInt(body.experienceInYears),
+        dailyContribution: parseInt(body.dailyContribution),
+        hearAboutAstroguru: body.hearAboutAstroguru || null,
+        isWorkingOnAnotherPlatform: body.isWorkingOnAnotherPlatform || false,
+        whyOnBoard: body.whyOnBoard,
+        interviewSuitableTime: body.interviewSuitableTime,
+        currentCity: body.currentCity || null,
+        mainSourceOfBusiness: body.mainSourceOfBusiness,
+        highestQualification: body.highestQualification,
+        degree: body.degree || null,
+        college: body.college || null,
+        learnAstrology: body.learnAstrology || null,
+        astrologerCategoryId: body.astrologerCategoryId,
+        instaProfileLink: body.instaProfileLink || null,
+        facebookProfileLink: body.facebookProfileLink || null,
+        linkedInProfileLink: body.linkedInProfileLink || null,
+        youtubeChannelLink: body.youtubeChannelLink || null,
+        websiteProfileLink: body.websiteProfileLink || null,
+        isAnyBodyRefer: body.isAnyBodyRefer || false,
+        minimumEarning: parseInt(body.minimumEarning),
+        maximumEarning: parseInt(body.maximumEarning),
+        loginBio: body.loginBio || null,
+        NoofforeignCountriesTravel: body.NoofforeignCountriesTravel,
+        currentlyworkingfulltimejob: body.currentlyworkingfulltimejob,
+        goodQuality: body.goodQuality,
+        biggestChallenge: body.biggestChallenge || null,
+        whatwillDo: body.whatwillDo,
+        isVerified: body.isVerified || false,
+        totalOrder: body.totalOrder || 0,
+        country: body.country || null,
+        isActive: body.isActive !== undefined ? body.isActive : true,
+        isDelete: false,
+        createdBy: body.createdBy || 0,
+        modifiedBy: body.modifiedBy || 0,
+        nameofplateform: body.nameofplateform || null,
+        monthlyEarning: body.monthlyEarning || null,
+        referedPerson: body.referedPerson || null,
+        chatStatus: body.chatStatus || "offline",
+        chatWaitTime: body.chatWaitTime || null,
+        callStatus: body.callStatus || "offline",
+        callWaitTime: body.callWaitTime || null,
+        videoCallRate: body.videoCallRate || null,
+        reportRate: body.reportRate || null,
+        chat_sorting: body.chat_sorting || 0,
+        chat_select: body.chat_select || 0,
+        call_sorting: body.call_sorting || 0,
+        call_select: body.call_select || 0,
+      },
+    });
+
+    const safe = convertPrismaTypes({
+      success: true,
+      message: "Astrologer created successfully",
+      data: newAstrologer,
+    });
+
+    return NextResponse.json(safe, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating astrologer:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to create astrologer",
         message: error.message,
       },
       { status: 500 }

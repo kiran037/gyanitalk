@@ -1,19 +1,17 @@
 generator client {
-  provider = "prisma-client"              
-  output   = "../src/generated/client"    
+  provider = "prisma-client"
+  output   = "../src/generated/client"
 }
 
 datasource db {
   provider = "mysql"
 }
 
-
 enum WithdrawStatus {
   Pending
   Reject
   Released
 }
-
 
 model admin_get_commissions {
   id               BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
@@ -72,7 +70,7 @@ model assistantchat {
   astrologerId BigInt
   customerId   Int
 
-  astrologer   astrologers @relation(fields: [astrologerId], references: [id])
+  astrologer astrologers @relation(fields: [astrologerId], references: [id])
 }
 
 model astrohost {
@@ -86,18 +84,17 @@ model astrohost {
 }
 
 model astrologer_assign_group {
-  id           Int           @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   group_id     BigInt?
-  astrologerId BigInt?       @db.UnsignedBigInt
-  created_at   DateTime?     @default(now()) @db.Timestamp(0)
-  updated_at   DateTime?     @default(now()) @db.Timestamp(0)
+  astrologerId BigInt?   @db.UnsignedBigInt
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @default(now()) @db.Timestamp(0)
 
-  astrologer   astrologers?  @relation(fields: [astrologerId], references: [id])
+  astrologer astrologers?       @relation(fields: [astrologerId], references: [id])
   group      astrologer_groups? @relation(fields: [group_id], references: [id])
 
   @@map("astrologer_assign_group")
 }
-
 
 model astrologer_assistant_permissions {
   id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
@@ -196,9 +193,9 @@ model astrologer_followers {
   createdBy      Int
   modifiedBy     Int
 
-  astrologer    astrologers?     @relation(fields: [astrologerId], references: [id])
-  user          users?            @relation("UserFollowers", fields: [userId], references: [id])
-  aiAstrologer  aiastrologers?   @relation("AiAstroFollowers", fields: [aiAstrologerId], references: [id])
+  astrologer   astrologers?   @relation(fields: [astrologerId], references: [id])
+  user         users?         @relation("UserFollowers", fields: [userId], references: [id])
+  aiAstrologer aiastrologers? @relation("AiAstroFollowers", fields: [aiAstrologerId], references: [id])
 
   @@index([astrologerId], map: "astrologer_followers_astrologerid_foreign")
   @@index([userId], map: "astrologer_followers_userid_foreign")
@@ -216,10 +213,10 @@ model astrologer_gifts {
   updated_at   DateTime? @db.Timestamp(0)
   createdBy    Int
   modifiedBy   Int
- 
-  user         users?     @relation("UserGiftsRelation", fields: [userId], references: [id])
-  gift         gifts?     @relation("GiftsRelation", fields: [giftId], references: [id])
-  astrologer   astrologers? @relation("AstrologerGiftsRelation", fields: [astrologerId], references: [id])
+
+  user       users?       @relation("UserGiftsRelation", fields: [userId], references: [id])
+  gift       gifts?       @relation("GiftsRelation", fields: [giftId], references: [id])
+  astrologer astrologers? @relation("AstrologerGiftsRelation", fields: [astrologerId], references: [id])
 
   @@index([astrologerId], map: "astrologer_gifts_astrologerid_foreign")
   @@index([giftId], map: "astrologer_gifts_giftid_foreign")
@@ -232,8 +229,9 @@ model astrologer_groups {
   created_at DateTime? @default(now()) @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
 
-  astrologerassign   astrologer_assign_group[] // relation
-   @@map("astrologer_groups")
+  astrologerassign astrologer_assign_group[] // relation
+
+  @@map("astrologer_groups")
 }
 
 model astrologer_product {
@@ -254,7 +252,7 @@ model astrologer_product {
 
 model astrologer_request {
   id               Int       @id @default(autoincrement())
-  userId           BigInt 
+  userId           BigInt
   groupId          BigInt?
   type             String?   @db.VarChar(50)
   request_id       Int?
@@ -275,16 +273,16 @@ model astrologer_request {
 }
 
 model astrologer_stories {
-  id           Int       @id @default(autoincrement())
-  astrologerId BigInt?
-  mediaType    String?   @db.Text
-  media        String?   @db.Text
-  created_at   DateTime? @default(now()) @db.Timestamp(0)
-  updated_at   DateTime? @default(now()) @db.Timestamp(0)
-  astrologer   astrologers? @relation("AstrologerStoriesRelation", fields: [astrologerId], references: [id])
+  id               Int                 @id @default(autoincrement())
+  astrologerId     BigInt?             @db.UnsignedBigInt
+  mediaType        String?             @db.Text
+  media            String?             @db.Text
+  created_at       DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?           @default(now()) @db.Timestamp(0)
+  astrologer       astrologers?        @relation("AstrologerStoriesRelation", fields: [astrologerId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   story_view_count story_view_counts[] @relation("StoryViewCounts")
 
-  @@index([astrologerId], map: "astrologer_product_astrologer_idx")
+  @@index([astrologerId], map: "astrologer_stories_astrologerid_foreign")
 }
 
 model astrologer_wait_lists {
@@ -328,6 +326,7 @@ model astrologers {
   languageKnown               String    @db.VarChar(255)
   profileImage                String?   @db.VarChar(255)
   charge                      Int
+  actualCharge                Int       @map("actual_charge")
   experienceInYears           Int
   dailyContribution           Int
   hearAboutAstroguru          String?   @db.LongText
@@ -389,25 +388,25 @@ model astrologers {
   call_select                 Int
   deleted_at                  DateTime? @db.Timestamp(0)
 
-  users        users?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "astrologers_userid_foreign")
+  users users? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "astrologers_userid_foreign")
 
-  chatrequests    chatrequest[]      @relation("AstrologerChatRequests")
-  callrequests callrequest[] @relation("AstrologerToCallRequests")
+  chatrequests       chatrequest[]             @relation("AstrologerChatRequests")
+  callrequests       callrequest[]             @relation("AstrologerToCallRequests")
   walletTransactions wallettransaction[]
-  withdraws     withdrawrequest[]
-  assistantchat assistantchat[]
-  order_requests order_request[]
-  followers     astrologer_followers[] 
-  astrologerGifts   astrologer_gifts[]  @relation("AstrologerGiftsRelation")
+  withdraws          withdrawrequest[]
+  assistantchat      assistantchat[]
+  order_requests     order_request[]
+  followers          astrologer_followers[]
+  astrologerGifts    astrologer_gifts[]        @relation("AstrologerGiftsRelation")
   astrologerassign   astrologer_assign_group[]
-  liveastro      liveastro[]   
-  stories       astrologer_stories[] @relation("AstrologerStoriesRelation")
-  blocks        blockastrologer[]
-  reviews      user_reviews[]
-  commissions commissions[] @relation(name: "astrologersTocommissions")
+  liveastro          liveastro[]
+  stories            astrologer_stories[]      @relation("AstrologerStoriesRelation")
+  blocks             blockastrologer[]
+  reviews            user_reviews[]
+  commissions        commissions[]             @relation(name: "astrologersTocommissions")
+
   @@index([userId], map: "astrologers_userid_foreign")
 }
-
 
 model astrologers_gallery {
   id           Int      @id @default(autoincrement())
@@ -447,38 +446,38 @@ model astrology_videos {
 }
 
 model astromall_products {
-  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  name              String    @db.VarChar(255)
-  slug              String?   @db.VarChar(255)
-  metaTitle         String?   @db.VarChar(255)
-  metaDescription   String?   @db.VarChar(500)
-  metaKeywords      String?   @db.VarChar(500)
-  canonicalUrl      String?   @db.VarChar(255)
-  ogTitle           String?   @db.VarChar(255)
-  ogDescription     String?   @db.VarChar(500)
-  ogImage           String?   @db.VarChar(255)
-  twitterTitle      String?   @db.VarChar(255)
-  twitterDescription String?  @db.VarChar(500)
-  twitterImage      String?   @db.VarChar(255)
-  schemaJson        String?   @db.LongText
-  features          String    @db.Text
-  productImage      String    @db.VarChar(255)
-  gallery           String?
-  productCategoryId BigInt    @db.UnsignedBigInt
-  amount            Float
-  is_feature        Boolean   @default(false)
-  bestseller        Boolean   @default(false)
-  description       String?   @db.VarChar(255)
-  isActive          Boolean   @default(true)
-  isDelete          Boolean   @default(false)
-  created_at        DateTime? @db.Timestamp(0)
-  updated_at        DateTime? @db.Timestamp(0)
-  createdBy         Int
-  modifiedBy        Int
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name               String    @db.VarChar(255)
+  slug               String?   @db.VarChar(255)
+  metaTitle          String?   @db.VarChar(255)
+  metaDescription    String?   @db.VarChar(500)
+  metaKeywords       String?   @db.VarChar(500)
+  canonicalUrl       String?   @db.VarChar(255)
+  ogTitle            String?   @db.VarChar(255)
+  ogDescription      String?   @db.VarChar(500)
+  ogImage            String?   @db.VarChar(255)
+  twitterTitle       String?   @db.VarChar(255)
+  twitterDescription String?   @db.VarChar(500)
+  twitterImage       String?   @db.VarChar(255)
+  schemaJson         String?   @db.LongText
+  features           String    @db.Text
+  productImage       String    @db.VarChar(255)
+  gallery            String?
+  productCategoryId  BigInt    @db.UnsignedBigInt
+  amount             Float
+  is_feature         Boolean   @default(false)
+  bestseller         Boolean   @default(false)
+  description        String?   @db.VarChar(255)
+  isActive           Boolean   @default(true)
+  isDelete           Boolean   @default(false)
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+  createdBy          Int
+  modifiedBy         Int
 
-  product_category  product_categories @relation(fields: [productCategoryId], references: [id])
-  order_requests order_request[]
-  product_details product_details[]
+  product_category product_categories @relation(fields: [productCategoryId], references: [id])
+  order_requests   order_request[]
+  product_details  product_details[]
 
   @@index([productCategoryId], map: "astromall_products_productcategoryid_foreign")
 }
@@ -508,7 +507,7 @@ model banner_types {
   updated_at DateTime? @db.Timestamp(0)
 
   // 👇 Add relation to banners
-  banners    banners[]
+  banners banners[]
 }
 
 model banners {
@@ -525,11 +524,10 @@ model banners {
   modifiedBy   Int
 
   // 👇 Add the relation field
-  bannerType   banner_types @relation(fields: [bannerTypeId], references: [id])
+  bannerType banner_types @relation(fields: [bannerTypeId], references: [id])
 
   @@index([bannerTypeId], map: "banners_bannertypeid_foreign")
 }
-
 
 model blockassistant {
   id          Int      @id @default(autoincrement())
@@ -541,14 +539,14 @@ model blockassistant {
 
 model blockastrologer {
   id           Int      @id @default(autoincrement())
-  astrologerId BigInt?   @db.UnsignedBigInt
-  userId       BigInt?   @db.UnsignedBigInt
+  astrologerId BigInt?  @db.UnsignedBigInt
+  userId       BigInt?  @db.UnsignedBigInt
   reason       String   @db.LongText
   created_at   DateTime @default(now()) @db.Timestamp(0)
   updated_at   DateTime @default(now()) @db.Timestamp(0)
 
-  user          users?        @relation(fields: [userId], references: [id])
-  astrologer    astrologers?  @relation(fields: [astrologerId], references: [id])
+  user       users?       @relation(fields: [userId], references: [id])
+  astrologer astrologers? @relation(fields: [astrologerId], references: [id])
 }
 
 model blockuserreview {
@@ -598,39 +596,38 @@ model blog_readers {
 }
 
 model blogs {
-  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  title              String    @db.VarChar(255)
-  slug               String?   @db.VarChar(255)
-  metaTitle          String?   @db.VarChar(255)
-  metaDescription    String?   @db.VarChar(500)
-  metaKeywords       String?   @db.VarChar(500)
-  canonicalUrl       String?   @db.VarChar(255)
-  ogTitle            String?   @db.VarChar(255)
-  ogDescription      String?   @db.VarChar(500)
-  ogImage            String?   @db.VarChar(255)
-  twitterTitle       String?   @db.VarChar(255)
-  twitterDescription String?   @db.VarChar(500)
-  twitterImage       String?   @db.VarChar(255)
-  schemaJson         String?   @db.LongText
+  id                 BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  title              String  @db.VarChar(255)
+  slug               String? @db.VarChar(255)
+  metaTitle          String? @db.VarChar(255)
+  metaDescription    String? @db.VarChar(500)
+  metaKeywords       String? @db.VarChar(500)
+  canonicalUrl       String? @db.VarChar(255)
+  ogTitle            String? @db.VarChar(255)
+  ogDescription      String? @db.VarChar(500)
+  ogImage            String? @db.VarChar(255)
+  twitterTitle       String? @db.VarChar(255)
+  twitterDescription String? @db.VarChar(500)
+  twitterImage       String? @db.VarChar(255)
+  schemaJson         String? @db.LongText
 
-  blogImage          String    @db.VarChar(200)
-  blogCategoryId     BigInt?   @db.UnsignedBigInt
-  description        String    @db.LongText
-  viewer             BigInt?
-  author             String    @db.VarChar(100)
-  postedOn           DateTime? @db.Timestamp(0)
-  isActive           Boolean   @default(true)
-  isDelete           Boolean   @default(false)
-  created_at         DateTime  @default(now()) @db.Timestamp(0)
-  updated_at         DateTime  @updatedAt @db.Timestamp(0)
-  createdBy          Int
-  modifiedBy         Int
-  extension          String?   @db.VarChar(45)
-  previewImage       String?   @db.VarChar(200)
+  blogImage      String    @db.VarChar(200)
+  blogCategoryId BigInt?   @db.UnsignedBigInt
+  description    String    @db.LongText
+  viewer         BigInt?
+  author         String    @db.VarChar(100)
+  postedOn       DateTime? @db.Timestamp(0)
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime  @updatedAt @db.Timestamp(0)
+  createdBy      Int
+  modifiedBy     Int
+  extension      String?   @db.VarChar(45)
+  previewImage   String?   @db.VarChar(200)
 
   @@index([blogCategoryId], map: "blogs_blogcategoryid_foreign")
 }
-
 
 model callaudio {
   id          Int     @id @default(autoincrement())
@@ -660,15 +657,13 @@ model callrequest {
   isFreeSession           Boolean?
   call_type               Int       @default(0)
 
-  astrologer   astrologers?  @relation("AstrologerToCallRequests", fields: [astrologerId], references: [id])  
-  user         users?         @relation("UserToCallRequests", fields: [userId], references: [id])
+  astrologer     astrologers?    @relation("AstrologerToCallRequests", fields: [astrologerId], references: [id])
+  user           users?          @relation("UserToCallRequests", fields: [userId], references: [id])
   order_requests order_request[]
 
   @@index([astrologerId], map: "callrequest_astrologer_idx")
   @@index([userId], map: "callrequest_user_idx")
 }
-
-
 
 model categories {
   id         Int      @id @default(autoincrement())
@@ -677,7 +672,7 @@ model categories {
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
 
-  courses    courses[]
+  courses courses[]
 }
 
 model cdemo {
@@ -716,24 +711,24 @@ model chat_log {
 }
 
 model chatrequest {
-  id                      Int       @id @default(autoincrement())
-  userId                  BigInt    @db.UnsignedBigInt
-  astrologerId            BigInt    @db.UnsignedBigInt
-  chatStatus              String?   @db.VarChar(45)
-  channelName             String?   @db.VarChar(45)
-  senderId                String?   @db.VarChar(45)
-  receiverId              String?   @db.VarChar(45)
+  id                      Int          @id @default(autoincrement())
+  userId                  BigInt       @db.UnsignedBigInt
+  astrologerId            BigInt       @db.UnsignedBigInt
+  chatStatus              String?      @db.VarChar(45)
+  channelName             String?      @db.VarChar(45)
+  senderId                String?      @db.VarChar(45)
+  receiverId              String?      @db.VarChar(45)
   deduction               Float?
-  chatId                  String?   @db.VarChar(400)
+  chatId                  String?      @db.VarChar(400)
   deductionFromAstrologer Float?
-  totalMin                String?   @db.VarChar(45)
-  chatRate                String?   @db.VarChar(45)
-  chat_duration           String?   @db.VarChar(255)
-  created_at              DateTime? @default(now()) @db.Timestamp(0)
-  updated_at              DateTime? @default(now()) @db.Timestamp(0)
+  totalMin                String?      @db.VarChar(45)
+  chatRate                String?      @db.VarChar(45)
+  chat_duration           String?      @db.VarChar(255)
+  created_at              DateTime?    @default(now()) @db.Timestamp(0)
+  updated_at              DateTime?    @default(now()) @db.Timestamp(0)
   isFreeSession           Boolean?
-  user            users?         @relation("UserChatRequests", fields: [userId], references: [id])
-  astrologer      astrologers?   @relation("AstrologerChatRequests", fields: [astrologerId], references: [id])
+  user                    users?       @relation("UserChatRequests", fields: [userId], references: [id])
+  astrologer              astrologers? @relation("AstrologerChatRequests", fields: [astrologerId], references: [id])
 
   @@index([userId], map: "chat_request_users_idx")
   @@index([astrologerId], map: "chatrequest_astrologer_idx")
@@ -758,7 +753,7 @@ model commission_types {
   createdBy             Int
   modifiedBy            Int
   admin_get_commissions admin_get_commissions[]
-  commissions commissions[]
+  commissions           commissions[]
 }
 
 model commissions {
@@ -773,20 +768,20 @@ model commissions {
   modifiedBy            Int
   astrologerId          BigInt?                 @db.UnsignedBigInt
   admin_get_commissions admin_get_commissions[]
-  astrologer      astrologers?     @relation(name: "astrologersTocommissions", fields: [astrologerId], references: [id])
-  commissionType  commission_types @relation(fields: [commissionTypeId], references: [id])
+  astrologer            astrologers?            @relation(name: "astrologersTocommissions", fields: [astrologerId], references: [id])
+  commissionType        commission_types        @relation(fields: [commissionTypeId], references: [id])
 
   @@index([astrologerId], map: "commissions_astrologers_idx")
   @@index([commissionTypeId], map: "commissions_commissiontypeid_foreign")
 }
 
 model contact_us {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   contact_email   String    @db.VarChar(225)
   contact_name    String    @db.VarChar(225)
   contact_message String    @db.VarChar(225)
-  created_at      DateTime?   @db.Timestamp(0)
-  updated_at      DateTime?   @db.Timestamp(0)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
 }
 
 model coupon_user_usages {
@@ -801,7 +796,7 @@ model coupon_user_usages {
   updated_at    DateTime?      @db.Timestamp(0)
   coupons       coupons        @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_coupon_id_foreign")
   order_request order_request? @relation(fields: [order_id], references: [id], onUpdate: Restrict, map: "coupon_user_usages_order_id_foreign")
-  users         users?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_userid_foreign")
+  users         users?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "coupon_user_usages_userid_foreign")
 
   @@index([coupon_id], map: "coupon_user_usages_coupon_id_foreign")
   @@index([order_id], map: "coupon_user_usages_order_id_foreign")
@@ -836,37 +831,36 @@ model course_purchase {
   price      Decimal? @db.Decimal(10, 0)
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
-  course courses @relation(fields: [course_id], references: [id])
-
+  course     courses  @relation(fields: [course_id], references: [id])
 }
 
 model courses {
-  id                 Int              @id @default(autoincrement())
-  name               String           @db.Text
-  slug               String?          @db.VarChar(255)
-  metaTitle          String?          @db.VarChar(255)
-  metaDescription    String?          @db.VarChar(500)
-  metaKeywords       String?          @db.VarChar(500)
-  canonicalUrl       String?          @db.VarChar(255)
-  ogTitle            String?          @db.VarChar(255)
-  ogDescription      String?          @db.VarChar(500)
-  ogImage            String?          @db.VarChar(255)
-  twitterTitle       String?          @db.VarChar(255)
-  twitterDescription String?          @db.VarChar(500)
-  twitterImage       String?          @db.VarChar(255)
-  schemaJson         String?          @db.LongText
-  price              Decimal?         @db.Decimal(10, 0)
-  offer_price        Decimal?         @db.Decimal(10, 0)
-  description        String?          @db.Text
-  image              String?          @db.Text
-  is_paid            Int?             @default(0)
+  id                 Int      @id @default(autoincrement())
+  name               String   @db.Text
+  slug               String?  @db.VarChar(255)
+  metaTitle          String?  @db.VarChar(255)
+  metaDescription    String?  @db.VarChar(500)
+  metaKeywords       String?  @db.VarChar(500)
+  canonicalUrl       String?  @db.VarChar(255)
+  ogTitle            String?  @db.VarChar(255)
+  ogDescription      String?  @db.VarChar(500)
+  ogImage            String?  @db.VarChar(255)
+  twitterTitle       String?  @db.VarChar(255)
+  twitterDescription String?  @db.VarChar(500)
+  twitterImage       String?  @db.VarChar(255)
+  schemaJson         String?  @db.LongText
+  price              Decimal? @db.Decimal(10, 0)
+  offer_price        Decimal? @db.Decimal(10, 0)
+  description        String?  @db.Text
+  image              String?  @db.Text
+  is_paid            Int?     @default(0)
   category_id        Int?
-  created_at         DateTime         @default(now()) @db.Timestamp(0)
-  updated_at         DateTime         @default(now()) @db.Timestamp(0)
+  created_at         DateTime @default(now()) @db.Timestamp(0)
+  updated_at         DateTime @default(now()) @db.Timestamp(0)
 
-  category       categories?      @relation(fields: [category_id], references: [id])
+  category        categories?       @relation(fields: [category_id], references: [id])
   course_purchase course_purchase[]
-  chapters chapters[]
+  chapters        chapters[]
 }
 
 model dailyhoroscope {
@@ -974,7 +968,7 @@ model gifts {
   createdBy    Int
   modifiedBy   Int
 
-  astrologerGifts    astrologer_gifts[]   @relation("GiftsRelation")
+  astrologerGifts astrologer_gifts[] @relation("GiftsRelation")
 }
 
 model help_support_quation_answers {
@@ -992,6 +986,7 @@ model help_support_quation_answers {
   description          String?   @db.LongText
 
   question help_support_quations @relation(fields: [helpSupportQuationId], references: [id])
+
   @@index([helpSupportId], map: "help_support_quation_answers_helpsupportid_foreign")
   @@index([helpSupportQuationId], map: "help_support_quation_answers_helpsupportquationid_foreign")
 }
@@ -1010,22 +1005,22 @@ model help_support_quations {
   isChatWithus  Int?      @db.TinyInt
 
   help_support_quation_answers help_support_quation_answers[]
-  support help_supports @relation(fields: [helpSupportId], references: [id])
+  support                      help_supports                  @relation(fields: [helpSupportId], references: [id])
+
   @@index([helpSupportId], map: "help_support_quations_helpsupportid_foreign")
 }
 
 model help_supports {
-  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  name       String    @db.VarChar(255)
-  isActive   Boolean   @default(true)
-  isDelete   Boolean   @default(false)
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  createdBy  Int
-  modifiedBy Int
-  tickets tickets[]
+  id          BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String                  @db.VarChar(255)
+  isActive    Boolean                 @default(true)
+  isDelete    Boolean                 @default(false)
+  created_at  DateTime?               @db.Timestamp(0)
+  updated_at  DateTime?               @db.Timestamp(0)
+  createdBy   Int
+  modifiedBy  Int
+  tickets     tickets[]
   subCategory help_support_quations[]
-
 }
 
 model highest_qualifications {
@@ -1111,7 +1106,7 @@ model intakeform {
   birthTime         String    @db.VarChar(45)
   birthPlace        String    @db.VarChar(400)
   maritalStatus     String    @db.VarChar(40)
-  occupation        String?    @db.VarChar(400)
+  occupation        String?   @db.VarChar(400)
   topicOfConcern    String    @db.VarChar(200)
   partnerName       String?   @db.VarChar(400)
   partnerBirthDate  DateTime? @db.Timestamp(0)
@@ -1188,7 +1183,8 @@ model liveastro {
   created_at    DateTime? @default(now()) @db.Timestamp(0)
   updated_at    DateTime? @default(now()) @db.Timestamp(0)
 
-  astrologer    astrologers?  @relation(fields: [astrologerId], references: [id])
+  astrologer astrologers? @relation(fields: [astrologerId], references: [id])
+
   @@index([astrologerId], map: "liveastro_astrologers_idx")
 }
 
@@ -1203,13 +1199,13 @@ model livechat {
 
 model liveuser {
   id          Int      @id @default(autoincrement())
-  userId      BigInt   // ✅ Fix type to match users.id
+  userId      BigInt // ✅ Fix type to match users.id
   fcmToken    String   @db.VarChar(400)
   channelName String   @db.VarChar(400)
   created_at  DateTime @default(now()) @db.Timestamp(0)
   updated_at  DateTime @default(now()) @db.Timestamp(0)
 
-  users       users    @relation(fields: [userId], references: [id])
+  users users @relation(fields: [userId], references: [id])
 }
 
 model main_source_of_businesses {
@@ -1311,28 +1307,27 @@ model oauth_refresh_tokens {
 }
 
 model order_addresses {
-  id                   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  userId               BigInt    @db.UnsignedBigInt
-  name                 String    @db.VarChar(255)
-  phoneNumber          String    @db.VarChar(20)
-  phoneNumber2         String?   @db.VarChar(20)
-  flatNo               String    @db.VarChar(255)
-  locality             String    @db.VarChar(255)
-  landmark             String?   @db.VarChar(255)
-  city                 String    @db.VarChar(255)
-  state                String    @db.VarChar(255)
-  country              String    @db.VarChar(255)
+  id                   BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  userId               BigInt          @db.UnsignedBigInt
+  name                 String          @db.VarChar(255)
+  phoneNumber          String          @db.VarChar(20)
+  phoneNumber2         String?         @db.VarChar(20)
+  flatNo               String          @db.VarChar(255)
+  locality             String          @db.VarChar(255)
+  landmark             String?         @db.VarChar(255)
+  city                 String          @db.VarChar(255)
+  state                String          @db.VarChar(255)
+  country              String          @db.VarChar(255)
   pincode              Int
-  isActive             Boolean   @default(true)
-  isDelete             Boolean   @default(false)
-  created_at           DateTime? @db.Timestamp(0)
-  updated_at           DateTime? @db.Timestamp(0)
+  isActive             Boolean         @default(true)
+  isDelete             Boolean         @default(false)
+  created_at           DateTime?       @db.Timestamp(0)
+  updated_at           DateTime?       @db.Timestamp(0)
   createdBy            Int
   modifiedBy           Int
-  countryCode          String?   @db.VarChar(45)
-  alternateCountryCode String?   @db.VarChar(45)
-  order_requests order_request[]
-
+  countryCode          String?         @db.VarChar(45)
+  alternateCountryCode String?         @db.VarChar(45)
+  order_requests       order_request[]
 
   @@index([userId], map: "order_addresses_userid_foreign")
 }
@@ -1361,42 +1356,41 @@ model order_payments {
 }
 
 model order_request {
-  id                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   userId                BigInt
   astrologerId          BigInt?
   aiAstrologerId        BigInt?
-  orderType             String?  @db.VarChar(45)
-  productCategoryId     BigInt?  // ✅ changed from Int? to BigInt?
-  productId             BigInt?  // ✅ changed from Int? to BigInt?
-  orderAddressId        BigInt?  // ✅ changed from Int? to BigInt?
-  payableAmount         Decimal? @db.Decimal(10, 2)
-  walletBalanceDeducted Decimal? @db.Decimal(10, 2)
-  gstPercent            Decimal? @db.Decimal(10, 2)
-  totalPayable          Decimal? @db.Decimal(10, 2)
-  couponCode            String?  @db.VarChar(45)
-  paymentMethod         String?  @db.VarChar(45)
-  orderStatus           String?  @db.VarChar(45)
-  totalMin              String?  @db.VarChar(45)
-  isActive              String?  @default("1") @db.VarChar(45)
-  isDelete              String?  @default("0") @db.VarChar(45)
+  orderType             String?   @db.VarChar(45)
+  productCategoryId     BigInt? // ✅ changed from Int? to BigInt?
+  productId             BigInt? // ✅ changed from Int? to BigInt?
+  orderAddressId        BigInt? // ✅ changed from Int? to BigInt?
+  payableAmount         Decimal?  @db.Decimal(10, 2)
+  walletBalanceDeducted Decimal?  @db.Decimal(10, 2)
+  gstPercent            Decimal?  @db.Decimal(10, 2)
+  totalPayable          Decimal?  @db.Decimal(10, 2)
+  couponCode            String?   @db.VarChar(45)
+  paymentMethod         String?   @db.VarChar(45)
+  orderStatus           String?   @db.VarChar(45)
+  totalMin              String?   @db.VarChar(45)
+  isActive              String?   @default("1") @db.VarChar(45)
+  isDelete              String?   @default("0") @db.VarChar(45)
   created_at            DateTime? @default(now()) @db.Timestamp(0)
   updated_at            DateTime? @default(now()) @db.Timestamp(0)
   chatId                Int?
   callId                Int?
 
   // ✅ Relations
-  product_category      product_categories?  @relation(fields: [productCategoryId], references: [id])
-  product               astromall_products?  @relation(fields: [productId], references: [id])
-  order_address         order_addresses?     @relation(fields: [orderAddressId], references: [id])
-  user users? @relation(fields: [userId], references: [id])
+  product_category product_categories? @relation(fields: [productCategoryId], references: [id])
+  product          astromall_products? @relation(fields: [productId], references: [id])
+  order_address    order_addresses?    @relation(fields: [orderAddressId], references: [id])
+  user             users?              @relation(fields: [userId], references: [id])
 
-  astrologer     astrologers?     @relation(fields: [astrologerId], references: [id])
-  aiAstrologer   aiastrologers? @relation("AiAstroOrders", fields: [aiAstrologerId], references: [id])
-  callrequest    callrequest?     @relation(fields: [callId], references: [id])
+  astrologer   astrologers?   @relation(fields: [astrologerId], references: [id])
+  aiAstrologer aiastrologers? @relation("AiAstroOrders", fields: [aiAstrologerId], references: [id])
+  callrequest  callrequest?   @relation(fields: [callId], references: [id])
 
-
-  coupon_user_usages    coupon_user_usages[]
-  walletTransactions    wallettransaction[]
+  coupon_user_usages coupon_user_usages[]
+  walletTransactions wallettransaction[]
 
   @@index([astrologerId], map: "astrologerId")
   @@index([orderAddressId], map: "orderAddressId")
@@ -1405,22 +1399,21 @@ model order_request {
   @@index([userId], map: "userId")
 }
 
-
 model pages {
-  id                 Int         @id @default(autoincrement())
-  title              String?     @db.Text
-  slug               String?     @db.VarChar(255)
-  metaTitle          String?     @db.VarChar(255)
-  metaDescription    String?     @db.VarChar(500)
-  metaKeywords       String?     @db.VarChar(500)
-  canonicalUrl       String?     @db.VarChar(255)
-  ogTitle            String?     @db.VarChar(255)
-  ogDescription      String?     @db.VarChar(500)
-  ogImage            String?     @db.VarChar(255)
-  twitterTitle       String?     @db.VarChar(255)
-  twitterDescription String?     @db.VarChar(500)
-  twitterImage       String?     @db.VarChar(255)
-  schemaJson         String?     @db.LongText
+  id                 Int     @id @default(autoincrement())
+  title              String? @db.Text
+  slug               String? @db.VarChar(255)
+  metaTitle          String? @db.VarChar(255)
+  metaDescription    String? @db.VarChar(500)
+  metaKeywords       String? @db.VarChar(500)
+  canonicalUrl       String? @db.VarChar(255)
+  ogTitle            String? @db.VarChar(255)
+  ogDescription      String? @db.VarChar(500)
+  ogImage            String? @db.VarChar(255)
+  twitterTitle       String? @db.VarChar(255)
+  twitterDescription String? @db.VarChar(500)
+  twitterImage       String? @db.VarChar(255)
+  schemaJson         String? @db.LongText
 
   type        pages_type?
   description String?     @db.LongText
@@ -1430,7 +1423,6 @@ model pages {
 
   @@unique([type])
 }
-
 
 model password_reset_tokens {
   email      String    @id @db.VarChar(255)
@@ -1468,7 +1460,6 @@ model payment {
 
   user users? @relation(fields: [userId], references: [id])
 
-
   @@index([referred_user_id], map: "referred_user_id")
   @@index([userId], map: "userId")
 }
@@ -1500,21 +1491,20 @@ model personal_access_tokens {
 }
 
 model product_categories {
-  id            BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
-  name          String               @db.VarChar(255)
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name          String    @db.VarChar(255)
   displayOrder  Int?
-  categoryImage String               @db.VarChar(255)
-  isActive      Boolean              @default(true)
-  isDelete      Boolean              @default(false)
-  created_at    DateTime?            @db.Timestamp(0)
-  updated_at    DateTime?            @db.Timestamp(0)
+  categoryImage String    @db.VarChar(255)
+  isActive      Boolean   @default(true)
+  isDelete      Boolean   @default(false)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
   createdBy     Int
   modifiedBy    Int
 
-  product      astromall_products[] // back relation
+  product        astromall_products[] // back relation
   order_requests order_request[]
 }
-
 
 model product_details {
   id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
@@ -1526,8 +1516,9 @@ model product_details {
   created_at         DateTime? @db.Timestamp(0)
   updated_at         DateTime? @db.Timestamp(0)
 
- // Relation back to product
+  // Relation back to product
   product astromall_products @relation(fields: [astromallProductId], references: [id])
+
   @@index([astromallProductId], map: "product_details_astromallproductid_foreign")
 }
 
@@ -1611,12 +1602,13 @@ model skills {
 }
 
 model story_view_counts {
-  id         Int       @id @default(autoincrement())
+  id         Int                @id @default(autoincrement())
   userId     Int
   storyId    Int
-  created_at DateTime? @default(now()) @db.Timestamp(0)
-  updated_at DateTime? @default(now()) @db.Timestamp(0)
-  story astrologer_stories @relation("StoryViewCounts", fields: [storyId], references: [id])
+  created_at DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at DateTime?          @default(now()) @db.Timestamp(0)
+  story      astrologer_stories @relation("StoryViewCounts", fields: [storyId], references: [id])
+
   @@index([storyId], map: "story_view_counts_storyId_foreign")
 }
 
@@ -1643,14 +1635,13 @@ model systemflag {
   // 👇 make this OPTIONAL
   flagGroupId Int?
 
-  description String    @db.LongText
-  parent_id   Int       @default(0)
-  viewenable  Boolean?  @default(true)
+  description String   @db.LongText
+  parent_id   Int      @default(0)
+  viewenable  Boolean? @default(true)
 
   // 👇 relation also OPTIONAL
-  flagGroup   flaggroup? @relation(fields: [flagGroupId], references: [id])
+  flagGroup flaggroup? @relation(fields: [flagGroupId], references: [id])
 }
-
 
 model teammember {
   id         Int       @id @default(autoincrement())
@@ -1683,29 +1674,29 @@ model ticketreview {
   updated_at DateTime @default(now()) @db.Timestamp(0)
   userId     Int
 
-  ticket   tickets  @relation("TicketReviews", fields: [ticketId], references: [id])
+  ticket tickets @relation("TicketReviews", fields: [ticketId], references: [id])
 
   @@unique([userId, ticketId])
 }
 
 model tickets {
-  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  helpSupportId BigInt    @db.UnsignedBigInt
-  subject       String    @db.VarChar(255)
-  description   String    @db.VarChar(255)
-  ticketNumber  String    @db.VarChar(255)
-  userId        BigInt    @db.UnsignedBigInt
-  isActive      Boolean   @default(true)
-  isDelete      Boolean   @default(false)
-  created_at    DateTime? @db.Timestamp(0)
-  updated_at    DateTime? @db.Timestamp(0)
+  id            BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  helpSupportId BigInt         @db.UnsignedBigInt
+  subject       String         @db.VarChar(255)
+  description   String         @db.VarChar(255)
+  ticketNumber  String         @db.VarChar(255)
+  userId        BigInt         @db.UnsignedBigInt
+  isActive      Boolean        @default(true)
+  isDelete      Boolean        @default(false)
+  created_at    DateTime?      @db.Timestamp(0)
+  updated_at    DateTime?      @db.Timestamp(0)
   createdBy     Int
   modifiedBy    Int
-  chatId        String?   @db.VarChar(45)
-  ticketStatus  String?   @db.VarChar(45)
-  user     users? @relation(fields: [userId], references: [id]) // ✅ Optional
+  chatId        String?        @db.VarChar(45)
+  ticketStatus  String?        @db.VarChar(45)
+  user          users?         @relation(fields: [userId], references: [id]) // ✅ Optional
   help_support  help_supports? @relation(fields: [helpSupportId], references: [id])
-  ticketreview  ticketreview[]  @relation("TicketReviews") // ✅ relation name same as above
+  ticketreview  ticketreview[] @relation("TicketReviews") // ✅ relation name same as above
 
   @@index([helpSupportId], map: "tickets_helpsupportId_idx")
   @@index([userId], map: "tickets_userid_foreign")
@@ -1800,8 +1791,8 @@ model user_device_details {
   isDelete           Boolean?  @default(false)
   created_at         DateTime? @db.Timestamp(0)
   updated_at         DateTime? @db.Timestamp(0)
-  users              users?     @relation(fields: [userId], references: [id], name: "UserToDeviceDetails")
-  
+  users              users?    @relation(fields: [userId], references: [id], name: "UserToDeviceDetails")
+
   @@index([userId], map: "user_device_details_userid_foreign")
 }
 
@@ -1837,8 +1828,9 @@ model user_notifications {
   createdBy         Int
   modifiedBy        Int
 
-  user         users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         users          @relation(fields: [userId], references: [id], onDelete: Cascade)
   notification notifications? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
   @@index([notificationId], map: "user_notifications_notificationid_foreign")
   @@index([userId], map: "user_notifications_userid_foreign")
 }
@@ -1912,16 +1904,15 @@ model user_reviews {
   createdBy          Int
   modifiedBy         Int
 
-  user users? @relation(fields: [userId], references: [id])
-  astrologer   astrologers? @relation(fields: [astrologerId], references: [id])
+  user       users?       @relation(fields: [userId], references: [id])
+  astrologer astrologers? @relation(fields: [astrologerId], references: [id])
 
+  @@unique([userId, astrologerId])
+  @@unique([userId, aiAstrologerId]) // ✅ ADD THIS LINE
   @@index([astromallProductId], map: "test")
   @@index([astrologerId], map: "user_reviews_astrologerid_foreign")
   @@index([userId], map: "user_reviews_userid_foreign")
-  @@unique([userId, astrologerId])
-  @@unique([userId, aiAstrologerId]) // ✅ ADD THIS LINE
 }
-
 
 model user_roles {
   id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
@@ -1929,8 +1920,8 @@ model user_roles {
   roleId     BigInt    @db.UnsignedBigInt
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
-  user   users   @relation(fields: [userId], references: [id])
-  role roles @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user       users     @relation(fields: [userId], references: [id])
+  role       roles     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@index([roleId], map: "user_roles_roleid_foreign")
   @@index([userId], map: "user_roles_userid_foreign")
@@ -1946,57 +1937,57 @@ model user_wallets {
   updated_at DateTime? @db.Timestamp(0)
   createdBy  Int
   modifiedBy Int
-  user users @relation(fields: [userId], references: [id])
+  user       users     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "user_wallets_userid_foreign")
 }
 
 model users {
-  id                 BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
-  user_id            Int?
-  name               String?              @db.VarChar(50)
-  refer_code         String?              @db.VarChar(255)
-  contactNo          String?              @db.VarChar(50)
-  email              String?              @db.VarChar(255)
-  password           String?              @db.VarChar(255)
-  birthDate          DateTime?            @db.Timestamp(0)
-  birthTime          String?              @db.VarChar(50)
-  profile            String?              @db.Text
-  birthPlace         String?              @db.VarChar(50)
-  addressLine1       String?              @db.Text
-  addressLine2       String?              @db.Text
-  location           String?              @db.VarChar(100)
-  pincode            Int?
-  gender             String?              @db.VarChar(30)
-  isActive           Boolean              @default(true)
-  isDelete           Boolean              @default(false)
-  created_at         DateTime?            @db.Timestamp(0)
-  updated_at         DateTime?            @db.Timestamp(0)
-  fcm_token          String?              @db.VarChar(400)
-  token              String?              @db.LongText
-  jwt_token          String?              @db.LongText
-  otp                String?              @db.VarChar(50)
-  expirationDate     DateTime?            @db.Timestamp(0)
-  countryCode        String?              @db.VarChar(45)
-  deleted_at         DateTime?            @db.Timestamp(0)
-  app_reviews        app_reviews[]
-  astrologers        astrologers[]
-  coupon_user_usages coupon_user_usages[]
-  userRoles  user_roles[]
-  reviews  user_reviews[]
-  tickets tickets[]
-  liveuser    liveuser[]    
-  payments payment[]
-  order_request order_request[]
-  blocks    blockastrologer[]
-  userNotifications  user_notifications[]
+  id                  BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id             Int?
+  name                String?                @db.VarChar(50)
+  refer_code          String?                @db.VarChar(255)
+  contactNo           String?                @db.VarChar(50)
+  email               String?                @db.VarChar(255)
+  password            String?                @db.VarChar(255)
+  birthDate           DateTime?              @db.Timestamp(0)
+  birthTime           String?                @db.VarChar(50)
+  profile             String?                @db.Text
+  birthPlace          String?                @db.VarChar(50)
+  addressLine1        String?                @db.Text
+  addressLine2        String?                @db.Text
+  location            String?                @db.VarChar(100)
+  pincode             Int?
+  gender              String?                @db.VarChar(30)
+  isActive            Boolean                @default(true)
+  isDelete            Boolean                @default(false)
+  created_at          DateTime?              @db.Timestamp(0)
+  updated_at          DateTime?              @db.Timestamp(0)
+  fcm_token           String?                @db.VarChar(400)
+  token               String?                @db.LongText
+  jwt_token           String?                @db.LongText
+  otp                 String?                @db.VarChar(50)
+  expirationDate      DateTime?              @db.Timestamp(0)
+  countryCode         String?                @db.VarChar(45)
+  deleted_at          DateTime?              @db.Timestamp(0)
+  app_reviews         app_reviews[]
+  astrologers         astrologers[]
+  coupon_user_usages  coupon_user_usages[]
+  userRoles           user_roles[]
+  reviews             user_reviews[]
+  tickets             tickets[]
+  liveuser            liveuser[]
+  payments            payment[]
+  order_request       order_request[]
+  blocks              blockastrologer[]
+  userNotifications   user_notifications[]
   followedAstrologers astrologer_followers[] @relation("UserFollowers")
-  wallettransactions wallettransaction[] @relation("UserWalletRelation")
-  user_wallets user_wallets[]  
-  user_device_details user_device_details[] @relation("UserToDeviceDetails")
-  chatrequests    chatrequest[]   @relation("UserChatRequests")
-  callrequests callrequest[] @relation("UserToCallRequests")
-  astrologerGifts    astrologer_gifts[]   @relation("UserGiftsRelation")
+  wallettransactions  wallettransaction[]    @relation("UserWalletRelation")
+  user_wallets        user_wallets[]
+  user_device_details user_device_details[]  @relation("UserToDeviceDetails")
+  chatrequests        chatrequest[]          @relation("UserChatRequests")
+  callrequests        callrequest[]          @relation("UserToCallRequests")
+  astrologerGifts     astrologer_gifts[]     @relation("UserGiftsRelation")
 }
 
 model waitlist {
@@ -2017,7 +2008,7 @@ model waitlist {
 model wallettransaction {
   id               Int       @id @default(autoincrement())
   amount           Float?
-  userId           BigInt? @db.UnsignedBigInt
+  userId           BigInt?   @db.UnsignedBigInt
   referred_user_id Int?
   transactionType  String?   @db.VarChar(45)
   transaction_id   String?   @db.Text
@@ -2032,16 +2023,15 @@ model wallettransaction {
 
   // Relations
   order_request order_request? @relation(fields: [orderId], references: [id])
-  astrologer     astrologers?  @relation(fields: [astrologerId], references: [id])
-  ai_astrologer     aiastrologers?     @relation("AiAstroWalletRelation", fields: [aiAstrologerId], references: [id])
-  user users? @relation("UserWalletRelation", fields: [userId], references: [id]) 
+  astrologer    astrologers?   @relation(fields: [astrologerId], references: [id])
+  ai_astrologer aiastrologers? @relation("AiAstroWalletRelation", fields: [aiAstrologerId], references: [id])
+  user          users?         @relation("UserWalletRelation", fields: [userId], references: [id])
 
   @@index([astrologerId], map: "astrologerId")
   @@index([orderId], map: "orderId")
   @@index([referred_user_id], map: "referred_user_id")
   @@index([userId], map: "userId")
 }
-
 
 model withdrawmethods {
   id          Int       @id @default(autoincrement())
@@ -2051,32 +2041,31 @@ model withdrawmethods {
   created_at  DateTime? @default(now()) @db.Timestamp(0)
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
 
-  withdraws   withdrawrequest[]
+  withdraws withdrawrequest[]
 }
 
 model withdrawrequest {
-  id                Int       @id @default(autoincrement())
-  astrologerId      BigInt?   @db.UnsignedBigInt
-  withdrawAmount    Decimal?  @db.Decimal(10, 2)
+  id                Int            @id @default(autoincrement())
+  astrologerId      BigInt?        @db.UnsignedBigInt
+  withdrawAmount    Decimal?       @db.Decimal(10, 2)
   status            WithdrawStatus @default(Pending)
-  isActive          Int?      @default(1) @db.TinyInt
-  isDelete          Int?      @default(0) @db.TinyInt
-  created_at        DateTime? @default(now()) @db.Timestamp(0)
-  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+  isActive          Int?           @default(1) @db.TinyInt
+  isDelete          Int?           @default(0) @db.TinyInt
+  created_at        DateTime?      @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?      @default(now()) @db.Timestamp(0)
   createdBy         Int?
   modifiedBy        Int?
-  paymentMethod     Int?   
-  upiId             String?   @db.VarChar(45)
-  accountNumber     String?   @db.VarChar(45)
-  ifscCode          String?   @db.VarChar(45)
-  accountHolderName String?   @db.VarChar(100)
+  paymentMethod     Int?
+  upiId             String?        @db.VarChar(45)
+  accountNumber     String?        @db.VarChar(45)
+  ifscCode          String?        @db.VarChar(45)
+  accountHolderName String?        @db.VarChar(100)
 
   astrologer     astrologers?     @relation(fields: [astrologerId], references: [id])
   withdrawmethod withdrawmethods? @relation(fields: [paymentMethod], references: [id])
 
   @@index([astrologerId], map: "withdrawrequest_astrologer_idx")
 }
-
 
 model withdraws {
   id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
@@ -2131,12 +2120,11 @@ model aiastrologers {
   created_at           DateTime? @default(now()) @db.Timestamp(0)
   updated_at           DateTime? @db.Timestamp(0)
   featured             Int
-  
-  aiChatHistories ai_chat_histories[] @relation("AiAstrologerToChatHistories")
-  wallettransactions   wallettransaction[] @relation("AiAstroWalletRelation")
-  aiFollowers astrologer_followers[] @relation("AiAstroFollowers")
-  order_requests order_request[] @relation("AiAstroOrders")
 
+  aiChatHistories    ai_chat_histories[]    @relation("AiAstrologerToChatHistories")
+  wallettransactions wallettransaction[]    @relation("AiAstroWalletRelation")
+  aiFollowers        astrologer_followers[] @relation("AiAstroFollowers")
+  order_requests     order_request[]        @relation("AiAstroOrders")
 }
 
 enum pages_type {

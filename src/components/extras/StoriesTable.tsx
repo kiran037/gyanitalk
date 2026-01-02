@@ -1,3 +1,5 @@
+
+
 import { Trash2, Eye, Clock, User } from "lucide-react";
 import { Button } from "@/components/adminUI/Button";
 import { avatar } from "@/lib/images";
@@ -127,21 +129,42 @@ export default function StoriesTable({ stories, loading, onDelete }: StoriesTabl
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={avatar(story.astrologer?.profileImage)}
-                      alt={story.astrologer?.name || "Unknown"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        {story.astrologer?.name || "Unknown"}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        ID: {story.astrologerId}
+                  {/* ✅ FIX: Better null handling and debugging */}
+                  {story.astrologer ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={avatar(story.astrologer.profileImage)}
+                        alt={story.astrologer.name}
+                        className="w-10 h-10 rounded-full"
+                        onError={(e) => {
+                          // Fallback to default avatar if image fails
+                          e.currentTarget.src = "/default-avatar.png";
+                        }}
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">
+                          {story.astrologer.name}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          ID: {story.astrologerId}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-500 dark:text-gray-400">
+                          Unknown Astrologer
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          ID: {story.astrologerId || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">

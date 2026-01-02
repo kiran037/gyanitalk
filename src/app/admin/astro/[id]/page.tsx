@@ -1,3 +1,4 @@
+// app/admin/astro/[id]/page.tsx - Updated with Edit button
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,10 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/adminUI/PageHeader";
 import { Button } from "@/components/adminUI/Button";
 import { useToast } from "@/components/Toast/ToastProvider";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Edit, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AstrologerDetailHeader } from "@/components/astro/AstrologerDetailHeader";
 import { AstrologerTabs } from "@/components/astro/AstrologerTabs";
+import { ActionModal } from "@/components/adminUI/ActionModal";
 
 export default function AstrologerDetailPage() {
   const params = useParams();
@@ -19,6 +21,8 @@ export default function AstrologerDetailPage() {
   const [astrologer, setAstrologer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("chatHistory");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchAstrologerDetails();
@@ -34,14 +38,38 @@ export default function AstrologerDetailPage() {
         setAstrologer(data.data);
       } else {
         addToast("error", "Error", data.error || "Failed to fetch astrologer");
-        router.push("/astro");
+        router.push("/admin/astro");
       }
     } catch (error) {
       console.error("Error fetching astrologer:", error);
       addToast("error", "Error", "Failed to fetch astrologer details");
-      router.push("/astro");
+      router.push("/admin/astro");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/astrologers/${astrologerId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        addToast("success", "Success", "Astrologer deleted successfully");
+        router.push("/admin/astro");
+      } else {
+        addToast("error", "Error", data.error || "Failed to delete astrologer");
+      }
+    } catch (error) {
+      console.error("Error deleting astrologer:", error);
+      addToast("error", "Error", "Failed to delete astrologer");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -86,18 +114,36 @@ export default function AstrologerDetailPage() {
             variant="outline"
             size="sm"
             icon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => router.push("/astro")}
+            onClick={() => router.push("/admin/astro")}
           >
             Back
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<RefreshCw className="w-4 h-4" />}
-            onClick={fetchAstrologerDetails}
-          >
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={() => router.push(`/admin/astro/${astrologerId}/edit`)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Trash2 className="w-4 h-4" />}
+              onClick={() => setShowDeleteModal(true)}
+            >
+              Delete
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<RefreshCw className="w-4 h-4" />}
+              onClick={fetchAstrologerDetails}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Astrologer Header */}
@@ -110,6 +156,19 @@ export default function AstrologerDetailPage() {
           setActiveTab={setActiveTab}
         />
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ActionModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete Astrologer"
+        message={`Are you sure you want to delete ${astrologer?.name}? This action cannot be undone and will remove all associated data.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 }

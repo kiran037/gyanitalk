@@ -35,11 +35,11 @@ export default function AIAstrologerDetailPage() {
         setAiAstrologer(data.data);
       } else {
         addToast("error", "Error", "Failed to fetch AI astrologer");
-        router.push("/astro/ai");
+        router.push("/admin/astro/ai");
       }
     } catch (error) {
       addToast("error", "Error", "Failed to fetch AI astrologer");
-      router.push("/astro/ai");
+      router.push("/admin/astro/ai");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function AIAstrologerDetailPage() {
             variant="outline"
             size="sm"
             icon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => router.push("/astro/ai")}
+            onClick={() => router.push("/admin/astro/ai")}
           >
             Back
           </Button>

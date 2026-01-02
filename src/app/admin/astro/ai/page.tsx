@@ -163,7 +163,7 @@ export default function AIAstrologersPage() {
                 index={index}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onView={() => router.push(`/astro/ai/${ai.id}`)}
+                onView={() => router.push(`/admin/astro/ai/${ai.id}`)}
               />
             ))}
           </div>

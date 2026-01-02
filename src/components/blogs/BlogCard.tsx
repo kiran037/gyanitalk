@@ -1,17 +1,16 @@
-// components/blogs/BlogCard.tsx
 "use client";
 
-import { useState } from "react";
 import {
   Eye,
   Edit,
   Trash2,
-  Power,
   Calendar,
   User,
-  ExternalLink
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  TrendingUp
 } from "lucide-react";
-
 import { avatar } from "@/lib/images";
 
 interface BlogCardProps {
@@ -33,7 +32,6 @@ interface BlogCardProps {
   onToggleStatus: (id: string) => void;
 }
 
-
 export function BlogCard({
   blog,
   isSelected,
@@ -54,121 +52,149 @@ export function BlogCard({
 
   return (
     <div
-      className={`group relative bg-white dark:bg-gray-800 rounded-2xl border-2 transition-all duration-300 ${isSelected
-        ? 'border-orange-500 shadow-lg shadow-orange-500/20 scale-[0.98]'
-        : 'border-gray-200/50 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-xl'
-        }`}
+      onClick={(e) => {
+        if (selectionMode) {
+          e.stopPropagation();
+          onSelect(blog.id);
+        }
+      }}
+      className={`group relative flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl overflow-hidden transition-all duration-300 ${
+        isSelected
+          ? "ring-2 ring-orange-500 shadow-lg shadow-orange-500/10 scale-[0.99]"
+          : "border border-gray-200 dark:border-gray-800 hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-700"
+      } ${selectionMode ? "cursor-pointer" : ""}`}
     >
-
-      {/* Image Section */}
-      <div className="relative h-48 overflow-hidden rounded-t-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
-
+      {/* === Image Section === */}
+      <div className="relative h-48 sm:h-52 overflow-hidden bg-gray-100 dark:bg-gray-800">
         <img
           src={avatar(blog.blogImage)}
           alt={blog.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-        {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Top Bar: Selection & Status */}
+        <div className="absolute top-3 inset-x-3 flex items-start justify-between z-10">
+          {/* Selection Checkbox (Visible in selection mode or on hover) */}
+          <div className={`${selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`}>
+             <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(blog.id);
+              }}
+              className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md border shadow-sm transition-all ${
+                isSelected
+                  ? "bg-orange-500 border-orange-500 text-white"
+                  : "bg-white/30 hover:bg-white border-white/50 text-gray-600"
+              }`}
+            >
+              {isSelected ? (
+                <CheckCircle className="w-5 h-5 fill-current" />
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-current" />
+              )}
+            </button>
+          </div>
 
-        {/* Selection Checkbox - Top Left (only show when selectionMode is true) */}
-        {selectionMode && (
+          {/* Status Toggle Pill */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(blog.id);
+              onToggleStatus(blog.id);
             }}
-            className={`absolute top-3 left-3 z-10 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${isSelected
-              ? 'bg-orange-500 border-orange-500 scale-110'
-              : 'bg-white/90 border-white hover:bg-orange-500 hover:border-orange-500'
-              }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-bold shadow-sm transition-all ${
+              blog.isActive
+                ? "bg-emerald-500/90 border-emerald-400 text-white hover:bg-emerald-600"
+                : "bg-gray-900/60 border-gray-700 text-gray-300 hover:bg-gray-900"
+            }`}
           >
-            {isSelected && (
-              <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7"></path>
-              </svg>
+            {blog.isActive ? (
+              <>
+                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                Active
+              </>
+            ) : (
+              <>
+                <XCircle className="w-3 h-3" />
+                Inactive
+              </>
             )}
-          </button>
-        )}
-
-
-        {/* Status Badge - Top Right */}
-        {/* Status Badge - Top Right (click to toggle active/inactive) */}
-        <div className="absolute top-3 right-3 z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();               // prevent card click
-              onToggleStatus(blog.id);           // call handler passed from parent
-            }}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-full backdrop-blur-sm transition-transform active:scale-95 ${blog.isActive ? "bg-emerald-500/90 text-white" : "bg-slate-500/90 text-white"
-              }`}
-            aria-pressed={blog.isActive}
-            title={blog.isActive ? "Click to deactivate" : "Click to activate"}
-          >
-            {blog.isActive ? "Active" : "Inactive"}
           </button>
         </div>
 
+        {/* Bottom Bar: Views & Preview */}
+        <div className="absolute bottom-3 inset-x-3 flex items-end justify-between z-10">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-white/90 bg-black/40 px-2.5 py-1 rounded-lg backdrop-blur-sm border border-white/10">
+            <TrendingUp className="w-3.5 h-3.5 text-orange-400" />
+            {blog.viewer} Views
+          </div>
 
-        {/* Quick View Link - Bottom Right (on hover) */}
-        <a
-          href={`/landing/blog/${blog.slug || blog.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute bottom-3 right-3 z-10 p-2 bg-white/90 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ExternalLink className="w-4 h-4 text-gray-700" />
-        </a>
+          <a
+            href={`/landing/blog/${blog.slug || blog.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-lg translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-orange-500 hover:text-white"
+            title="View Live Blog"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
       </div>
 
-      {/* Content Section */}
-      <div className="p-5">
+      {/* === Content Section === */}
+      <div className="flex flex-col flex-1 p-5">
+        {/* Date */}
+        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <Calendar className="w-3.5 h-3.5" />
+          {formatDate(blog.postedOn)}
+        </div>
+
         {/* Title */}
-        <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 min-h-[3rem] leading-snug">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 mb-3 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
           {blog.title}
         </h3>
 
-        {/* Meta Information */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <User className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate font-medium">{blog.author}</span>
-          </div>
-
-          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 flex-shrink-0" />
-              <span>{formatDate(blog.postedOn)}</span>
+        <div className="mt-auto pt-4 flex flex-col gap-4">
+          {/* Author Info */}
+          <div className="flex items-center gap-2.5 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+              <User className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
-              <Eye className="w-3.5 h-3.5" />
-              <span className="font-semibold">{blog.viewer}</span>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Written by</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate max-w-[150px]">
+                {blog.author}
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onEdit}
-            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/30 active:scale-95 flex items-center justify-center gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </button>
-
-          {/* Delete button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-            title="Delete blog"
-            aria-label="Delete blog"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
-
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 dark:hover:border-orange-900/30 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 transition-all active:scale-[0.98]"
+            >
+              <Edit className="w-4 h-4" />
+              Edit
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:border-red-900/30 transition-all active:scale-[0.98]"
+              title="Delete Blog"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -30,19 +30,6 @@ function convertPrismaTypes(obj: unknown): any {
   return out;
 }
 
-/** Resolve the astrologer's users.id whether chatId uses astrologers.id or users.id */
-async function resolveAstroUserId(rawAstroIdNum: number): Promise<number> {
-  const astroRow = await prisma.astrologers.findFirst({
-    where: { id: BigInt(rawAstroIdNum) },
-    select: { userId: true },
-  });
-
-  if (astroRow?.userId) return Number(astroRow.userId);
-
-  // Otherwise assume it's already a users.id
-  return Number(rawAstroIdNum);
-}
-
 // Next 15 style: params is a Promise
 type RouteContext = {
   params: Promise<{ id: string; chatId: string }>;
@@ -59,19 +46,17 @@ export async function GET(req: NextRequest, context: RouteContext) {
       );
     }
 
-    if (!chatId || !chatId.includes("_")) {
+    if (!chatId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid chatId format",
-        },
+        { success: false, error: "Chat ID is required" },
         { status: 400 }
       );
     }
 
     const astrologerId = BigInt(id);
 
-    // Get chat request details from database
+    // 1. Fetch Chat Request with relationships
+    // We fetch user and astrologer here, so we don't need to query them again later.
     const chatRequest = await prisma.chatrequest.findFirst({
       where: {
         astrologerId,
@@ -80,7 +65,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       include: {
         user: {
           select: {
-            id: true,
+            id: true, // This is the User's ID (bigint)
             name: true,
             profile: true,
             email: true,
@@ -91,42 +76,32 @@ export async function GET(req: NextRequest, context: RouteContext) {
             id: true,
             name: true,
             profileImage: true,
-            userId: true,
+            userId: true, // This is the Astrologer's User ID (bigint)
           },
         },
       },
     });
 
-    if (!chatRequest) {
+    if (!chatRequest || !chatRequest.user || !chatRequest.astrologer) {
       return NextResponse.json(
         {
           success: false,
-          error: "Chat not found",
+          error: "Chat request or participants not found",
         },
         { status: 404 }
       );
     }
 
-    // Parse chatId pieces: "<astroPart>_<userPart>"
-    const [astroPart, userPart] = chatId.split("_");
-    const rawAstroId = Number(astroPart);
-    const userUserId = Number(userPart);
+    // 2. Extract reliable IDs from the DB result (No need to parse/guess from chatId string)
+    const userUserId = Number(chatRequest.user.id);
+    const astroUserId = Number(chatRequest.astrologer.userId);
 
-    if (Number.isNaN(rawAstroId) || Number.isNaN(userUserId)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid numeric IDs in chatId" },
-        { status: 400 }
-      );
-    }
-
-    // Normalize to users.id for astrologer
-    const astroUserId = await resolveAstroUserId(rawAstroId);
-
-    // Get messages from Firestore
+    // 3. Get messages from Firestore
     const firestoreService = new FirestoreService();
+    // Assuming getFullChat expects (chatId, user_id_string)
     const chatData = await firestoreService.getFullChat(chatId, String(userUserId));
 
-    // Normalize + sort messages
+    // 4. Normalize + sort messages safely
     const allMessages = (chatData?.messages || [])
       .map((m: any) => ({
         ...m,
@@ -136,22 +111,27 @@ export async function GET(req: NextRequest, context: RouteContext) {
             ? Number(m.receiver_id)
             : undefined,
       }))
-      .sort(
-        (a: any, b: any) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      .sort((a: any, b: any) => {
+        // Handle Firestore Timestamps or ISO strings safely
+        const getTime = (dateObj: any) => {
+          if (!dateObj) return 0;
+          if (typeof dateObj.toDate === "function") return dateObj.toDate().getTime(); // Firestore Timestamp
+          return new Date(dateObj).getTime(); // Standard Date/String
+        };
+        return getTime(a.createdAt) - getTime(b.createdAt);
+      });
 
-    const safe = convertPrismaTypes({
+    // 5. Return safe response
+    const safeResponse = convertPrismaTypes({
       success: true,
       data: {
         chatRequest: {
           ...chatRequest,
-          astrologer: chatRequest.astrologer
-            ? {
-                ...chatRequest.astrologer,
-                userId: astroUserId,
-              }
-            : null,
+          // Ensure the frontend receives the normalized UserID for the astrologer
+          astrologer: {
+            ...chatRequest.astrologer,
+            userId: astroUserId,
+          },
         },
         messages: allMessages,
         userId: userUserId,
@@ -159,7 +139,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
       },
     });
 
-    return NextResponse.json(safe);
+    return NextResponse.json(safeResponse);
+
   } catch (error: any) {
     console.error("Error fetching chat messages:", error);
     return NextResponse.json(
