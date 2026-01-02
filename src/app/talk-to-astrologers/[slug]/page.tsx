@@ -64,9 +64,7 @@ export async function generateMetadata({
     keywords: [seo.metaKeywords, skills.join(", "), astrologer.name]
       .filter(Boolean)
       .join(", "),
-    alternates: {
-      canonical: seo.canonicalUrl,
-    },
+   
     openGraph: {
       title: seo.ogTitle,
       description: seo.ogDescription,

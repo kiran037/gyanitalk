@@ -24,6 +24,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "img.youtube.com", // Add this
+        pathname: "/**"
+      },
+      {
+        protocol: "https",
         hostname: "cdn.sanity.io",
         pathname: "/**"
       },
