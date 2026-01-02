@@ -597,7 +597,7 @@ export async function GET(
       .replace(/^-|-$/g, '');
 
     // ✅ Build comprehensive SEO
-    const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const astrologerUrl = `${baseUrl}/landing/astro/${astrologerSlug}`;
 
     const seoData = {

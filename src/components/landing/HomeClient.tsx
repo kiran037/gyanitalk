@@ -43,6 +43,44 @@ const PlaystoreReviewCarousel = dynamic(
   { ssr: false }
 );
 
+const KundaliCard = dynamic(
+  () => import("@/components/landing/home/KundaliCard"),
+  { ssr: false }
+);
+
+const NewsCarousel = dynamic(
+  () => import("@/components/landing/home/NewsCarousel"),
+  { ssr: false }
+);
+
+const BlogCarousel = dynamic(
+  () => import("@/components/landing/home/BlogCarousel"),
+  { ssr: false }
+);
+
+
+const FaqComponent = dynamic(
+  () => import("@/components/landing/home/FaqComponent"),
+  { ssr: false }
+);
+
+const ZodiacSignComponent = dynamic(
+  () => import("@/components/landing/home/ZodiacSignComponent"),
+  { ssr: false }
+);
+
+const AstrologerService = dynamic(
+  () => import("@/components/landing/home/AstrologerService"),
+  { ssr: false }
+);
+
+const TestimonialVideos = dynamic(
+  () => import("@/components/landing/home//TestimonialVideos"),
+  { ssr: false }
+);
+
+
+
 export default function HomeClient() {
   useSecretGyani();
   const prefersReducedMotion = useReducedMotion();
@@ -53,6 +91,9 @@ export default function HomeClient() {
 
       {/* 1. HERO SECTION */}
       <HomeMain />
+      <KundaliCard />
+      <AstrologerService />
+      <ZodiacSignComponent />
 
       {/* 2. FEATURES SECTION - COSMIC GRID */}
       
@@ -175,6 +216,8 @@ export default function HomeClient() {
       <div className="">
         <AstrologerCarousel />
         <ProductCarousel />
+        <BlogCarousel />
+        <NewsCarousel/>
       </div>
 
       {/* 4. BENEFITS SECTION */}
@@ -277,6 +320,8 @@ export default function HomeClient() {
 
       {/* 5. REVIEWS */}
       <PlaystoreReviewCarousel />
+      <TestimonialVideos />
+      <FaqComponent />
     </LandingWrapper>
   );
 }
