@@ -35,11 +35,11 @@ export default function GroupDetailPage() {
         setGroup(data.data);
       } else {
         addToast("error", "Error", "Failed to fetch group details");
-        router.push("/astro/groups");
+        router.push("/admin/astro/groups");
       }
     } catch (error) {
       addToast("error", "Error", "Failed to fetch group details");
-      router.push("/astro/groups");
+      router.push("/admin/astro/groups");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export default function GroupDetailPage() {
             variant="outline"
             size="sm"
             icon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => router.push("/astro/groups")}
+            onClick={() => router.push("/admin/astro/groups")}
           >
             Back
           </Button>

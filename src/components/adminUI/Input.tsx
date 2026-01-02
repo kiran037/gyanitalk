@@ -1,11 +1,13 @@
-///Users/xeoren/gyanitallk-admin/src/components/adminUI/Input.tsx
+
+
 import { ReactNode } from "react";
 
 interface InputProps {
   label?: string;
   name?: string;
   type?: string;
-  value: string;
+  // Loosened type to handle potential nulls from API data gracefully
+  value: string | number | undefined | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   required?: boolean;
@@ -49,7 +51,8 @@ export function Input({
         <input
           type={type}
           name={name}
-          value={value}
+          // FIX: Use nullish coalescing (??) to ensure value is never null/undefined
+          value={value ?? ""}
           onChange={onChange}
           placeholder={placeholder}
           required={required}

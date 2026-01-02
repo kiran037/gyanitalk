@@ -6,11 +6,11 @@ import {
   Eye, MoreVertical, Trash2, Star, Clock, 
   MapPin, Languages, Phone, MessageSquare, 
   Video, Users, Wallet, CheckCircle, XCircle,
-  Shield
+  Shield, ChevronDown, Activity, Mic
 } from "lucide-react";
 import { avatar } from "@/lib/images";
-import { Button } from "@/components/adminUI/Button";
-import { ActionModal } from "@/components/adminUI/ActionModal";
+import { Button } from "@/components/adminUI/Button"; // Assuming this exists based on your code
+import { ActionModal } from "@/components/adminUI/ActionModal"; // Assuming this exists based on your code
 
 interface AstrologerCardProps {
   astrologer: any;
@@ -30,251 +30,224 @@ export function AstrologerCard({
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Helper to determine status colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "online": return "bg-green-500";
+      case "busy": return "bg-red-500";
+      default: return "bg-gray-400";
+    }
+  };
+
   return (
     <>
       <motion.div
-        className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl overflow-hidden hover:shadow-xl transition-all"
+        className="group relative flex flex-col justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
-        whileHover={{ scale: 1.02 }}
       >
-        {/* Header with Avatar */}
-        <div className="relative p-6 bg-gradient-to-br from-[#FF6B35]/5 to-[#FFB347]/5">
-          {/* Verified Badge */}
-          {astrologer.isVerified && (
-            <div className="absolute top-3 right-3">
-              <div className="p-1.5 bg-green-500 rounded-full">
-                <Shield className="w-3 h-3 text-white" />
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-4">
+        {/* === Top Section: Profile === */}
+        <div className="p-5 pb-0">
+          <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="relative">
-              <img
-                src={avatar(astrologer.profileImage)}
-                alt={astrologer.name}
-                className="w-16 h-16 rounded-full object-cover ring-4 ring-white/60 dark:ring-gray-700/60"
-              />
-              <div
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${
-                  astrologer.chatStatus === "online"
-                    ? "bg-green-500"
-                    : "bg-gray-400"
-                }`}
-              />
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-br from-orange-400 to-amber-400">
+                <img
+                  src={avatar(astrologer.profileImage)}
+                  alt={astrologer.name}
+                  className="w-full h-full rounded-full object-cover border-2 border-white dark:border-gray-900"
+                />
+              </div>
+              {/* Online Dot */}
+              <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-gray-900 ${getStatusColor(astrologer.chatStatus)}`} />
             </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 dark:text-white truncate">
-                {astrologer.name}
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+            {/* Name & Basic Info */}
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate pr-2">
+                  {astrologer.name}
+                </h3>
+                
+                {/* Menu Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+
+                  {showMenu && (
+                    <div className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl z-20 py-1 overflow-hidden">
+                      <button
+                        onClick={() => {
+                          onView();
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" /> View Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDeleteModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete Profile
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1">
                 {astrologer.email}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                  <Clock className="w-3 h-3" />
-                  {astrologer.experienceInYears}y
-                </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-300">
+                  <Clock className="w-3 h-3" /> {astrologer.experienceInYears}y Exp
+                </span>
+                {astrologer.isVerified && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-900/30 text-xs font-medium text-green-700 dark:text-green-400">
+                    <Shield className="w-3 h-3" /> Verified
+                  </span>
+                )}
               </div>
             </div>
-
-            {/* Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <MoreVertical className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
-
-              {showMenu && (
-                <div className="absolute right-0 top-10 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-10">
-                  <button
-                    onClick={() => {
-                      onView();
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDeleteModal(true);
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="p-4 grid grid-cols-3 gap-3 border-b border-gray-200/60 dark:border-gray-700/60">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
-              <Users className="w-3 h-3" />
-              Followers
+        {/* === Middle Section: Stats & Wallet === */}
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Wallet</p>
+              <p className="font-bold text-gray-900 dark:text-white">₹{astrologer.walletBalance}</p>
             </div>
-            <p className="font-bold text-gray-900 dark:text-white">
-              {astrologer.followerCount}
-            </p>
+            <div className="text-center border-l border-gray-200 dark:border-gray-700">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Followers</p>
+              <p className="font-bold text-gray-900 dark:text-white">{astrologer.followerCount}</p>
+            </div>
+            <div className="text-center border-l border-gray-200 dark:border-gray-700">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-1">Orders</p>
+              <p className="font-bold text-gray-900 dark:text-white">{astrologer.totalOrder || 0}</p>
+            </div>
           </div>
-          <div className="text-center border-x border-gray-200/60 dark:border-gray-700/60">
-            <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
-              <Wallet className="w-3 h-3" />
-              Wallet
-            </div>
-            <p className="font-bold text-gray-900 dark:text-white">
-              ₹{astrologer.walletBalance}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-1">
-              <Star className="w-3 h-3" />
-              Orders
-            </div>
-            <p className="font-bold text-gray-900 dark:text-white">
-              {astrologer.totalOrder || 0}
-            </p>
+          
+          {/* Rates Pills */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300">
+                <MessageSquare className="w-3 h-3 text-orange-500" />
+                <span className="font-semibold">₹{astrologer.charge}/min</span>
+             </div>
+             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300">
+                <Phone className="w-3 h-3 text-blue-500" />
+                <span className="font-semibold">₹{astrologer.charge}/min</span>
+             </div>
+             {astrologer.videoCallRate && (
+               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300">
+                  <Video className="w-3 h-3 text-purple-500" />
+                  <span className="font-semibold">₹{astrologer.videoCallRate}/min</span>
+               </div>
+             )}
           </div>
         </div>
 
-        {/* Rates - Single Line */}
-        <div className="p-4 flex items-center justify-between gap-2 border-b border-gray-200/60 dark:border-gray-700/60">
-          <div className="flex items-center gap-1.5 text-xs">
-            <MessageSquare className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
-            <span className="font-semibold text-gray-900 dark:text-white">
-              ₹{astrologer.charge}/min
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs">
-            <Phone className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
-            <span className="font-semibold text-gray-900 dark:text-white">
-              ₹{astrologer.charge}/min
-            </span>
-          </div>
-          {astrologer.videoCallRate && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <Video className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">
-                ₹{astrologer.videoCallRate}/min
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Toggle Buttons - Compact */}
-        <div className="p-4 space-y-2">
-          {/* First Row: Verified, Active, Live Status */}
-          <div className="grid grid-cols-3 gap-2">
+        {/* === Bottom Section: Admin Controls === */}
+        <div className="bg-gray-50/80 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800 p-4 space-y-3">
+          
+          {/* Row 1: Status Toggles */}
+          <div className="flex items-center justify-between gap-2">
             <button
-              onClick={() =>
-                onToggleStatus(
-                  astrologer.id,
-                  "isVerified",
-                  !astrologer.isVerified
-                )
-              }
-              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              onClick={() => onToggleStatus(astrologer.id, "isVerified", !astrologer.isVerified)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 astrologer.isVerified
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                  : "bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50"
               }`}
             >
+              {astrologer.isVerified ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
               {astrologer.isVerified ? "Verified" : "Unverified"}
             </button>
 
             <button
-              onClick={() =>
-                onToggleStatus(astrologer.id, "isActive", !astrologer.isActive)
-              }
-              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              onClick={() => onToggleStatus(astrologer.id, "isActive", !astrologer.isActive)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 astrologer.isActive
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                  : "bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50"
               }`}
             >
+              <Activity className="w-3.5 h-3.5" />
               {astrologer.isActive ? "Active" : "Inactive"}
             </button>
-
+            
             <button
-              onClick={() =>
-                onToggleStatus(
-                  astrologer.id,
-                  "isLiveOff",
-                  astrologer.isLiveOff === 0 ? 1 : 0
-                )
-              }
-              className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              onClick={() => onToggleStatus(astrologer.id, "isLiveOff", astrologer.isLiveOff === 0 ? 1 : 0)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 astrologer.isLiveOff === 0
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 animate-pulse"
+                  : "bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50"
               }`}
             >
+              <div className={`w-2 h-2 rounded-full ${astrologer.isLiveOff === 0 ? "bg-red-500" : "bg-gray-400"}`} />
               {astrologer.isLiveOff === 0 ? "Live On" : "Live Off"}
             </button>
           </div>
 
-          {/* Second Row: Chat and Call Status */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                Chat:
-              </span>
-              <select
-                value={astrologer.chatStatus || "offline"}
-                onChange={(e) =>
-                  onToggleStatus(astrologer.id, "chatStatus", e.target.value)
-                }
-                className="flex-1 text-xs px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-              >
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
-                <option value="busy">Busy</option>
-              </select>
-            </div>
+          {/* Row 2: Availability Dropdowns */}
+          <div className="grid grid-cols-2 gap-3">
+             {/* Chat Select */}
+             <div className="relative">
+                <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
+                   <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
+                </div>
+                <select 
+                   value={astrologer.chatStatus || "offline"}
+                   onChange={(e) => onToggleStatus(astrologer.id, "chatStatus", e.target.value)}
+                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium py-2 pl-7 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
+                >
+                   <option value="online">Chat: Online</option>
+                   <option value="offline">Chat: Offline</option>
+                   <option value="busy">Chat: Busy</option>
+                </select>
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                   <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                </div>
+             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                Call:
-              </span>
-              <select
-                value={astrologer.callStatus || "offline"}
-                onChange={(e) =>
-                  onToggleStatus(astrologer.id, "callStatus", e.target.value)
-                }
-                className="flex-1 text-xs px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-              >
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
-                <option value="busy">Busy</option>
-              </select>
-            </div>
+             {/* Call Select */}
+             <div className="relative">
+                <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
+                   <Phone className="w-3.5 h-3.5 text-gray-400" />
+                </div>
+                <select 
+                   value={astrologer.callStatus || "offline"}
+                   onChange={(e) => onToggleStatus(astrologer.id, "callStatus", e.target.value)}
+                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium py-2 pl-7 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
+                >
+                   <option value="online">Call: Online</option>
+                   <option value="offline">Call: Offline</option>
+                   <option value="busy">Call: Busy</option>
+                </select>
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                   <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                </div>
+             </div>
           </div>
-        </div>
 
-        {/* View Button */}
-        <div className="p-4 pt-0">
+          {/* View Details Button */}
           <Button
             variant="outline"
-            size="sm"
-            icon={<Eye className="w-4 h-4" />}
             onClick={onView}
-            className="w-full"
+            className="w-full h-9 rounded-lg border-orange-200 text-orange-600 hover:bg-orange-50 hover:text-orange-700 dark:border-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/10 text-xs font-bold"
           >
-            View Details
+            Manage Profile
           </Button>
         </div>
       </motion.div>

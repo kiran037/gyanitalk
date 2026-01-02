@@ -87,11 +87,11 @@ export default function BlockedAstrologerDetailPage() {
         setBlockDetail(data.data);
       } else {
         addToast("error", "Error", data.error);
-        router.push("/astro/block-astro");
+        router.push("/admin/astro/block-astro");
       }
     } catch (error) {
       addToast("error", "Error", "Failed to fetch block details");
-      router.push("/astro/block-astro");
+      router.push("/admin/astro/block-astro");
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ export default function BlockedAstrologerDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 dark:text-gray-400">Block details not found</p>
-          <Link href="/astro/block-astro">
+          <Link href="/admin/astro/block-astro">
             <Button className="mt-4">Back to List</Button>
           </Link>
         </div>
@@ -135,7 +135,7 @@ export default function BlockedAstrologerDetailPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Link href="/astro/block-astro">
+          <Link href="/admin/astro/block-astro">
             <Button variant="outline" icon={<ArrowLeft className="w-4 h-4" />} ariaLabel="Back" />
           </Link>
           <PageHeader
@@ -376,7 +376,7 @@ export default function BlockedAstrologerDetailPage() {
 
         {/* Back Button */}
         <div className="flex justify-center pt-4">
-          <Link href="/astro/block-astro">
+          <Link href="/admin/astro/block-astro">
             <Button variant="outline" icon={<ArrowLeft className="w-4 h-4" />}>
               Back to Blocked Astrologers
             </Button>

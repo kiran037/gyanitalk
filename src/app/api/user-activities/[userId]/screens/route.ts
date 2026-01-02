@@ -1,4 +1,4 @@
-// app/api/user-activities/[userId]/screens/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/services/firebase";
 import moment from "moment";
@@ -57,13 +57,19 @@ export async function GET(req: NextRequest, context: RouteContext) {
         .get();
     } catch (err: any) {
       if (err?.code === 8 || err?.details?.includes?.("Quota exceeded")) {
-        console.error("Firestore quota exceeded for screen activities:", err);
-        return NextResponse.json(
-          {
+        console.warn(`[Quota Exceeded] GET /user-activities/${userId}/screens - Returning 429`);
+        return new NextResponse(
+          JSON.stringify({
             success: false,
             error: "Activity logs quota exceeded. Please try again later.",
-          },
-          { status: 429 }
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "60", // Tell client to wait 60s before retrying
+            },
+          }
         );
       }
       throw err;
@@ -85,7 +91,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       const countSnap = await colRef.count().get();
       totalCount = countSnap.data().count;
     } catch (err) {
-      console.warn("Failed to fetch total count for activities:", err);
+      // Quietly fail for count to save resources or if quota tight
       totalCount = undefined;
     }
 
@@ -133,13 +139,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
         });
       } catch (err: any) {
         if (err?.code === 8 || err?.details?.includes?.("Quota exceeded")) {
-          console.error("Firestore quota exceeded in weeklyTrend:", err);
-          // Push 0 for this day and stop trying further to avoid more quota hits
+          console.warn("Firestore quota exceeded in weeklyTrend - stopping loop");
           last7Days.push({
             date: dayDate,
             count: 0,
           });
-          break;
+          break; // Stop trying to fetch remaining days to save quota
         }
 
         last7Days.push({
@@ -149,30 +154,39 @@ export async function GET(req: NextRequest, context: RouteContext) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        date,
-        userId,
-        activities: {
-          total: totalCount,
-          shown: activities.length,
-          recent: activities.map((a) => ({
-            screenName: a.screenName,
-            timestamp: a.timestamp,
-          })),
+    // ✅ ADDED: Cache-Control headers to prevent constant re-fetching
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          date,
+          userId,
+          activities: {
+            total: totalCount,
+            shown: activities.length,
+            recent: activities.map((a) => ({
+              screenName: a.screenName,
+              timestamp: a.timestamp,
+            })),
+          },
+          analytics: {
+            topScreens,
+            uniqueScreens: Object.keys(screenFrequency).length,
+            sessionDurationMs: sessionDuration,
+            sessionDurationMinutes: (sessionDuration / (1000 * 60)).toFixed(2),
+          },
+          weeklyTrend: last7Days,
         },
-        analytics: {
-          topScreens,
-          uniqueScreens: Object.keys(screenFrequency).length,
-          sessionDurationMs: sessionDuration,
-          sessionDurationMinutes: (sessionDuration / (1000 * 60)).toFixed(2),
-        },
-        weeklyTrend: last7Days,
       },
-    });
-  } catch (error) {
-    console.error("Error fetching screen activities:", error);
+      {
+        headers: {
+          // Cache for 60s (fresh), allow stale data up to 5 mins
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
+  } catch (error: any) {
+    console.error("Error fetching screen activities:", error?.message || error);
     return NextResponse.json(
       { error: "Failed to fetch screen activities" },
       { status: 500 }

@@ -38,18 +38,13 @@ function convertPrismaTypes(obj: unknown): any {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id: rawId } = await context.params;
-    const id = parseInt(rawId, 10); // if story.id is Int
+    const id = parseInt(rawId, 10);
 
     const story = await prisma.astrologer_stories.findUnique({
       where: { id },
       include: {
-        astrologer: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-          },
-        },
+        astrologer: true,
+        // ✅ FIX: Use story_view_count (singular)
         story_view_count: {
           select: {
             id: true,
@@ -76,6 +71,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const payload = {
       ...story,
+      // ✅ FIX: Use story_view_count (singular)
       viewCount: story.story_view_count.length,
       expiresAt: expiresAt.toISOString(),
       isExpired,
@@ -108,7 +104,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id: rawId } = await context.params;
-    const id = parseInt(rawId, 10); // if story.id is Int
+    const id = parseInt(rawId, 10);
 
     const existingStory = await prisma.astrologer_stories.findUnique({
       where: { id },

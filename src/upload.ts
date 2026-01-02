@@ -9,7 +9,12 @@ export async function uploadImage(
   fd.append("uploadPath", uploadPath);
   if (newPath) fd.append("newPath", newPath);
 
-  const res = await fetch("/api/upload", {
+  const baseUrl =
+    typeof window === "undefined"
+      ? process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      : "";
+
+  const res = await fetch(`${baseUrl}/api/upload`, {
     method: "POST",
     body: fd,
   });

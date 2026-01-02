@@ -157,7 +157,7 @@ export default function AstrologerGroupsPage() {
                 index={index}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onView={() => router.push(`/astro/groups/${group.id}`)}
+                onView={() => router.push(`/admin/astro/groups/${group.id}`)}
               />
             ))}
           </div>

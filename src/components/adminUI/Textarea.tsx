@@ -1,9 +1,11 @@
+
+
 import { ReactNode } from "react";
 
 interface TextareaProps {
   label?: string;
   name?: string;
-  value: string;
+  value: string | number | undefined | null; // Updated to reflect reality
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   required?: boolean;
@@ -27,6 +29,9 @@ export function Textarea({
   className = "",
   error,
 }: TextareaProps) {
+  // 1. Create a safe value. If value is null/undefined, use ""
+  const safeValue = value ?? "";
+
   return (
     <div className={className}>
       {label && (
@@ -38,7 +43,8 @@ export function Textarea({
       <div className="relative">
         <textarea
           name={name}
-          value={value}
+          // 2. Use safeValue here to prevent the Console Error
+          value={safeValue} 
           onChange={onChange}
           placeholder={placeholder}
           required={required}
@@ -53,7 +59,8 @@ export function Textarea({
         />
         {maxLength && (
           <div className="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500">
-            {value.length}/{maxLength}
+             {/* 3. Use safeValue here to prevent crash on .length lookup */}
+            {String(safeValue).length}/{maxLength}
           </div>
         )}
       </div>

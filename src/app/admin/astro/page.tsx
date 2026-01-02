@@ -1,4 +1,5 @@
- "use client";
+// app/admin/astro/page.tsx - Updated with Add New button
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,7 @@ import { Button } from "@/components/adminUI/Button";
 import { useToast } from "@/components/Toast/ToastProvider";
 import { 
   Star, Phone, MessageSquare, Video, Eye, Filter, 
-  Download, RefreshCw, Users, Verified 
+  Download, RefreshCw, Users, Verified, Plus
 } from "lucide-react";
 import { AstrologerCard } from "@/components/astro/AstrologerCard";
 import { AstrologerFilters } from "@/components/astro/AstrologerFilters";
@@ -109,7 +110,7 @@ export default function AstrologersPage() {
       if (data.success) {
         setAstrologers(data.data);
         setPagination(data.pagination);
-        setStats(data.stats); // Update stats from API
+        setStats(data.stats);
       } else {
         addToast("error", "Error", data.error || "Failed to fetch astrologers");
       }
@@ -185,7 +186,7 @@ export default function AstrologersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-amber-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 p-6">
       {/* Floating Background Elements */}
-      <div className="fixed  inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-20 right-20 w-64 h-64 bg-[#FF6B35] rounded-full mix-blend-multiply filter blur-3xl opacity-10 dark:opacity-5"
           animate={{
@@ -223,6 +224,14 @@ export default function AstrologersPage() {
           badge={{ text: "MANAGEMENT", variant: "orange" }}
           actions={
             <div className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={() => router.push("/admin/astro/new")}
+              >
+                Add New
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -363,9 +372,16 @@ export default function AstrologersPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               No Astrologers Found
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Try adjusting your filters or search query
             </p>
+            <Button
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => router.push("/admin/astro/new")}
+            >
+              Add First Astrologer
+            </Button>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
@@ -376,7 +392,7 @@ export default function AstrologersPage() {
                 index={index}
                 onToggleStatus={handleToggleStatus}
                 onDelete={handleDelete}
-                onView={() => router.push(`/astro/${astrologer.id}`)}
+                onView={() => router.push(`/admin/astro/${astrologer.id}`)}
               />
             ))}
           </div>

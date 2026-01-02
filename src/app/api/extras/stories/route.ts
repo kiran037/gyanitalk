@@ -22,6 +22,7 @@ function convertPrismaTypes(obj: unknown): any {
 
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
 
+  // ✅ FIX: Properly handle nested objects
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -50,9 +51,7 @@ export async function GET(request: NextRequest) {
     };
 
     if (astrologerId) {
-      // if astrologerId column is BIGINT
       where.astrologerId = BigInt(astrologerId);
-      // if it's Int, use: where.astrologerId = parseInt(astrologerId, 10);
     }
 
     const [stories, total] = await Promise.all([
@@ -62,6 +61,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { created_at: "desc" },
         include: {
+          // ✅ FIX: Explicitly include astrologer with all fields
           astrologer: {
             select: {
               id: true,
@@ -79,6 +79,13 @@ export async function GET(request: NextRequest) {
       prisma.astrologer_stories.count({ where }),
     ]);
 
+    // ✅ DEBUG: Check raw data from Prisma
+    console.log("Raw first story from Prisma:", {
+      id: stories[0]?.id,
+      astrologerId: stories[0]?.astrologerId,
+      astrologer: stories[0]?.astrologer,
+    });
+
     // Add view count and calculate remaining time
     const storiesWithMeta = stories.map((story) => {
       const createdAt = new Date(story.created_at!);
@@ -95,9 +102,27 @@ export async function GET(request: NextRequest) {
         Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60))
       );
 
+      // ✅ DEBUG: Log to see what astrologer data we have
+      console.log(`Story ${story.id}:`, {
+        astrologerId: story.astrologerId?.toString(),
+        hasAstrologer: !!story.astrologer,
+        astrologerName: story.astrologer?.name,
+        astrologerType: typeof story.astrologer
+      });
+
       return {
-        ...story,
-        viewCount: story.story_view_count.length,
+        id: story.id,
+        astrologerId: story.astrologerId?.toString() || null,
+        mediaType: story.mediaType,
+        media: story.media,
+        created_at: story.created_at?.toISOString(),
+        // ✅ FIX: Explicitly map astrologer object
+        astrologer: story.astrologer ? {
+          id: story.astrologer.id.toString(),
+          name: story.astrologer.name,
+          profileImage: story.astrologer.profileImage
+        } : null,
+        viewCount: story.story_view_count?.length || 0,
         expiresAt: expiresAt.toISOString(),
         remainingTime: {
           hours: remainingHours,
@@ -110,9 +135,11 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    console.log("First story with meta:", JSON.stringify(storiesWithMeta[0], null, 2));
+
     return NextResponse.json({
       success: true,
-      data: convertPrismaTypes(storiesWithMeta),
+      data: storiesWithMeta,
       pagination: {
         total,
         page,

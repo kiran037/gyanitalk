@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Eye, Calendar, TrendingUp, Activity } from "lucide-react";
+import { Eye, Calendar, TrendingUp, Activity, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/Toast/ToastProvider";
 import { Input } from "@/components/adminUI/Input";
 import moment from "moment";
@@ -14,34 +14,78 @@ interface ScreenActivityProps {
 export function ScreenActivity({ userId }: ScreenActivityProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(moment().format("DD-MM-YYYY"));
+  
+  // Ref to store the abort controller so we can cancel requests if user clicks fast
+  const abortControllerRef = useRef<AbortController | null>(null);
   const addToast = useToast();
 
   useEffect(() => {
     fetchScreens();
+
+    // Cleanup: cancel request if component unmounts or dependency changes
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, selectedDate]);
 
   const fetchScreens = async () => {
+    // 1. Cancel previous request if exists to SAVE QUOTA
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
+    setErrorMsg(null);
+
     try {
-      const res = await fetch(`/api/user-activities/${userId}/screens?date=${selectedDate}`);
+      const res = await fetch(
+        `/api/user-activities/${userId}/screens?date=${selectedDate}`, 
+        { signal: abortControllerRef.current.signal }
+      );
+
+      // 2. Handle Quota Exceeded specifically
+      if (res.status === 429) {
+        const errData = await res.json();
+        setErrorMsg("System busy (Quota Exceeded). Please wait 1 minute.");
+        addToast("warning", "System Busy", "Too many requests. Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+
       const result = await res.json();
 
       if (result.success) {
         setData(result.data);
       } else {
-        addToast("error", "Error", "Failed to load screen activity");
+        // Handle API logic errors
+        addToast("error", "Error", result.error || "Failed to load screen activity");
+        setErrorMsg(result.error || "Failed to load data");
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        // Request cancelled intentionally, do nothing
+        return;
+      }
       console.error(error);
-      addToast("error", "Error", "Failed to fetch data");
+      addToast("error", "Error", "Network connection failed");
+      setErrorMsg("Network error occurred");
     } finally {
-      setLoading(false);
+      // Only stop loading if we haven't aborted
+      if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateValue = e.target.value;
+    if (!dateValue) return;
     const formattedDate = moment(dateValue).format("DD-MM-YYYY");
     setSelectedDate(formattedDate);
   };
@@ -61,9 +105,27 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
     );
   }
 
+  // 3. Error State UI
+  if (errorMsg && !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-gray-600 dark:text-gray-400 space-y-4">
+        <AlertCircle className="w-10 h-10 text-orange-500" />
+        <p>{errorMsg}</p>
+        <button 
+          onClick={fetchScreens}
+          className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (!data) return <div className="text-center py-12 text-gray-600 dark:text-gray-400">No data available</div>;
 
-  const maxCount = Math.max(...data.analytics.topScreens.map((s: any) => s.count), 1);
+  // 4. Safe access for analytics
+  const topScreens = data.analytics?.topScreens || [];
+  const maxCount = Math.max(...topScreens.map((s: any) => s.count), 1);
 
   return (
     <div className="space-y-6">
@@ -96,7 +158,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
           transition={{ delay: 0.1 }}
         >
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Activities</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.activities.total || 0}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.activities?.total || 0}</p>
         </motion.div>
 
         <motion.div
@@ -106,7 +168,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
           transition={{ delay: 0.2 }}
         >
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Unique Screens</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.analytics.uniqueScreens}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.analytics?.uniqueScreens || 0}</p>
         </motion.div>
 
         <motion.div
@@ -117,7 +179,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
         >
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Session Time</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {data.analytics.sessionDurationMinutes}m
+            {data.analytics?.sessionDurationMinutes || 0}m
           </p>
         </motion.div>
 
@@ -128,7 +190,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
           transition={{ delay: 0.4 }}
         >
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Shown</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.activities.shown}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.activities?.shown || 0}</p>
         </motion.div>
       </div>
 
@@ -145,8 +207,8 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
         </h3>
 
         <div className="space-y-3">
-          {data.analytics.topScreens.length > 0 ? (
-            data.analytics.topScreens.map((screen: any, i: number) => (
+          {topScreens.length > 0 ? (
+            topScreens.map((screen: any, i: number) => (
               <motion.div
                 key={screen.screen}
                 className="flex items-center gap-3"
@@ -192,7 +254,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
         </h3>
 
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {data.activities.recent.length > 0 ? (
+          {data.activities?.recent?.length > 0 ? (
             data.activities.recent.map((activity: any, i: number) => (
               <motion.div
                 key={i}
@@ -231,7 +293,7 @@ export function ScreenActivity({ userId }: ScreenActivityProps) {
         </h3>
 
         <div className="space-y-3">
-          {data.weeklyTrend.length > 0 ? (
+          {data.weeklyTrend?.length > 0 ? (
             data.weeklyTrend.map((day: any, i: number) => {
               const maxWeekCount = Math.max(...data.weeklyTrend.map((d: any) => d.count), 1);
               return (
