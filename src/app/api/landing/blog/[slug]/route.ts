@@ -60,9 +60,9 @@ function generateCompleteSEO(
     const plainDescription = extractPlainText(blog.description);
     const excerpt = plainDescription.substring(0, 160);
     const blogUrl = `${baseUrl}/blog/${blog.slug || blog.id}`;
-    const fullImageUrl = blog.blogImage.startsWith('http')
-        ? blog.blogImage
-        : `${baseUrl}${blog.blogImage}`;
+
+    // ✅ RAW IMAGE (Frontend handles the URL)
+    const fullImageUrl = blog.blogImage;
 
     // Generate reading time (words per minute: 200)
     const wordCount = plainDescription.split(/\s+/).length;
@@ -124,7 +124,14 @@ function generateCompleteSEO(
             "headline": blog.title,
             "image": {
                 "@type": "ImageObject",
-                "url": fullImageUrl,
+                // ✅ Using RAW Image Path - Frontend/Client will need to make this absolute if schema is used there
+                // BUT for SEO purposes inside this API response, we return raw.
+                // NOTE: If you use this JSON-LD directly in <head>, you might want absolute URL here.
+                // However, you asked to let image.ts handle images. 
+                // Standard Schema usually needs absolute URLs.
+                // Since this is an API route returning JSON, the consumer (page.tsx) 
+                // should probably use a helper to make it absolute for SEO tags.
+                "url": fullImageUrl, 
                 "width": 1200,
                 "height": 630
             },
@@ -197,7 +204,7 @@ function generateCompleteSEO(
         }),
 
         // FAQ Schema (if applicable - can be extracted from content)
-        faqSchema: null, // Can be populated if you have Q&A in blog
+        faqSchema: null,
 
         // Related Articles Schema
         relatedArticlesSchema: relatedBlogs.length > 0 ? JSON.stringify({
@@ -229,11 +236,9 @@ export async function GET(
     try {
         const { slug } = await params;
 
-
-
         let blog = null;
 
-        // Try to find by database slug first (for future when slugs are populated)
+        // Try to find by database slug first
         blog = await prisma.blogs.findFirst({
             where: {
                 slug: slug,
@@ -242,7 +247,7 @@ export async function GET(
             },
         });
 
-        // If not found by slug, check if it's a numeric ID
+        // If not found by slug, check if it's a numeric ID or match generated slug
         if (!blog) {
             try {
                 const blogId = BigInt(slug);
@@ -255,15 +260,11 @@ export async function GET(
                 });
 
             } catch (e) {
-
-
-
                 const allBlogs = await prisma.blogs.findMany({
                     where: {
                         isActive: true,
                         isDelete: false,
                     },
-                    
                 });
 
                 // Find by generated slug
@@ -274,24 +275,15 @@ export async function GET(
                         .replace(/^-|-$/g, ''));
                     return generatedSlug === slug;
                 }) || null;
-
-                if (blog) {
-
-                }
             }
-        } else {
-
         }
 
         if (!blog) {
-
             return NextResponse.json(
                 { error: "Blog not found" },
                 { status: 404 }
             );
         }
-
-
 
         // Increment viewer count asynchronously
         prisma.blogs.update({
@@ -377,7 +369,6 @@ export async function GET(
 
         // Serialize with slug generation and PROPER excerpt extraction
         const relatedBlogs = relatedBlogsQuery.map((b: any) => {
-            // Use the extractPlainText function for proper handling of TipTap JSON
             const plainText = extractPlainText(b.description);
             const excerpt = plainText.substring(0, 150) + (plainText.length > 150 ? '...' : '');
             
@@ -386,9 +377,8 @@ export async function GET(
                 id: b.id.toString(),
                 slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
                 viewer: b.viewer?.toString() || "0",
-                blogImage: b.blogImage.startsWith('http')
-                    ? b.blogImage
-                    : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`,
+                // ✅ RAW IMAGE PATH
+                blogImage: b.blogImage,
                 excerpt: excerpt
             };
         });
@@ -405,14 +395,10 @@ export async function GET(
                 id: category.id.toString(),
                 name: category.name
             } : null,
-            blogImage: blog.blogImage.startsWith('http')
-                ? blog.blogImage
-                : `${process.env.NEXT_PUBLIC_BASEURL || ''}${blog.blogImage}`,
-            previewImage: blog.previewImage
-                ? (blog.previewImage.startsWith('http')
-                    ? blog.previewImage
-                    : `${process.env.NEXT_PUBLIC_BASEURL || ''}${blog.previewImage}`)
-                : null,
+            // ✅ RAW IMAGE PATH
+            blogImage: blog.blogImage,
+            // ✅ RAW IMAGE PATH
+            previewImage: blog.previewImage || null,
             seo
         };
 
@@ -420,9 +406,8 @@ export async function GET(
             ...b,
             id: b.id.toString(),
             slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-            blogImage: b.blogImage.startsWith('http')
-                ? b.blogImage
-                : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`
+            // ✅ RAW IMAGE PATH
+            blogImage: b.blogImage
         }));
 
         return NextResponse.json({
@@ -461,26 +446,38 @@ export async function GET(
     }
 }
 
-// Endpoint to track blog views (can be called separately for analytics)
+// Endpoint to track blog views
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ slug: string }> } // Note: Route param is slug here too
 ) {
     try {
-        const { id } = await params;
+        const { slug } = await params;
 
         let blogId: bigint;
 
         // Try to find by slug first
         const blogBySlug = await prisma.blogs.findFirst({
-            where: { slug: id, isActive: true, isDelete: false },
+            where: { slug: slug, isActive: true, isDelete: false },
             select: { id: true }
         });
 
         if (blogBySlug) {
             blogId = blogBySlug.id;
         } else {
-            blogId = BigInt(id);
+            // Fallback to trying ID if numeric
+            try {
+               blogId = BigInt(slug);
+            } catch {
+               // If not numeric and not found by slug field, check generated slugs
+               const allBlogs = await prisma.blogs.findMany({ select: { id: true, title: true, slug: true }});
+               const found = allBlogs.find(b => {
+                 const genSlug = (b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+                 return genSlug === slug;
+               });
+               if(!found) throw new Error("Blog not found");
+               blogId = found.id;
+            }
         }
 
         await prisma.blogs.update({
@@ -499,7 +496,5 @@ export async function POST(
             { error: "Failed to update view count" },
             { status: 500 }
         );
-    } finally {
-
     }
 }

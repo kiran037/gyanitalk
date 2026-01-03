@@ -1,13 +1,5 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-// Helper to strip 'public/' from database paths
-const cleanImagePath = (path: string | null, baseUrl: string) => {
-  if (!path) return null;
-  const cleanPath = path.replace(/^(\/)?public\//, '');
-  return `${baseUrl}/${cleanPath}`;
-};
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,6 +10,7 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
+    // 1. Build Search Filters
     const where: any = { isActive: true, isDelete: false };
     if (search) {
       where.OR = [
@@ -28,6 +21,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // 2. Fetch all matching IDs (for sorting logic)
     const matching = await prisma.astrologers.findMany({
       where,
       select: { id: true, top_badge: true },
@@ -35,20 +29,21 @@ export async function GET(request: NextRequest) {
 
     const allIds: bigint[] = matching.map(m => m.id);
 
-    // Fetch skills and languages for mapping
+    // 3. Fetch skills and languages for mapping
     const [allSkills, allLanguages] = await Promise.all([
-        prisma.skills.findMany({
-            where: { isActive: true, isDelete: false },
-            select: { id: true, name: true }
-        }),
-        prisma.languages.findMany({
-            select: { id: true, languageName: true }
-        })
+      prisma.skills.findMany({
+        where: { isActive: true, isDelete: false },
+        select: { id: true, name: true }
+      }),
+      prisma.languages.findMany({
+        select: { id: true, languageName: true }
+      })
     ]);
 
     const skillMap = new Map(allSkills.map(s => [s.id.toString(), s.name]));
     const languageMap = new Map(allLanguages.map(l => [l.id.toString(), l.languageName]));
 
+    // 4. Handle Empty Results
     if (allIds.length === 0) {
       return NextResponse.json({
         page,
@@ -64,7 +59,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Sort IDs based on review counts and badges
+    // 5. Sorting Logic (Top Badge > Reviews Count)
     const topBadgeIds = matching
       .filter(m => !!(m.top_badge && String(m.top_badge).trim() !== ""))
       .map(m => m.id);
@@ -111,6 +106,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // 6. Fetch Full Data for Current Page
     const rows = await prisma.astrologers.findMany({
       where: { id: { in: pageIds } },
       select: {
@@ -151,25 +147,27 @@ export async function GET(request: NextRequest) {
     const rowById = new Map<string, any>();
     rows.forEach(r => rowById.set(r.id.toString(), r));
 
+    // Used for SEO URLs (Canonical/Schema ID), NOT for images
     const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
 
-    // ✅ Helper to convert IDs to Names
+    // Helper: Map IDs to Names
     const mapIdsToNames = (idsString: string | null, map: Map<string, string>) => {
-        if (!idsString) return "";
-        return idsString
-          .split(',')
-          .map(id => map.get(id.trim()))
-          .filter(Boolean)
-          .join(', ');
+      if (!idsString) return "";
+      return idsString
+        .split(',')
+        .map(id => map.get(id.trim()))
+        .filter(Boolean)
+        .join(', ');
     };
 
+    // 7. Transform Data
     const results = pageIds.map((idBig) => {
       const r = rowById.get(idBig.toString());
       if (!r) return null;
 
       const astrologerSlug = r.slug || r.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-      // ✅ Map IDs to Text
+      // Map IDs to Text
       const languageNames = mapIdsToNames(r.languageKnown, languageMap);
       const primarySkillName = mapIdsToNames(r.primarySkill, skillMap) || "Astrologer";
       const allSkillNames = mapIdsToNames(r.allSkill, skillMap);
@@ -177,17 +175,17 @@ export async function GET(request: NextRequest) {
       const agg = reviewMap.get(r.id.toString());
       const avgRating = agg?.avg ?? null;
       const reviewCount = agg?.count ?? (r._count?.reviews ?? 0);
-      
-      // ✅ Fix Image Path
-      const absoluteProfileImage = cleanImagePath(r.profileImage, baseUrl);
+
+      // Raw Image Path (Frontend handles cleaning)
+      const rawProfileImage = r.profileImage;
 
       return {
         id: r.id.toString(),
         name: r.name,
         slug: astrologerSlug,
-        profileImage: absoluteProfileImage,
-        primarySkill: primarySkillName, // Text
-        allSkill: allSkillNames,       // Text
+        profileImage: rawProfileImage, // Sending raw URL
+        primarySkill: primarySkillName,
+        allSkill: allSkillNames,
         charge: r.charge,
         experienceInYears: r.experienceInYears,
         languageKnown: languageNames,
@@ -215,17 +213,17 @@ export async function GET(request: NextRequest) {
           ogDescription: r.ogDescription || r.metaDescription,
           twitterTitle: r.twitterTitle || r.metaTitle || r.name,
           twitterDescription: r.twitterDescription || r.metaDescription,
-          ogImage: r.ogImage ? cleanImagePath(r.ogImage, baseUrl) : absoluteProfileImage,
-          twitterImage: r.twitterImage ? cleanImagePath(r.twitterImage, baseUrl) : absoluteProfileImage,
-          
+          // Sending raw URLs for SEO images as well
+          ogImage: r.ogImage || rawProfileImage,
+          twitterImage: r.twitterImage || rawProfileImage,
+
           schemaJson: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Person",
             "name": r.name,
-            // ✅ Fix jobTitle to be text
             "jobTitle": primarySkillName,
             "url": `${baseUrl}/landing/astro/${astrologerSlug}`,
-            "image": absoluteProfileImage,
+            "image": rawProfileImage, // Raw URL
             "description": r.loginBio || `Expert astrologer with ${r.experienceInYears}+ years of experience`,
             "knowsAbout": allSkillNames ? allSkillNames.split(',').map((s: string) => s.trim()) : [],
             "knowsLanguage": languageNames ? languageNames.split(',').map((l: string) => l.trim()) : []
@@ -236,6 +234,7 @@ export async function GET(request: NextRequest) {
 
     const safeResults = results.filter((r): r is NonNullable<typeof r> => r != null);
 
+    // 8. Page Level SEO
     const pageSEO = {
       title: search
         ? `${search} - Find Astrologers | Page ${page}`
@@ -256,9 +255,8 @@ export async function GET(request: NextRequest) {
             "@type": "Person",
             "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/landing/astro/${astro.slug}`,
             "name": astro.name,
-            "image": astro.profileImage,
-            // ✅ Use text skill
-            "jobTitle": astro.primarySkill, 
+            "image": astro.profileImage, // Raw URL
+            "jobTitle": astro.primarySkill,
             "description": astro.loginBio || `Expert astrologer specializing in ${astro.primarySkill}`,
             "aggregateRating": astro.avgRating ? {
               "@type": "AggregateRating",

@@ -1,54 +1,47 @@
-// // /Users/xeoren/gyanitallk-admin/src/lib/images.ts
 
-// export function ensureAbs(p?: string | null, fallback = "/default-avatar.svg"): string {
-//   if (!p || typeof p !== "string") return fallback;
+export function ensureAbs(path?: string | null, fallback = "/default-avatar.svg"): string {
+  // 1. Safety Check: If empty, return fallback
+  if (!path || typeof path !== "string" || path.trim() === "") {
+    return fallback;
+  }
 
-//   // Already a full URL → return as-is
-//   if (/^https?:\/\//i.test(p)) return p;
+  // 2. CONFIG: Your S3 Bucket URL
+  const S3_BASE = process.env.NEXT_PUBLIC_ASSET_BASE_URL?.replace(/\/+$/, "") 
+    || "https://gyanitalk.s3.ap-south-1.amazonaws.com";
 
-//   // Normalize path early (IMPORTANT)
-//   const cleanedPath = p.replace(/^\/+/, ""); // remove ALL leading slashes
+  // 3. CONFIG: Legacy App Domain (to strip out if present in DB)
+  const LEGACY_DOMAIN = "https://app.gyanitalk.com";
 
-//   // Use S3 base URL if available
-//   const base =
-//     process.env.NEXT_PUBLIC_ASSET_BASE_URL ||
-//     process.env.NEXT_PUBLIC_BASEURL ||
-//     "";
+  // --- LOGIC START ---
 
-//   const cleanedBase = base.replace(/\/+$/, ""); // remove trailing slashes
+  // 4. Check if it is ALREADY a valid S3 URL
+  if (path.includes("gyanitalk.s3.ap-south-1.amazonaws.com")) {
+    return path;
+  }
 
-//   if (cleanedBase) {
-//     // Build full CDN/S3 URL
-//     return `${cleanedBase}/${cleanedPath}`;
-//   }
+  // 5. Strip the Legacy Domain (if the DB saved the full local URL)
+  let cleanPath = path.replace(LEGACY_DOMAIN, "").replace("http://app.gyanitalk.com", "");
 
-//   // Local public folder fallback
-//   const localPath = cleanedPath.startsWith("public/")
-//     ? cleanedPath.replace(/^public\//, "")
-//     : cleanedPath;
+  // 6. Check for External URLs (e.g., Google Auth, Facebook, Twitter images)
+  // We check this AFTER stripping legacy domain to ensure we don't return app.gyanitalk.com URLs
+  if (/^https?:\/\//i.test(cleanPath)) {
+    return cleanPath;
+  }
 
-//   return `/${localPath}`;
-// }
+  // 7. Normalize Slashes: Remove ALL leading slashes
+  // Example: "/public/storage/..." becomes "public/storage/..."
+  cleanPath = cleanPath.replace(/^\/+/, "");
 
-// export function avatar(p?: string | null) {
-//   return ensureAbs(p, "/default-avatar.svg");
-// }
+  // 8. CRITICAL: Handle the "public" folder duplication
+  // Your DB has "public/storage" or "/public/storage".
+  // We want to force the structure, so we remove "public/" from the start first.
+  if (cleanPath.startsWith("public/")) {
+    cleanPath = cleanPath.replace(/^public\//, "");
+  }
 
-// /Users/xeoren/gyanitallk-admin/src/lib/images.ts
-
-export function ensureAbs(p?: string | null, fallback = "/default-avatar.svg"): string {
-  if (!p || typeof p !== "string") return fallback;
-
-  // 1. If it's already a full external URL (e.g. Google/Facebook avatars), return as-is
-  if (/^https?:\/\//i.test(p)) return p;
-
-  // 2. Clean up the path (remove leading slashes)
-  const cleanedPath = p.replace(/^\/+/, "");
-
-  // 3. Return the "Masked" URL.
-  // This tells the browser: "Go to mywebsite.com/assets/..."
-  // Next.js will handle the rest in the background.
-  return `/assets/${cleanedPath}`;
+  // 9. Rebuild the Full S3 URL
+  // We explicitly add "/public/" here to match your S3 bucket structure.
+  return `${S3_BASE}/public/${cleanPath}`;
 }
 
 export function avatar(p?: string | null) {

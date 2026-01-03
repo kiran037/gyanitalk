@@ -1,5 +1,5 @@
-
 "use client";
+
 declare global {
   interface Window {
     dataLayer: any[];
@@ -27,106 +27,11 @@ import {
   Share2
 } from "lucide-react";
 import Link from "next/link";
-import { avatar } from "@/lib/images";
+import { avatar } from "@/lib/images"; // ✅ Using your specific lib
 import { motion, AnimatePresence } from "framer-motion";
 
-/* ================= TYPES ================= */
-interface Review {
-  id: string;
-  rating: number;
-  review: string;
-  reply: string | null;
-  isPublic: boolean | null;
-  created_at: string;
-  user: {
-    id: string;
-    name: string | null;
-    profile: string | null;
-  } | null;
-}
-
-interface Availability {
-  id: string;
-  day: string;
-  fromTime: string | null;
-  toTime: string | null;
-}
-
-interface Assistant {
-  id: string;
-  name: string;
-  email: string | null;
-  contactNo: string;
-  gender: string;
-  primarySkill: string | null;
-  allSkill: string | null;
-  languageKnown: string | null;
-  experienceInYears: number;
-  profile: string | null;
-}
-
-// Ensure this matches the Server Component interface to avoid TS errors
-export interface Astrologer {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  contactNo: string;
-  gender: string;
-  birthDate: string;
-  primarySkill: string | null;
-  allSkill: string | null;
-  languageKnown: string | null;
-  profileImage: string | null;
-  charge: number;
-  experienceInYears: number;
-  dailyContribution: number;
-  currentCity: string | null;
-  highestQualification: string | null;
-  degree: string | null;
-  college: string | null;
-  learnAstrology: string | null;
-  isVerified: boolean;
-  isLiveOff: number;
-  monthlyEarning: string | null;
-  whatwillDo: string | null;
-  whyOnBoard: string | null;
-  top_badge: string | null;
-  featured_badge: string | null;
-  chatStatus: string | null;
-  chatWaitTime: string | null;
-  callStatus: string | null;
-  callWaitTime: string | null;
-  videoCallRate: number | null;
-  reportRate: number | null;
-  socialLinks: {
-    instagram: string | null;
-    facebook: string | null;
-    linkedin: string | null;
-    youtube: string | null;
-    website: string | null;
-  };
-  loginBio: string | null;
-  created_at: string;
-  updated_at: string;
-  assistants: Assistant[];
-  availabilities: Availability[];
-  reviews: Review[];
-  avgRating: number | null;
-  reviewsCount: number;
-  stats: {
-    followerCount: number;
-    reviewCount: number;
-    chatRequestCount: number;
-    callRequestCount: number;
-    orderCount: number;
-  };
-  // SEO is passed from server but not strictly needed in UI props unless used
-  seo?: any; 
-}
-
 interface Props {
-  astrologer: Astrologer;
+  astrologer: any; // Using any to avoid strict type conflicts if API changes rapidly
 }
 
 export default function AstrologerDetailClient({ astrologer }: Props) {
@@ -135,6 +40,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
   const [activeTab, setActiveTab] = useState<"about" | "reviews" | "availability">("about");
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -144,7 +50,10 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
   };
 
   const displayReviews = useMemo(
-    () => (showAllReviews ? astrologer.reviews : astrologer.reviews.slice(0, 5)),
+    () => {
+      if (!astrologer.reviews) return [];
+      return showAllReviews ? astrologer.reviews : astrologer.reviews.slice(0, 5);
+    },
     [astrologer.reviews, showAllReviews]
   );
 
@@ -157,11 +66,12 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
       schema_type: "astrologer",
       name: astrologer.name,
       url: typeof window !== "undefined" ? window.location.href : "",
-      image: avatar(astrologer.profileImage),
+      // ✅ Using lib/images for data layer too
+      image: avatar(astrologer.profileImage), 
       experience: `${astrologer.experienceInYears}+ years`,
       expertise: astrologer.allSkill || astrologer.primarySkill || "",
-      rating: astrologer.avgRating ? astrologer.avgRating.toFixed(1) : "New",
-      review_count: astrologer.reviewsCount.toString(),
+      rating: astrologer.avgRating ? Number(astrologer.avgRating).toFixed(1) : "New",
+      review_count: astrologer.reviewsCount?.toString() || "0",
       chat_rate: astrologer.charge,
     });
   }, [astrologer]);
@@ -186,6 +96,10 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
       "noopener,noreferrer"
     );
   }
+
+  // --- Safe Data Helpers ---
+  const skillsArray = astrologer.allSkill ? astrologer.allSkill.split(",") : [];
+  const languagesString = astrologer.languageKnown ? astrologer.languageKnown.replace(/,/g, ", ") : "";
 
   // --- Animation Variants ---
   const containerVariants = {
@@ -244,7 +158,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                     )}
                   </div>
 
-                  {/* Profile Image */}
+                  {/* Profile Image - USING YOUR LIB/IMAGES HERE */}
                   <div className="relative h-28 w-28 overflow-hidden rounded-full ring-4 ring-white shadow-lg dark:ring-gray-800 sm:h-32 sm:w-32">
                     <img
                       src={avatar(astrologer.profileImage)}
@@ -255,12 +169,12 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                   </div>
                 </div>
 
-                {/* Mobile Stats Row (Visible only on small screens) */}
+                {/* Mobile Stats Row */}
                 <div className="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600 dark:text-gray-400 md:hidden">
                   <div className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span className="font-bold text-gray-900 dark:text-white">
-                      {astrologer.avgRating ? astrologer.avgRating.toFixed(1) : "New"}
+                      {astrologer.avgRating ? Number(astrologer.avgRating).toFixed(1) : "New"}
                     </span>
                     <span>({astrologer.reviewsCount})</span>
                   </div>
@@ -285,12 +199,12 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                   </div>
                 </div>
 
-                {/* Desktop Stats (Hidden on mobile) */}
+                {/* Desktop Stats */}
                 <div className="mb-4 hidden flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 md:flex">
                   <span className="flex items-center gap-1.5">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-bold text-gray-900 dark:text-white">
-                      {astrologer.avgRating ? astrologer.avgRating.toFixed(1) : "New"}
+                      {astrologer.avgRating ? Number(astrologer.avgRating).toFixed(1) : "New"}
                     </span>
                     <span>({astrologer.reviewsCount} Reviews)</span>
                   </span>
@@ -306,20 +220,20 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                   )}
                 </div>
 
-                {/* Languages - Responsive */}
-                {astrologer.languageKnown && (
+                {/* Languages */}
+                {languagesString && (
                   <div className="mb-4 flex items-start justify-center gap-2 text-sm text-gray-600 dark:text-gray-400 md:justify-start">
                     <Languages className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                     <p className="text-center md:text-left leading-tight">
-                       {astrologer.languageKnown.replace(/,/g, ", ")}
+                       {languagesString}
                     </p>
                   </div>
                 )}
 
                 {/* Skills Chips */}
-                {astrologer.allSkill && (
+                {skillsArray.length > 0 && (
                   <div className="mb-6 flex flex-wrap justify-center gap-2 md:justify-start">
-                    {astrologer.allSkill.split(",").map((skill, idx) => (
+                    {skillsArray.map((skill: string, idx: number) => (
                       <span
                         key={idx}
                         className="rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border border-orange-100 dark:border-orange-900/30"
@@ -365,8 +279,8 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
               <div className="scrollbar-hide sticky top-[70px] z-20 mb-6 -mx-4 overflow-x-auto bg-gray-50/95 px-4 py-2 backdrop-blur-sm dark:bg-gray-950/95 sm:mx-0 sm:rounded-2xl sm:px-0">
                 <div className="flex gap-2 sm:gap-4">
                   {(["about", "reviews", "availability"] as const).map((tab) => {
-                    if (tab === "reviews" && astrologer.reviews.length === 0) return null;
-                    if (tab === "availability" && astrologer.availabilities.length === 0) return null;
+                    if (tab === "reviews" && (!astrologer.reviews || astrologer.reviews.length === 0)) return null;
+                    if (tab === "availability" && (!astrologer.availabilities || astrologer.availabilities.length === 0)) return null;
                     
                     const isActive = activeTab === tab;
                     return (
@@ -426,11 +340,11 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                         <h3 className="mb-3 text-base font-bold text-gray-900 dark:text-white">Activity Stats</h3>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                             {[
-                              { label: "Followers", value: astrologer.stats.followerCount },
-                              { label: "Reviews", value: astrologer.stats.reviewCount },
-                              { label: "Chats", value: astrologer.stats.chatRequestCount },
-                              { label: "Calls", value: astrologer.stats.callRequestCount },
-                              { label: "Orders", value: astrologer.stats.orderCount },
+                              { label: "Followers", value: astrologer.stats?.followerCount || 0 },
+                              { label: "Reviews", value: astrologer.stats?.reviewCount || 0 },
+                              { label: "Chats", value: astrologer.stats?.chatRequestCount || 0 },
+                              { label: "Calls", value: astrologer.stats?.callRequestCount || 0 },
+                              { label: "Orders", value: astrologer.stats?.orderCount || 0 },
                             ].map((stat, i) => (
                               <div key={i} className="flex flex-col items-center justify-center rounded-xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800">
                                 <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -499,15 +413,16 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Client Stories</h3>
                          <div className="flex items-center gap-1 rounded-lg bg-yellow-50 px-2 py-1 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
                             <Star className="h-4 w-4 fill-current" />
-                            <span className="font-bold">{astrologer.avgRating?.toFixed(1) || "N/A"}</span>
+                            <span className="font-bold">{astrologer.avgRating ? Number(astrologer.avgRating).toFixed(1) : "N/A"}</span>
                          </div>
                       </div>
                       
                       <div className="space-y-6">
-                        {displayReviews.map((review) => (
+                        {displayReviews.map((review: any) => (
                           <div key={review.id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0 dark:border-gray-800">
                              <div className="flex gap-4">
                                <div className="shrink-0">
+                                 {/* REVIEWER IMAGE - Using avatar helper */}
                                  <img
                                    src={avatar(review.user?.profile)}
                                    alt={review.user?.name || "User"}
@@ -540,7 +455,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                         ))}
                       </div>
 
-                      {astrologer.reviews.length > 5 && (
+                      {astrologer.reviews && astrologer.reviews.length > 5 && (
                         <button
                           onClick={() => setShowAllReviews(!showAllReviews)}
                           className="mt-6 w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
@@ -552,14 +467,14 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                   )}
 
                   {/* --- AVAILABILITY TAB --- */}
-                  {activeTab === "availability" && (
+                  {activeTab === "availability" && astrologer.availabilities && (
                     <motion.div variants={itemVariants} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800">
                        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
                           <Calendar className="h-5 w-5 text-orange-500" />
                           Availability
                        </h3>
                        <div className="grid gap-3 sm:grid-cols-2">
-                          {astrologer.availabilities.map((avail) => (
+                          {astrologer.availabilities.map((avail: any) => (
                              <div key={avail.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/50">
                                 <span className="font-medium text-gray-900 dark:text-white">{avail.day}</span>
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -581,7 +496,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
               </AnimatePresence>
             </div>
 
-            {/* Right Column: Pricing & Extra Info (Desktop Only Sticky) */}
+            {/* Right Column: Pricing & Extra Info */}
             <div className="space-y-6 lg:col-span-1">
                <div className="sticky top-24 space-y-6">
                  
@@ -635,7 +550,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
                     </div>
                  </div>
 
-                 {/* Share Card (Optional Polish) */}
+                 {/* Share Card */}
                  <div className="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 p-5 text-white shadow-lg">
                     <div className="flex items-center justify-between">
                        <div>
@@ -690,7 +605,7 @@ export default function AstrologerDetailClient({ astrologer }: Props) {
 
       </main>
       
-      {/* Utility to hide scrollbar but keep functionality */}
+      {/* Utility to hide scrollbar */}
       <style jsx global>{`
         .scrollbar-hide::-webkit-scrollbar {
             display: none;

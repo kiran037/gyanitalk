@@ -54,18 +54,6 @@ const nextConfig = {
     ]
   },
 
-  // --- 1. MASK S3 BUCKET (The Security Fix) ---
-  async rewrites() {
-    return [
-      {
-        // When user visits: /assets/public/storage/images/image.png
-        source: '/assets/:path*',
-        // Next.js fetches: https://gyanitalk.s3.../public/storage/images/image.png
-        destination: 'https://gyanitalk.s3.ap-south-1.amazonaws.com/:path*',
-      },
-    ];
-  },
-
   // --- 2. EXISTING REDIRECTS ---
   async redirects() {
     return [

@@ -1,13 +1,6 @@
-
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/astro/[slug]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-// ✅ Helper: Fix broken image paths (removes 'public/')
-const cleanImagePath = (path: string | null, baseUrl: string) => {
-  if (!path) return null;
-  const cleanPath = path.replace(/^(\/)?public\//, '');
-  return `${baseUrl}/${cleanPath}`;
-};
 
 // ✅ Helper: Convert IDs ("2,35") -> Names ("Vedic, Tarot")
 const mapIdsToNames = (idsString: string | null, map: Map<string, string>) => {
@@ -76,8 +69,6 @@ export async function GET(
       loginBio: true,
       created_at: true,
       updated_at: true,
-      // We DO NOT select metaTitle/metaDescription here to avoid accidental usage
-      // (Or even if selected, we ignore them below)
       
       // Relations
       stories: {
@@ -183,7 +174,8 @@ export async function GET(
     const primarySkillName = mapIdsToNames(astrologer.primarySkill, skillMap) || "Astrologer"; 
     const languageNames = mapIdsToNames(astrologer.languageKnown, languageMap);
 
-    const absoluteProfileImage = cleanImagePath(astrologer.profileImage, baseUrl);
+    // ✅ Use Raw Image URL (Frontend handles cleaning)
+    const rawProfileImage = astrologer.profileImage;
 
     // Generate slug
     const astrologerSlug = astrologer.slug || astrologer.name
@@ -193,11 +185,10 @@ export async function GET(
 
     const astrologerUrl = `${baseUrl}/landing/astro/${astrologerSlug}`;
 
-    // --- 5. FORCE GENERATE SEO (IGNORING DB GARBAGE) ---
+    // --- 5. FORCE GENERATE SEO ---
     const seoData = {
       slug: astrologerSlug,
       
-      // 🔥 CRITICAL FIX: Direct string construction. NO check for existing metaTitle.
       metaTitle: `${astrologer.name} - Expert ${primarySkillName} | ${astrologer.experienceInYears}+ Years Experience`,
       
       metaDescription: `Consult with ${astrologer.name}, a verified ${primarySkillName} with ${astrologer.experienceInYears}+ years of experience. ${astrologer.loginBio?.substring(0, 100) || 'Get expert astrological guidance'}. Starting at ₹${astrologer.charge}/min.`,
@@ -208,13 +199,13 @@ export async function GET(
       
       ogTitle: `${astrologer.name} | Expert ${primarySkillName}`,
       ogDescription: `Connect with ${astrologer.name}, a verified astrologer with ${astrologer.experienceInYears}+ years experience.`,
-      ogImage: absoluteProfileImage,
+      ogImage: rawProfileImage, // Raw URL
       ogUrl: astrologerUrl,
       ogType: 'profile',
       
       twitterTitle: `${astrologer.name} on Gyanitalk`,
       twitterDescription: `Expert ${primarySkillName} with ${astrologer.experienceInYears}+ years experience.`,
-      twitterImage: absoluteProfileImage,
+      twitterImage: rawProfileImage, // Raw URL
       twitterCard: 'summary_large_image',
 
       // Schema
@@ -222,9 +213,9 @@ export async function GET(
         "@context": "https://schema.org",
         "@type": "Person",
         "name": astrologer.name,
-        "jobTitle": primarySkillName, // ✅ Now uses "Vedic Astrology"
+        "jobTitle": primarySkillName,
         "description": astrologer.loginBio,
-        "image": absoluteProfileImage,
+        "image": rawProfileImage, // Raw URL
         "url": astrologerUrl,
         "telephone": astrologer.contactNo,
         "email": astrologer.email,
@@ -279,7 +270,7 @@ export async function GET(
       primarySkill: primarySkillName,
       allSkill: allSkillNames,
       languageKnown: languageNames,
-      profileImage: absoluteProfileImage,
+      profileImage: rawProfileImage, // Raw URL
       
       charge: astrologer.charge,
       experienceInYears: astrologer.experienceInYears,
@@ -323,7 +314,7 @@ export async function GET(
         allSkill: mapIdsToNames(a.allSkill, skillMap),
         languageKnown: mapIdsToNames(a.languageKnown, languageMap),
         experienceInYears: a.experienceInYears,
-        profile: cleanImagePath(a.profile, baseUrl),
+        profile: a.profile, // Raw URL
       })),
 
       availabilities: availabilities.map(av => ({
@@ -336,7 +327,7 @@ export async function GET(
       stories: astrologer.stories.map((s: any) => ({
         id: s.id.toString(),
         mediaType: s.mediaType,
-        media: cleanImagePath(s.media, baseUrl),
+        media: s.media, // Raw URL
         created_at: s.created_at,
         viewCount: s._count.story_view_count,
       })),
@@ -349,7 +340,7 @@ export async function GET(
         gift: g.gift ? {
           id: g.gift.id.toString(),
           name: g.gift.name,
-          image: cleanImagePath(g.gift.image, baseUrl),
+          image: g.gift.image, // Raw URL
           amount: g.gift.amount,
         } : null,
       })),
@@ -375,7 +366,7 @@ export async function GET(
         user: r.user ? {
           id: r.user.id.toString(),
           name: r.user.name,
-          profile: cleanImagePath(r.user.profile, baseUrl),
+          profile: r.user.profile, // Raw URL
         } : null,
       })),
       avgRating: avgRating ? Number(avgRating.toFixed(1)) : null,
@@ -391,7 +382,7 @@ export async function GET(
         id: astrologer.users.id.toString(),
         name: astrologer.users.name,
         email: astrologer.users.email,
-        profile: cleanImagePath(astrologer.users.profile, baseUrl),
+        profile: astrologer.users.profile, // Raw URL
       } : null,
     };
 

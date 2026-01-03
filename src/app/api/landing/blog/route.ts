@@ -1,4 +1,3 @@
-///Users/xeoren/gyanitallk-admin/src/app/api/landing/blog/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
 
@@ -42,11 +41,13 @@ function generateSEOMetadata(blog: NonNullable<BlogType>, categoryName?: string 
         // Open Graph
         ogTitle: blog.ogTitle || blog.metaTitle || blog.title,
         ogDescription: blog.ogDescription || blog.metaDescription || truncateText(plainDescription, 200),
+        // ✅ RAW IMAGE
         ogImage: blog.ogImage || blog.blogImage,
         
         // Twitter Card
         twitterTitle: blog.twitterTitle || blog.ogTitle || blog.metaTitle || blog.title,
         twitterDescription: blog.twitterDescription || blog.ogDescription || blog.metaDescription || truncateText(plainDescription, 200),
+        // ✅ RAW IMAGE
         twitterImage: blog.twitterImage || blog.ogImage || blog.blogImage,
         
         // Schema.org JSON-LD
@@ -54,7 +55,8 @@ function generateSEOMetadata(blog: NonNullable<BlogType>, categoryName?: string 
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             "headline": blog.title,
-            "image": blog.blogImage.startsWith('http') ? blog.blogImage : `${baseUrl}${blog.blogImage}`,
+            // ✅ RAW IMAGE (Frontend handles the URL)
+            "image": blog.blogImage,
             "author": {
                 "@type": "Person",
                 "name": blog.author
@@ -148,32 +150,31 @@ export async function GET(request: NextRequest) {
             categories.map(cat => [cat.id.toString(), cat.name])
         );
 
-    const serializedBlogs = blogs.map((blog: NonNullable<BlogType>) => {
-    const categoryName = blog.blogCategoryId 
-        ? categoryMap.get(blog.blogCategoryId.toString()) 
-        : null;
-    
-    const seoData = generateSEOMetadata(blog, categoryName);
-    
-    // ✅ Generate slug if it doesn't exist
-    const generatedSlug = blog.slug || blog.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-    
-    return {
-        ...blog,
-        id: blog.id.toString(),
-        slug: generatedSlug,  // ✅ Always include a slug
-        blogCategoryId: blog.blogCategoryId?.toString() || null,
-        viewer: blog.viewer?.toString() || "0",
-        blogImage: blog.blogImage.startsWith('http') 
-            ? blog.blogImage 
-            : `${process.env.NEXT_PUBLIC_BASEURL || ''}${blog.blogImage}`,
-        categoryName,
-        seo: seoData
-    };
-});
+        const serializedBlogs = blogs.map((blog: NonNullable<BlogType>) => {
+            const categoryName = blog.blogCategoryId 
+                ? categoryMap.get(blog.blogCategoryId.toString()) 
+                : null;
+            
+            const seoData = generateSEOMetadata(blog, categoryName);
+            
+            // Generate slug if it doesn't exist
+            const generatedSlug = blog.slug || blog.title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            
+            return {
+                ...blog,
+                id: blog.id.toString(),
+                slug: generatedSlug,
+                blogCategoryId: blog.blogCategoryId?.toString() || null,
+                viewer: blog.viewer?.toString() || "0",
+                // ✅ RAW IMAGE PATH
+                blogImage: blog.blogImage,
+                categoryName,
+                seo: seoData
+            };
+        });
 
         const serializedCategories = categories.map((cat: NonNullable<CategoryType>) => ({
             ...cat,
@@ -229,7 +230,7 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        // Get unique authors (filter out null/empty in memory)
+        // Get unique authors
         const authorsResult = await prisma.blogs.findMany({
             where: {
                 isActive: true,
@@ -245,22 +246,21 @@ export async function GET(request: NextRequest) {
             .filter(a => a.author && a.author.trim() !== '')
             .map(a => a.author) as string[];
 
-     const serializedPopularBlogs = popularBlogs.map(b => ({
-    ...b,
-    id: b.id.toString(),
-    slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),  // ✅ ADD THIS
-    viewer: b.viewer?.toString() || "0",
-    blogImage: b.blogImage.startsWith('http') 
-        ? b.blogImage 
-        : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`
-}));
+        const serializedPopularBlogs = popularBlogs.map(b => ({
+            ...b,
+            id: b.id.toString(),
+            slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+            viewer: b.viewer?.toString() || "0",
+            // ✅ RAW IMAGE PATH
+            blogImage: b.blogImage
+        }));
 
         const serializedRecentBlogs = recentBlogs.map(b => ({
             ...b,
             id: b.id.toString(),
-            blogImage: b.blogImage.startsWith('http') 
-                ? b.blogImage 
-                : `${process.env.NEXT_PUBLIC_BASEURL || ''}${b.blogImage}`
+            slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), // Ensure slug exists for recent too
+            // ✅ RAW IMAGE PATH
+            blogImage: b.blogImage
         }));
 
         return NextResponse.json({
@@ -298,5 +298,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-
 }

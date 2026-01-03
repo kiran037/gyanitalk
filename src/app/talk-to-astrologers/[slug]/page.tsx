@@ -2,160 +2,39 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AstrologerDetailClient from "./AstrologerDetailClient";
 
-/* ================= TYPES ================= */
+// 🚀 FORCE DYNAMIC: Disables all caching for this page
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
-interface SeoData {
-  metaTitle: string;
-  metaDescription: string;
-  metaKeywords: string | null;
-  ogTitle: string;
-  ogDescription: string;
-  ogImage: string;
-  ogUrl: string;
-  ogType: string;
-  twitterCard: string;
-  twitterTitle: string;
-  twitterDescription: string;
-  twitterImage: string;
-  schemaJson?: string;
-  breadcrumbSchema?: string;
-}
-
-interface SocialLinks {
-  instagram: string | null;
-  facebook: string | null;
-  linkedin: string | null;
-  youtube: string | null;
-  website: string | null;
-}
-
-interface Review {
-  id: string;
-  rating: number;
-  review: string;
-  reply: string | null;
-  isPublic: boolean | null;
-  created_at: string;
-  user: {
-    id: string;
-    name: string | null;
-    profile: string | null;
-  } | null;
-}
-
-interface Availability {
-  id: string;
-  day: string;
-  fromTime: string | null;
-  toTime: string | null;
-}
-
-interface Assistant {
-  id: string;
-  name: string;
-  email: string | null;
-  contactNo: string;
-  gender: string;
-  primarySkill: string | null;
-  allSkill: string | null;
-  languageKnown: string | null;
-  experienceInYears: number;
-  profile: string | null;
-}
-
-interface Stats {
-  followerCount: number;
-  reviewCount: number;
-  chatRequestCount: number;
-  callRequestCount: number;
-  orderCount: number;
-}
-
-// Strictly matches the API Payload
-export interface Astrologer {
-  id: string;
-  userId: string;
-  name: string;
-  slug: string;
-  email: string;
-  contactNo: string;
-  gender: string;
-  birthDate: string;
-  profileImage: string | null;
-  primarySkill: string | null;
-  allSkill: string | null;
-  languageKnown: string | null;
-  charge: number;
-  experienceInYears: number;
-  dailyContribution: number;
-  currentCity: string | null;
-  highestQualification: string | null;
-  degree: string | null;
-  college: string | null;
-  learnAstrology: string | null;
-  isVerified: boolean;
-  isLiveOff: number;
-  monthlyEarning: string | null;
-  whatwillDo: string | null;
-  whyOnBoard: string | null;
-  top_badge: string | null;
-  featured_badge: string | null;
-  chatStatus: string | null;
-  chatWaitTime: string | null;
-  callStatus: string | null;
-  callWaitTime: string | null;
-  videoCallRate: number | null;
-  reportRate: number | null;
-  loginBio: string | null;
-  created_at: string;
-  updated_at: string;
-  
-  // Nested Objects
-  seo: SeoData;
-  socialLinks: SocialLinks;
-  assistants: Assistant[];
-  availabilities: Availability[];
-  reviews: Review[];
-  
-  // Loosely typed arrays for now, or define specific interfaces if used in UI
-  stories: any[]; 
-  gifts: any[];
-  commissions: any[];
-
-  avgRating: number | null;
-  reviewsCount: number;
-  stats: Stats;
-  
-  user: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    profile: string | null;
-  } | null;
-}
-
-interface PageProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
+/* ================= CONFIG ================= */
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://app.gyanitalk.com";
+const AWS_URL = "https://gyanitalk.s3.ap-south-1.amazonaws.com";
+
+/* ================= HELPER ================= */
+
+// Fixes paths for SEO/Metadata only (Client uses lib/images)
+const getAbsoluteSeoImage = (path: string | null) => {
+  if (!path) return `${AWS_URL}/default-avatar.png`; // Fallback if needed
+  if (path.startsWith("http")) return path;
+  const cleanPath = path.replace(/^(\/)?public\//, "").replace(/^\//, "");
+  return `${AWS_URL}/${cleanPath}`;
+};
 
 /* ================= DATA FETCHING ================= */
 
-async function getAstrologer(slug: string): Promise<Astrologer | null> {
+async function getAstrologer(slug: string) {
   try {
-    const res = await fetch(`${SITE_URL}/api/landing/astro/${slug}`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
+    // timestamp added to prevent browser/network caching
+    const res = await fetch(`${SITE_URL}/api/landing/astro/${slug}?t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
     });
 
-    if (!res.ok) {
-      return null;
-    }
+    if (!res.ok) return null;
 
     const data = await res.json();
-    return data.success ? (data.data as Astrologer) : null;
+    return data.success ? data.data : null;
   } catch (error) {
     console.error("Failed to fetch astrologer:", error);
     return null;
@@ -164,77 +43,56 @@ async function getAstrologer(slug: string): Promise<Astrologer | null> {
 
 /* ================= METADATA ================= */
 
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const astrologer = await getAstrologer(slug);
 
   if (!astrologer || !astrologer.seo) {
     return {
-      title: "Astrologer Not Found",
-      description: "The astrologer you're looking for doesn't exist.",
+      title: "Astrologer Not Found | GyaniTalk",
+      robots: { index: false, follow: false } // Don't index 404s
     };
   }
 
   const seo = astrologer.seo;
-
-  // Safe skill parsing (API now returns proper names)
-  const skills = astrologer.allSkill
-    ? astrologer.allSkill
-        .split(",")
-        .map((s) => s.trim())
-        .slice(0, 6)
-    : [];
-
-  const existingKeywords = seo.metaKeywords
-    ? seo.metaKeywords.split(",").map((k) => k.trim())
-    : [];
-
-  const finalKeywords = Array.from(new Set([
-    ...existingKeywords,
-    ...skills,
-    astrologer.name,
-  ]));
-
-  const pageTitle = seo.metaTitle || `${astrologer.name} - Astrologer`;
+  const absoluteImage = getAbsoluteSeoImage(seo.ogImage || astrologer.profileImage);
+  const canonicalUrl = `${SITE_URL}/landing/astro/${astrologer.slug}`;
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: pageTitle,
+    title: seo.metaTitle || `${astrologer.name} - Astrologer`,
     description: seo.metaDescription,
-    keywords: finalKeywords,
-    
+    keywords: seo.metaKeywords,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: seo.ogTitle || pageTitle,
+      title: seo.ogTitle || seo.metaTitle,
       description: seo.ogDescription || seo.metaDescription,
+      url: canonicalUrl,
+      siteName: "GyaniTalk",
       images: [
         {
-          url: seo.ogImage,
+          url: absoluteImage,
           width: 1200,
           height: 630,
-          alt: seo.ogTitle || pageTitle,
+          alt: astrologer.name,
         },
       ],
-      url: seo.ogUrl,
-      type: (seo.ogType as any) || "profile",
+      type: "profile",
     },
     twitter: {
-      card: (seo.twitterCard as any) || "summary_large_image",
-      title: seo.twitterTitle || pageTitle,
+      card: "summary_large_image",
+      title: seo.twitterTitle || seo.metaTitle,
       description: seo.twitterDescription || seo.metaDescription,
-      images: [seo.twitterImage || seo.ogImage],
+      images: [absoluteImage],
     },
   };
 }
 
-export async function generateStaticParams() {
-  return [];
-}
-
 /* ================= PAGE COMPONENT ================= */
 
-export default async function AstrologerDetailPage({ params }: PageProps) {
+export default async function AstrologerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const astrologer = await getAstrologer(slug);
 
@@ -242,27 +100,30 @@ export default async function AstrologerDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Parse JSON strings explicitly for Schema injection
+  // Inject absolute images into Schema
   let structuredData = null;
   let breadcrumbData = null;
 
   try {
     if (astrologer.seo?.schemaJson) {
       structuredData = JSON.parse(astrologer.seo.schemaJson);
+      if (structuredData.image) {
+        structuredData.image = getAbsoluteSeoImage(structuredData.image);
+      }
     }
     if (astrologer.seo?.breadcrumbSchema) {
       breadcrumbData = JSON.parse(astrologer.seo.breadcrumbSchema);
     }
   } catch (e) {
-    console.error("Error parsing schema JSON:", e);
+    console.error("Schema parse error", e);
   }
 
   return (
     <>
-      {/* ✅ SEO-critical H1 */}
-      <h1 className="sr-only">{astrologer.name}</h1>
-      
-      {/* Structured Data */}
+      {/* Hidden H1 for SEO */}
+      <h1 className="sr-only">{astrologer.name} - {astrologer.primarySkill}</h1>
+
+      {/* JSON-LD Schemas */}
       {structuredData && (
         <script
           type="application/ld+json"
@@ -276,7 +137,6 @@ export default async function AstrologerDetailPage({ params }: PageProps) {
         />
       )}
 
-      {/* Client Component with strict typing */}
       <AstrologerDetailClient astrologer={astrologer} />
     </>
   );
