@@ -32,11 +32,13 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
+    "next/types/**/*.ts",
     "src/middleware.js",
-    ".next/dev/types/**/*.ts",
+    "next/dev/types/**/*.ts",
     "src/app/api/landing/playstorereview/route.js",
-    "prisma.config.ts"
+    "prisma.config.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

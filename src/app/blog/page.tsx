@@ -2,7 +2,7 @@
 import { Metadata } from "next";
 import BlogClient from "./BlogClient";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 
 const getBlogSEO = cache(async () => {
