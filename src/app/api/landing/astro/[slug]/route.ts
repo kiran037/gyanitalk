@@ -1,6 +1,24 @@
-// // src/app/api/landing/astro/[slug]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+
+// ✅ Helper: Fix broken image paths (removes 'public/')
+const cleanImagePath = (path: string | null, baseUrl: string) => {
+  if (!path) return null;
+  const cleanPath = path.replace(/^(\/)?public\//, '');
+  return `${baseUrl}/${cleanPath}`;
+};
+
+// ✅ Helper: Convert IDs ("2,35") -> Names ("Vedic, Tarot")
+const mapIdsToNames = (idsString: string | null, map: Map<string, string>) => {
+  if (!idsString) return "";
+  return idsString
+    .split(',')
+    .map(id => id.trim())
+    .map(id => map.get(id)) // Look up the name by ID
+    .filter(Boolean) // Remove nulls/undefined
+    .join(', ');
+};
 
 export async function GET(
   request: NextRequest,
@@ -13,552 +31,135 @@ export async function GET(
       return NextResponse.json({ error: "Missing slug parameter" }, { status: 400 });
     }
 
-
-
     let astrologer = null;
 
-    // ✅ Step 1: Try to find by database slug first
+    // --- 1. Fetch Astrologer Data (Select everything needed) ---
+    const astrologerSelect = {
+      id: true,
+      userId: true,
+      name: true,
+      slug: true,
+      email: true,
+      contactNo: true,
+      gender: true,
+      birthDate: true,
+      primarySkill: true, // RAW IDs
+      allSkill: true,     // RAW IDs
+      languageKnown: true,// RAW IDs
+      profileImage: true,
+      charge: true,
+      experienceInYears: true,
+      dailyContribution: true,
+      currentCity: true,
+      highestQualification: true,
+      degree: true,
+      college: true,
+      learnAstrology: true,
+      isVerified: true,
+      isLiveOff: true,
+      monthlyEarning: true,
+      whatwillDo: true,
+      whyOnBoard: true,
+      top_badge: true,
+      featured_badge: true,
+      chatStatus: true,
+      chatWaitTime: true,
+      callStatus: true,
+      callWaitTime: true,
+      videoCallRate: true,
+      reportRate: true,
+      instaProfileLink: true,
+      facebookProfileLink: true,
+      linkedInProfileLink: true,
+      youtubeChannelLink: true,
+      websiteProfileLink: true,
+      loginBio: true,
+      created_at: true,
+      updated_at: true,
+      // We DO NOT select metaTitle/metaDescription here to avoid accidental usage
+      // (Or even if selected, we ignore them below)
+      
+      // Relations
+      stories: {
+        where: { created_at: { not: null } },
+        select: {
+          id: true, mediaType: true, media: true, created_at: true,
+          _count: { select: { story_view_count: true } }
+        },
+        orderBy: { created_at: "desc" as const },
+        take: 20,
+      },
+      astrologerGifts: {
+        where: { isActive: true, isDelete: false },
+        select: {
+          id: true, giftId: true, giftAmount: true, created_at: true,
+          gift: { select: { id: true, name: true, image: true, amount: true } }
+        },
+        orderBy: { created_at: "desc" as const },
+        take: 10,
+      },
+      commissions: {
+        where: { isActive: true, isDelete: false },
+        select: {
+          id: true, commissionTypeId: true, commission: true, created_at: true,
+          commissionType: { select: { id: true, name: true } }
+        },
+      },
+      reviews: {
+        where: { isActive: true, isDelete: false },
+        select: {
+          id: true, rating: true, review: true, reply: true, isPublic: true, created_at: true,
+          user: { select: { id: true, name: true, profile: true } }
+        },
+        orderBy: { created_at: "desc" as const },
+        take: 50,
+      },
+      users: { select: { id: true, name: true, email: true, profile: true } },
+      _count: {
+        select: { followers: true, reviews: true, chatrequests: true, callrequests: true, order_requests: true }
+      }
+    };
+
+    // Try finding by Slug
     astrologer = await prisma.astrologers.findFirst({
-      where: {
-        slug: slug,
-        isActive: true,
-        isDelete: false,
-      },
-      select: {
-        id: true,
-        userId: true,
-        name: true,
-        slug: true,
-        metaTitle: true,
-        metaDescription: true,
-        metaKeywords: true,
-        canonicalUrl: true,
-        ogTitle: true,
-        ogDescription: true,
-        ogImage: true,
-        twitterTitle: true,
-        twitterDescription: true,
-        twitterImage: true,
-        schemaJson: true,
-        email: true,
-        contactNo: true,
-        gender: true,
-        birthDate: true,
-        primarySkill: true,
-        allSkill: true,
-        languageKnown: true,
-        profileImage: true,
-        charge: true,
-        experienceInYears: true,
-        dailyContribution: true,
-        currentCity: true,
-        highestQualification: true,
-        degree: true,
-        college: true,
-        learnAstrology: true,
-        isVerified: true,
-        isLiveOff: true,
-        monthlyEarning: true,
-        whatwillDo: true,
-        whyOnBoard: true,
-        top_badge: true,
-        featured_badge: true,
-        chatStatus: true,
-        chatWaitTime: true,
-        callStatus: true,
-        callWaitTime: true,
-        videoCallRate: true,
-        reportRate: true,
-        instaProfileLink: true,
-        facebookProfileLink: true,
-        linkedInProfileLink: true,
-        youtubeChannelLink: true,
-        websiteProfileLink: true,
-        loginBio: true,
-        created_at: true,
-        updated_at: true,
-        stories: {
-          where: { created_at: { not: null } },
-          select: {
-            id: true,
-            mediaType: true,
-            media: true,
-            created_at: true,
-            _count: {
-              select: { story_view_count: true }
-            }
-          },
-          orderBy: { created_at: "desc" },
-          take: 20,
-        },
-        astrologerGifts: {
-          where: { isActive: true, isDelete: false },
-          select: {
-            id: true,
-            giftId: true,
-            giftAmount: true,
-            created_at: true,
-            gift: {
-              select: {
-                id: true,
-                name: true,
-                image: true,
-                amount: true,
-              }
-            }
-          },
-          orderBy: { created_at: "desc" },
-          take: 10,
-        },
-        commissions: {
-          where: { isActive: true, isDelete: false },
-          select: {
-            id: true,
-            commissionTypeId: true,
-            commission: true,
-            created_at: true,
-            commissionType: {
-              select: {
-                id: true,
-                name: true,
-              }
-            }
-          },
-        },
-        reviews: {
-          where: { isActive: true, isDelete: false },
-          select: {
-            id: true,
-            rating: true,
-            review: true,
-            reply: true,
-            isPublic: true,
-            created_at: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profile: true,
-              }
-            }
-          },
-          orderBy: { created_at: "desc" },
-          take: 50,
-        },
-        users: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profile: true,
-          }
-        },
-        _count: {
-          select: {
-            followers: true,
-            reviews: true,
-            chatrequests: true,
-            callrequests: true,
-            order_requests: true,
-          }
-        }
-      },
+      where: { slug: slug, isActive: true, isDelete: false },
+      select: astrologerSelect,
     });
 
-    // ✅ Step 2: If not found by slug, check if it's a numeric ID (backward compatibility)
+    // Try finding by ID (Legacy)
     if (!astrologer) {
       try {
         const astrologerId = BigInt(slug);
         astrologer = await prisma.astrologers.findFirst({
-          where: {
-            id: astrologerId,
-            isActive: true,
-            isDelete: false,
-          },
-          select: {
-            id: true,
-            userId: true,
-            name: true,
-            slug: true,
-            metaTitle: true,
-            metaDescription: true,
-            metaKeywords: true,
-            canonicalUrl: true,
-            ogTitle: true,
-            ogDescription: true,
-            ogImage: true,
-            twitterTitle: true,
-            twitterDescription: true,
-            twitterImage: true,
-            schemaJson: true,
-            email: true,
-            contactNo: true,
-            gender: true,
-            birthDate: true,
-            primarySkill: true,
-            allSkill: true,
-            languageKnown: true,
-            profileImage: true,
-            charge: true,
-            experienceInYears: true,
-            dailyContribution: true,
-            currentCity: true,
-            highestQualification: true,
-            degree: true,
-            college: true,
-            learnAstrology: true,
-            isVerified: true,
-            isLiveOff: true,
-            monthlyEarning: true,
-            whatwillDo: true,
-            whyOnBoard: true,
-            top_badge: true,
-            featured_badge: true,
-            chatStatus: true,
-            chatWaitTime: true,
-            callStatus: true,
-            callWaitTime: true,
-            videoCallRate: true,
-            reportRate: true,
-            instaProfileLink: true,
-            facebookProfileLink: true,
-            linkedInProfileLink: true,
-            youtubeChannelLink: true,
-            websiteProfileLink: true,
-            loginBio: true,
-            created_at: true,
-            updated_at: true,
-            stories: {
-              where: { created_at: { not: null } },
-              select: {
-                id: true,
-                mediaType: true,
-                media: true,
-                created_at: true,
-                _count: {
-                  select: { story_view_count: true }
-                }
-              },
-              orderBy: { created_at: "desc" },
-              take: 20,
-            },
-            astrologerGifts: {
-              where: { isActive: true, isDelete: false },
-              select: {
-                id: true,
-                giftId: true,
-                giftAmount: true,
-                created_at: true,
-                gift: {
-                  select: {
-                    id: true,
-                    name: true,
-                    image: true,
-                    amount: true,
-                  }
-                }
-              },
-              orderBy: { created_at: "desc" },
-              take: 10,
-            },
-            commissions: {
-              where: { isActive: true, isDelete: false },
-              select: {
-                id: true,
-                commissionTypeId: true,
-                commission: true,
-                created_at: true,
-                commissionType: {
-                  select: {
-                    id: true,
-                    name: true,
-                  }
-                }
-              },
-            },
-            reviews: {
-              where: { isActive: true, isDelete: false },
-              select: {
-                id: true,
-                rating: true,
-                review: true,
-                reply: true,
-                isPublic: true,
-                created_at: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    profile: true,
-                  }
-                }
-              },
-              orderBy: { created_at: "desc" },
-              take: 50,
-            },
-            users: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                profile: true,
-              }
-            },
-            _count: {
-              select: {
-                followers: true,
-                reviews: true,
-                chatrequests: true,
-                callrequests: true,
-                order_requests: true,
-              }
-            }
-          },
+          where: { id: astrologerId, isActive: true, isDelete: false },
+          select: astrologerSelect,
         });
-
-        if (astrologer) {
-
-        }
-      } catch (e) {
-        // Not a valid number, try matching against generated slug
-
-
-        const allAstrologers = await prisma.astrologers.findMany({
-          where: {
-            isActive: true,
-            isDelete: false,
-          },
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          }
-        });
-
-        // Find by generated slug
-        astrologer = allAstrologers.find(a => {
-          const generatedSlug = (a.slug || a.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, ''));
-          return generatedSlug === slug;
-        }) as any || null;
-
-        if (astrologer) {
-
-
-          // Re-fetch full data
-          astrologer = await prisma.astrologers.findFirst({
-            where: { id: astrologer.id },
-            select: {
-              id: true,
-              userId: true,
-              name: true,
-              slug: true,
-              metaTitle: true,
-              metaDescription: true,
-              metaKeywords: true,
-              canonicalUrl: true,
-              ogTitle: true,
-              ogDescription: true,
-              ogImage: true,
-              twitterTitle: true,
-              twitterDescription: true,
-              twitterImage: true,
-              schemaJson: true,
-              email: true,
-              contactNo: true,
-              gender: true,
-              birthDate: true,
-              primarySkill: true,
-              allSkill: true,
-              languageKnown: true,
-              profileImage: true,
-              charge: true,
-              experienceInYears: true,
-              dailyContribution: true,
-              currentCity: true,
-              highestQualification: true,
-              degree: true,
-              college: true,
-              learnAstrology: true,
-              isVerified: true,
-              isLiveOff: true,
-              monthlyEarning: true,
-              whatwillDo: true,
-              whyOnBoard: true,
-              top_badge: true,
-              featured_badge: true,
-              chatStatus: true,
-              chatWaitTime: true,
-              callStatus: true,
-              callWaitTime: true,
-              videoCallRate: true,
-              reportRate: true,
-              instaProfileLink: true,
-              facebookProfileLink: true,
-              linkedInProfileLink: true,
-              youtubeChannelLink: true,
-              websiteProfileLink: true,
-              loginBio: true,
-              created_at: true,
-              updated_at: true,
-              stories: {
-                where: { created_at: { not: null } },
-                select: {
-                  id: true,
-                  mediaType: true,
-                  media: true,
-                  created_at: true,
-                  _count: {
-                    select: { story_view_count: true }
-                  }
-                },
-                orderBy: { created_at: "desc" },
-                take: 20,
-              },
-              astrologerGifts: {
-                where: { isActive: true, isDelete: false },
-                select: {
-                  id: true,
-                  giftId: true,
-                  giftAmount: true,
-                  created_at: true,
-                  gift: {
-                    select: {
-                      id: true,
-                      name: true,
-                      image: true,
-                      amount: true,
-                    }
-                  }
-                },
-                orderBy: { created_at: "desc" },
-                take: 10,
-              },
-              commissions: {
-                where: { isActive: true, isDelete: false },
-                select: {
-                  id: true,
-                  commissionTypeId: true,
-                  commission: true,
-                  created_at: true,
-                  commissionType: {
-                    select: {
-                      id: true,
-                      name: true,
-                    }
-                  }
-                },
-              },
-              reviews: {
-                where: { isActive: true, isDelete: false },
-                select: {
-                  id: true,
-                  rating: true,
-                  review: true,
-                  reply: true,
-                  isPublic: true,
-                  created_at: true,
-                  user: {
-                    select: {
-                      id: true,
-                      name: true,
-                      profile: true,
-                    }
-                  }
-                },
-                orderBy: { created_at: "desc" },
-                take: 50,
-              },
-              users: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  profile: true,
-                }
-              },
-              _count: {
-                select: {
-                  followers: true,
-                  reviews: true,
-                  chatrequests: true,
-                  callrequests: true,
-                  order_requests: true,
-                }
-              }
-            },
-          });
-        }
-      }
-    } else {
-
+      } catch (e) { /* Not an ID */ }
     }
 
     if (!astrologer) {
-
       return NextResponse.json({ error: "Astrologer not found" }, { status: 404 });
     }
 
-
-
-    // ✅ Fetch additional relations not available via direct include
-    const [assistants, availabilities, reviewsAgg] = await Promise.all([
-      // Assistants
+    // --- 2. Fetch Lookup Tables ---
+    const [assistants, availabilities, reviewsAgg, allSkills, allLanguages] = await Promise.all([
       prisma.astrologer_assistants.findMany({
-        where: {
-          astrologerId: astrologer.id,
-          isActive: true,
-          isDelete: false
-        },
+        where: { astrologerId: astrologer.id, isActive: true, isDelete: false },
         select: {
-          id: true,
-          name: true,
-          email: true,
-          contactNo: true,
-          gender: true,
-          primarySkill: true,
-          allSkill: true,
-          languageKnown: true,
-          experienceInYears: true,
-          profile: true,
+          id: true, name: true, email: true, contactNo: true, gender: true,
+          primarySkill: true, allSkill: true, languageKnown: true, experienceInYears: true, profile: true,
         },
       }),
-
-      // Availabilities
       prisma.astrologer_availabilities.findMany({
-        where: {
-          astrologerId: astrologer.id,
-          isActive: true,
-          isDelete: false
-        },
-        select: {
-          id: true,
-          day: true,
-          fromTime: true,
-          toTime: true
-        },
+        where: { astrologerId: astrologer.id, isActive: true, isDelete: false },
+        select: { id: true, day: true, fromTime: true, toTime: true },
         orderBy: { id: "asc" },
       }),
-
-      // Aggregate rating stats
       prisma.user_reviews.aggregate({
-        where: {
-          astrologerId: astrologer.id,
-          isActive: true,
-          isDelete: false
-        },
+        where: { astrologerId: astrologer.id, isActive: true, isDelete: false },
         _avg: { rating: true },
         _count: { _all: true },
       }),
-    ]);
-
-    const avgRating = reviewsAgg._avg?.rating ?? null;
-    const reviewsCount = reviewsAgg._count?._all ?? 0;
-
-    // ✅ Fetch skill and language mappings
-    const [allSkills, allLanguages] = await Promise.all([
       prisma.skills.findMany({
         where: { isActive: true, isDelete: false },
         select: { id: true, name: true }
@@ -568,81 +169,67 @@ export async function GET(
       })
     ]);
 
-    const skillMap = new Map(allSkills.map(skill => [skill.id.toString(), skill.name]));
-    const languageMap = new Map(allLanguages.map(lang => [lang.id.toString(), lang.languageName]));
+    // --- 3. Build Maps (ID -> Name) ---
+    const skillMap = new Map(allSkills.map(s => [s.id.toString(), s.name]));
+    const languageMap = new Map(allLanguages.map(l => [l.id.toString(), l.languageName]));
 
-    // ✅ Convert IDs to names
-    const primarySkillName = astrologer.primarySkill
-      ? skillMap.get(astrologer.primarySkill) || astrologer.primarySkill
-      : null;
+    const avgRating = reviewsAgg._avg?.rating ?? null;
+    const reviewsCount = reviewsAgg._count?._all ?? 0;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.gyanitalk.com';
 
-    const allSkillNames = astrologer.allSkill
-      ? astrologer.allSkill.split(',')
-        .map((id: string) => skillMap.get(id.trim()) || id.trim())
-        .filter(Boolean)
-        .join(', ')
-      : null;
+    // --- 4. Resolve IDs to Names ---
+    const allSkillNames = mapIdsToNames(astrologer.allSkill, skillMap);
+    // If no primary skill map found, default to "Astrologer"
+    const primarySkillName = mapIdsToNames(astrologer.primarySkill, skillMap) || "Astrologer"; 
+    const languageNames = mapIdsToNames(astrologer.languageKnown, languageMap);
 
-    const languageNames = astrologer.languageKnown
-      ? astrologer.languageKnown.split(',')
-        .map((id: string) => languageMap.get(id.trim()) || id.trim())
-        .filter(Boolean)
-        .join(', ')
-      : null;
+    const absoluteProfileImage = cleanImagePath(astrologer.profileImage, baseUrl);
 
-    // ✅ Generate slug if missing
+    // Generate slug
     const astrologerSlug = astrologer.slug || astrologer.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // ✅ Build comprehensive SEO
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const astrologerUrl = `${baseUrl}/landing/astro/${astrologerSlug}`;
 
+    // --- 5. FORCE GENERATE SEO (IGNORING DB GARBAGE) ---
     const seoData = {
       slug: astrologerSlug,
-      metaTitle: astrologer.metaTitle ||
-        `${astrologer.name} - Expert ${primarySkillName || 'Astrologer'} | ${astrologer.experienceInYears}+ Years Experience`,
-      metaDescription: astrologer.metaDescription ||
-        `Consult with ${astrologer.name}, a verified ${primarySkillName || 'astrologer'} with ${astrologer.experienceInYears}+ years of experience. ${astrologer.loginBio?.substring(0, 100) || 'Get expert astrological guidance'}. Starting at ₹${astrologer.charge}/min.`,
-      metaKeywords: astrologer.metaKeywords ||
-        `${astrologer.name}, ${primarySkillName}, astrologer, online consultation, ${languageNames}, ${astrologer.currentCity || 'India'}`,
-      canonicalUrl: astrologer.canonicalUrl || astrologerUrl,
-      ogTitle: astrologer.ogTitle || astrologer.metaTitle || astrologer.name,
-      ogDescription: astrologer.ogDescription || astrologer.metaDescription ||
-        `Expert ${primarySkillName || 'astrologer'} with ${astrologer.experienceInYears}+ years experience`,
-      ogImage: astrologer.ogImage || astrologer.profileImage,
+      
+      // 🔥 CRITICAL FIX: Direct string construction. NO check for existing metaTitle.
+      metaTitle: `${astrologer.name} - Expert ${primarySkillName} | ${astrologer.experienceInYears}+ Years Experience`,
+      
+      metaDescription: `Consult with ${astrologer.name}, a verified ${primarySkillName} with ${astrologer.experienceInYears}+ years of experience. ${astrologer.loginBio?.substring(0, 100) || 'Get expert astrological guidance'}. Starting at ₹${astrologer.charge}/min.`,
+      
+      metaKeywords: `${astrologer.name}, ${allSkillNames}, astrologer, online consultation, ${languageNames}, ${astrologer.currentCity || 'India'}`,
+      
+      canonicalUrl: astrologerUrl,
+      
+      ogTitle: `${astrologer.name} | Expert ${primarySkillName}`,
+      ogDescription: `Connect with ${astrologer.name}, a verified astrologer with ${astrologer.experienceInYears}+ years experience.`,
+      ogImage: absoluteProfileImage,
       ogUrl: astrologerUrl,
       ogType: 'profile',
-      twitterTitle: astrologer.twitterTitle || astrologer.metaTitle || astrologer.name,
-      twitterDescription: astrologer.twitterDescription || astrologer.metaDescription,
-      twitterImage: astrologer.twitterImage || astrologer.profileImage,
+      
+      twitterTitle: `${astrologer.name} on Gyanitalk`,
+      twitterDescription: `Expert ${primarySkillName} with ${astrologer.experienceInYears}+ years experience.`,
+      twitterImage: absoluteProfileImage,
       twitterCard: 'summary_large_image',
 
-      // Schema.org JSON-LD
-      schemaJson: astrologer.schemaJson || JSON.stringify({
+      // Schema
+      schemaJson: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Person",
         "name": astrologer.name,
-        "jobTitle": primarySkillName || "Astrologer",
-        "description": astrologer.loginBio || `Expert ${primarySkillName || 'astrologer'} with ${astrologer.experienceInYears}+ years of experience`,
-        "image": astrologer.profileImage,
+        "jobTitle": primarySkillName, // ✅ Now uses "Vedic Astrology"
+        "description": astrologer.loginBio,
+        "image": absoluteProfileImage,
         "url": astrologerUrl,
         "telephone": astrologer.contactNo,
         "email": astrologer.email,
-        "address": astrologer.currentCity ? {
-          "@type": "Place",
-          "name": astrologer.currentCity
-        } : undefined,
-        "alumniOf": astrologer.college ? {
-          "@type": "Organization",
-          "name": astrologer.college
-        } : undefined,
-        "hasCredential": astrologer.degree ? {
-          "@type": "EducationalOccupationalCredential",
-          "credentialCategory": astrologer.degree
-        } : undefined,
+        "address": astrologer.currentCity ? { "@type": "Place", "name": astrologer.currentCity } : undefined,
+        "alumniOf": astrologer.college ? { "@type": "Organization", "name": astrologer.college } : undefined,
         "aggregateRating": avgRating ? {
           "@type": "AggregateRating",
           "ratingValue": avgRating,
@@ -662,38 +249,22 @@ export async function GET(
             "unitText": "per minute"
           }
         },
-        "knowsAbout": allSkillNames ? allSkillNames.split(',').map((s: string) => s.trim()) : [],
-        "knowsLanguage": languageNames ? languageNames.split(',').map((l: string) => l.trim()) : []
+        "knowsAbout": allSkillNames ? allSkillNames.split(',').map(s => s.trim()) : [],
+        "knowsLanguage": languageNames ? languageNames.split(',').map(l => l.trim()) : [],
       }),
 
-      // Breadcrumb Schema
       breadcrumbSchema: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": baseUrl
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Astrologers",
-            "item": `${baseUrl}/landing/astro`
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "name": astrologer.name,
-            "item": astrologerUrl
-          }
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
+          { "@type": "ListItem", "position": 2, "name": "Astrologers", "item": `${baseUrl}/landing/astro` },
+          { "@type": "ListItem", "position": 3, "name": astrologer.name, "item": astrologerUrl }
         ]
       })
     };
 
-    // ✅ Build response payload
+    // --- 6. Payload ---
     const payload = {
       id: astrologer.id.toString(),
       userId: astrologer.userId.toString(),
@@ -703,10 +274,13 @@ export async function GET(
       contactNo: astrologer.contactNo,
       gender: astrologer.gender,
       birthDate: astrologer.birthDate,
-      primarySkill: primarySkillName, // ✅ Name instead of ID
-      allSkill: allSkillNames, // ✅ Names instead of IDs
-      languageKnown: languageNames, // ✅ Names instead of IDs
-      profileImage: astrologer.profileImage,
+      
+      // ✅ Corrected Text Values
+      primarySkill: primarySkillName,
+      allSkill: allSkillNames,
+      languageKnown: languageNames,
+      profileImage: absoluteProfileImage,
+      
       charge: astrologer.charge,
       experienceInYears: astrologer.experienceInYears,
       dailyContribution: astrologer.dailyContribution,
@@ -718,8 +292,8 @@ export async function GET(
       isVerified: astrologer.isVerified,
       isLiveOff: astrologer.isLiveOff,
       monthlyEarning: astrologer.monthlyEarning,
-      whatwillDo: astrologer.whatwillDo,
-      whyOnBoard: astrologer.whyOnBoard,
+      whatwillDo: astrologer.whatwillDo || "NA",
+      whyOnBoard: astrologer.whyOnBoard || "NA",
       top_badge: astrologer.top_badge,
       featured_badge: astrologer.featured_badge,
       chatStatus: astrologer.chatStatus,
@@ -728,8 +302,6 @@ export async function GET(
       callWaitTime: astrologer.callWaitTime,
       videoCallRate: astrologer.videoCallRate,
       reportRate: astrologer.reportRate,
-
-      // Social links
       socialLinks: {
         instagram: astrologer.instaProfileLink,
         facebook: astrologer.facebookProfileLink,
@@ -737,37 +309,22 @@ export async function GET(
         youtube: astrologer.youtubeChannelLink,
         website: astrologer.websiteProfileLink,
       },
-
       loginBio: astrologer.loginBio,
       created_at: astrologer.created_at,
       updated_at: astrologer.updated_at,
-
-      // Relations
-      assistants: assistants.map(a => {
-        // Convert assistant's skills/languages too
-        const assistantPrimarySkill = a.primarySkill
-          ? skillMap.get(a.primarySkill) || a.primarySkill
-          : null;
-        const assistantAllSkills = a.allSkill
-          ? a.allSkill.split(',').map(id => skillMap.get(id.trim()) || id.trim()).join(', ')
-          : null;
-        const assistantLanguages = a.languageKnown
-          ? a.languageKnown.split(',').map(id => languageMap.get(id.trim()) || id.trim()).join(', ')
-          : null;
-
-        return {
-          id: a.id.toString(),
-          name: a.name,
-          email: a.email,
-          contactNo: a.contactNo,
-          gender: a.gender,
-          primarySkill: assistantPrimarySkill,
-          allSkill: assistantAllSkills,
-          languageKnown: assistantLanguages,
-          experienceInYears: a.experienceInYears,
-          profile: a.profile,
-        };
-      }),
+      
+      assistants: assistants.map(a => ({
+        id: a.id.toString(),
+        name: a.name,
+        email: a.email,
+        contactNo: a.contactNo,
+        gender: a.gender,
+        primarySkill: mapIdsToNames(a.primarySkill, skillMap),
+        allSkill: mapIdsToNames(a.allSkill, skillMap),
+        languageKnown: mapIdsToNames(a.languageKnown, languageMap),
+        experienceInYears: a.experienceInYears,
+        profile: cleanImagePath(a.profile, baseUrl),
+      })),
 
       availabilities: availabilities.map(av => ({
         id: av.id.toString(),
@@ -779,7 +336,7 @@ export async function GET(
       stories: astrologer.stories.map((s: any) => ({
         id: s.id.toString(),
         mediaType: s.mediaType,
-        media: s.media,
+        media: cleanImagePath(s.media, baseUrl),
         created_at: s.created_at,
         viewCount: s._count.story_view_count,
       })),
@@ -792,7 +349,7 @@ export async function GET(
         gift: g.gift ? {
           id: g.gift.id.toString(),
           name: g.gift.name,
-          image: g.gift.image,
+          image: cleanImagePath(g.gift.image, baseUrl),
           amount: g.gift.amount,
         } : null,
       })),
@@ -808,7 +365,6 @@ export async function GET(
         }
       })),
 
-      // Reviews with stats
       reviews: astrologer.reviews.map((r: any) => ({
         id: r.id.toString(),
         rating: r.rating,
@@ -819,13 +375,11 @@ export async function GET(
         user: r.user ? {
           id: r.user.id.toString(),
           name: r.user.name,
-          profile: r.user.profile,
+          profile: cleanImagePath(r.user.profile, baseUrl),
         } : null,
       })),
       avgRating: avgRating ? Number(avgRating.toFixed(1)) : null,
       reviewsCount,
-
-      // Counts
       stats: {
         followerCount: astrologer._count.followers,
         reviewCount: astrologer._count.reviews,
@@ -833,13 +387,11 @@ export async function GET(
         callRequestCount: astrologer._count.callrequests,
         orderCount: astrologer._count.order_requests,
       },
-
-      // User/owner info
       user: astrologer.users ? {
         id: astrologer.users.id.toString(),
         name: astrologer.users.name,
         email: astrologer.users.email,
-        profile: astrologer.users.profile,
+        profile: cleanImagePath(astrologer.users.profile, baseUrl),
       } : null,
     };
 
@@ -860,7 +412,5 @@ export async function GET(
       error: "Internal server error",
       message: process.env.NODE_ENV === 'development' ? err.message : undefined
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
