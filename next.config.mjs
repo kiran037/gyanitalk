@@ -7,12 +7,6 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000",
-        pathname: "/**"
-      },
-      {
         protocol: "https",
         hostname: "gyanitalk.com",
         pathname: "/**"
@@ -24,7 +18,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "img.youtube.com", // Add this
+        hostname: "img.youtube.com",
         pathname: "/**"
       },
       {
@@ -46,17 +40,40 @@ const nextConfig = {
         protocol: "https",
         hostname: "pub-b7fd9c30cdbf439183b75041f5f71b92.r2.dev",
         pathname: "/**"
-      }
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: "/**"
+      },
+      {
+        protocol: "https",
+        hostname: "app.gyanitalk.com",
+        pathname: "/**",
+      },
     ]
   },
 
+  // --- 1. MASK S3 BUCKET (The Security Fix) ---
+  async rewrites() {
+    return [
+      {
+        // When user visits: /assets/public/storage/images/image.png
+        source: '/assets/:path*',
+        // Next.js fetches: https://gyanitalk.s3.../public/storage/images/image.png
+        destination: 'https://gyanitalk.s3.ap-south-1.amazonaws.com/:path*',
+      },
+    ];
+  },
+
+  // --- 2. EXISTING REDIRECTS ---
   async redirects() {
     return [
       // Static page redirects
       {
         source: "/landing/about-us",
         destination: "/about-us",
-        permanent: true, // 301 redirect
+        permanent: true,
       },
       {
         source: "/landing/terms-of-service",
@@ -74,7 +91,7 @@ const nextConfig = {
         permanent: true,
       },
       
-      // Dynamic route redirects with path parameters
+      // Dynamic route redirects
       {
         source: "/landing/blog/:path*",
         destination: "/blog/:path*",

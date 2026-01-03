@@ -1,6 +1,13 @@
-// src/app/api/landing/astro/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+
+// Helper to strip 'public/' from database paths
+const cleanImagePath = (path: string | null, baseUrl: string) => {
+  if (!path) return null;
+  const cleanPath = path.replace(/^(\/)?public\//, '');
+  return `${baseUrl}/${cleanPath}`;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,16 +18,15 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-// ✅ Build WHERE clause with MySQL-compatible search (NULL-safe)
-const where: any = { isActive: true, isDelete: false };
-if (search) {
-  where.OR = [
-    { name: { contains: search } },
-    { slug: { not: null, contains: search } },
-    { metaKeywords: { not: null, contains: search } },
-    { loginBio: { not: null, contains: search } },
-  ];
-}
+    const where: any = { isActive: true, isDelete: false };
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { slug: { not: null, contains: search } },
+        { metaKeywords: { not: null, contains: search } },
+        { loginBio: { not: null, contains: search } },
+      ];
+    }
 
     const matching = await prisma.astrologers.findMany({
       where,
@@ -28,6 +34,20 @@ if (search) {
     });
 
     const allIds: bigint[] = matching.map(m => m.id);
+
+    // Fetch skills and languages for mapping
+    const [allSkills, allLanguages] = await Promise.all([
+        prisma.skills.findMany({
+            where: { isActive: true, isDelete: false },
+            select: { id: true, name: true }
+        }),
+        prisma.languages.findMany({
+            select: { id: true, languageName: true }
+        })
+    ]);
+
+    const skillMap = new Map(allSkills.map(s => [s.id.toString(), s.name]));
+    const languageMap = new Map(allLanguages.map(l => [l.id.toString(), l.languageName]));
 
     if (allIds.length === 0) {
       return NextResponse.json({
@@ -44,7 +64,7 @@ if (search) {
       });
     }
 
-    // Split into topBadgeIds and otherIds
+    // Sort IDs based on review counts and badges
     const topBadgeIds = matching
       .filter(m => !!(m.top_badge && String(m.top_badge).trim() !== ""))
       .map(m => m.id);
@@ -52,16 +72,9 @@ if (search) {
       .filter(m => !(m.top_badge && String(m.top_badge).trim() !== ""))
       .map(m => m.id);
 
-    // -------------------------
-    // Step 2: Get review stats for all IDs
-    // -------------------------
     const reviewAgg = await prisma.user_reviews.groupBy({
       by: ["astrologerId"],
-      where: {
-        astrologerId: { in: allIds },
-        isActive: true,
-        isDelete: false
-      },
+      where: { astrologerId: { in: allIds }, isActive: true, isDelete: false },
       _count: { _all: true },
       _avg: { rating: true }
     });
@@ -75,14 +88,8 @@ if (search) {
       });
     });
 
-    const getReviewCount = (id: bigint) => {
-      const v = reviewMap.get(id.toString());
-      return v ? v.count : 0;
-    };
+    const getReviewCount = (id: bigint) => reviewMap.get(id.toString())?.count ?? 0;
 
-    // -------------------------
-    // Step 3: Sort by review count (TOP badge first, then others)
-    // -------------------------
     const sortIdsByReviewsDesc = (ids: bigint[]) => {
       return ids.slice().sort((a, b) => {
         const ra = getReviewCount(a);
@@ -96,25 +103,14 @@ if (search) {
     const sortedOther = sortIdsByReviewsDesc(otherIds);
     const orderedIds = [...sortedTop, ...sortedOther];
     const total = orderedIds.length;
-
-    // -------------------------
-    // Step 4: Paginate
-    // -------------------------
     const pageIds = orderedIds.slice(skip, skip + limit);
 
     if (pageIds.length === 0) {
       return NextResponse.json({
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        data: [],
+        page, limit, total, totalPages: Math.ceil(total / limit), data: [],
       });
     }
 
-    // -------------------------
-    // Step 5: Fetch astrologer data WITH SEO fields
-    // -------------------------
     const rows = await prisma.astrologers.findMany({
       where: { id: { in: pageIds } },
       select: {
@@ -148,105 +144,95 @@ if (search) {
         callWaitTime: true,
         videoCallRate: true,
         loginBio: true,
-        _count: {
-          select: {
-            followers: true,
-            reviews: true
-          },
-        },
+        _count: { select: { followers: true, reviews: true } },
       },
     });
 
-    // Map rows by ID for ordering
     const rowById = new Map<string, any>();
     rows.forEach(r => rowById.set(r.id.toString(), r));
 
-    // -------------------------
-    // Step 6: Fetch skill & language mappings
-    // -------------------------
-    const allSkills = await prisma.skills.findMany({
-      where: { isActive: true, isDelete: false },
-      select: { id: true, name: true }
-    });
-    const skillMap = new Map(allSkills.map(s => [s.id.toString(), s.name]));
+    const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
 
-    const allLanguages = await prisma.languages.findMany({
-      select: { id: true, languageName: true }
-    });
-    const languageMap = new Map(allLanguages.map(l => [l.id.toString(), l.languageName]));
+    // ✅ Helper to convert IDs to Names
+    const mapIdsToNames = (idsString: string | null, map: Map<string, string>) => {
+        if (!idsString) return "";
+        return idsString
+          .split(',')
+          .map(id => map.get(id.trim()))
+          .filter(Boolean)
+          .join(', ');
+    };
 
-   const results = pageIds.map((idBig) => {
-  const r = rowById.get(idBig.toString());
-  if (!r) return null;
+    const results = pageIds.map((idBig) => {
+      const r = rowById.get(idBig.toString());
+      if (!r) return null;
 
-  // ✅ Generate slug if missing
-  const astrologerSlug = r.slug || r.name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+      const astrologerSlug = r.slug || r.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-  const languageNames = r.languageKnown
-    ? r.languageKnown.split(',')
-      .map((id: string) => languageMap.get(id.trim()) || id.trim())
-      .filter(Boolean)
-      .join(', ')
-    : null;
+      // ✅ Map IDs to Text
+      const languageNames = mapIdsToNames(r.languageKnown, languageMap);
+      const primarySkillName = mapIdsToNames(r.primarySkill, skillMap) || "Astrologer";
+      const allSkillNames = mapIdsToNames(r.allSkill, skillMap);
 
-  const primarySkillName = r.primarySkill
-    ? skillMap.get(r.primarySkill) || r.primarySkill
-    : null;
+      const agg = reviewMap.get(r.id.toString());
+      const avgRating = agg?.avg ?? null;
+      const reviewCount = agg?.count ?? (r._count?.reviews ?? 0);
+      
+      // ✅ Fix Image Path
+      const absoluteProfileImage = cleanImagePath(r.profileImage, baseUrl);
 
-  const allSkillNames = r.allSkill
-    ? r.allSkill.split(',')
-      .slice(0, 3)
-      .map((id: string) => skillMap.get(id.trim()) || id.trim())
-      .join(', ')
-    : null;
-
-  const agg = reviewMap.get(r.id.toString());
-  const avgRating = agg?.avg ?? null;
-  const reviewCount = agg?.count ?? (r._count?.reviews ?? 0);
-
-  return {
-    id: r.id.toString(),
-    name: r.name,
-    slug: astrologerSlug, // ✅ Use generated slug
-    profileImage: r.profileImage,
-    primarySkill: primarySkillName,
-    allSkill: allSkillNames,
-    charge: r.charge,
-    experienceInYears: r.experienceInYears,
-    languageKnown: languageNames,
-    country: r.country,
-    isVerified: r.isVerified,
-    monthlyEarning: r.monthlyEarning,
-    chatStatus: r.chatStatus,
-    chatWaitTime: r.chatWaitTime,
-    callStatus: r.callStatus,
-    callWaitTime: r.callWaitTime,
-    videoCallRate: r.videoCallRate,
-    followerCount: r._count?.followers ?? 0,
-    reviewCount,
-    avgRating: avgRating ? Number(avgRating.toFixed(1)) : null,
-    loginBio: r.loginBio, 
-    badges: {
-      top_badge: r.top_badge,
-    },
-    seo: {
-      metaTitle: r.metaTitle || `${r.name} - Expert Astrologer | ${primarySkillName || 'Astrology'}`,
-      metaDescription: r.metaDescription || `Consult with ${r.name}, experienced astrologer with ${r.experienceInYears}+ years. Get expert guidance on ${primarySkillName}. ₹${r.charge}/min`,
-      metaKeywords: r.metaKeywords || `${r.name}, astrologer, ${primarySkillName}, online consultation`,
-      canonicalUrl: r.canonicalUrl || `/landing/astro/${astrologerSlug}`, // ✅ Use slug in canonical
-      ogTitle: r.ogTitle || r.metaTitle || r.name,
-      ogDescription: r.ogDescription || r.metaDescription,
-      ogImage: r.ogImage || r.profileImage,
-      twitterTitle: r.twitterTitle || r.metaTitle || r.name,
-      twitterDescription: r.twitterDescription || r.metaDescription,
-      twitterImage: r.twitterImage || r.profileImage,
-      schemaJson: r.schemaJson,
-    }
-  };
-}).filter(Boolean);
+      return {
+        id: r.id.toString(),
+        name: r.name,
+        slug: astrologerSlug,
+        profileImage: absoluteProfileImage,
+        primarySkill: primarySkillName, // Text
+        allSkill: allSkillNames,       // Text
+        charge: r.charge,
+        experienceInYears: r.experienceInYears,
+        languageKnown: languageNames,
+        country: r.country,
+        isVerified: r.isVerified,
+        monthlyEarning: r.monthlyEarning,
+        chatStatus: r.chatStatus,
+        chatWaitTime: r.chatWaitTime,
+        callStatus: r.callStatus,
+        callWaitTime: r.callWaitTime,
+        videoCallRate: r.videoCallRate,
+        followerCount: r._count?.followers ?? 0,
+        reviewCount,
+        avgRating: avgRating ? Number(avgRating.toFixed(1)) : null,
+        loginBio: r.loginBio,
+        badges: {
+          top_badge: r.top_badge,
+        },
+        seo: {
+          metaTitle: r.metaTitle || `${r.name} - Expert ${primarySkillName}`,
+          metaDescription: r.metaDescription || `Consult with ${r.name}, experienced astrologer. Get expert guidance on ${primarySkillName}. ₹${r.charge}/min`,
+          metaKeywords: r.metaKeywords || `${r.name}, astrologer, ${primarySkillName}, online consultation`,
+          canonicalUrl: r.canonicalUrl || `/landing/astro/${astrologerSlug}`,
+          ogTitle: r.ogTitle || r.metaTitle || r.name,
+          ogDescription: r.ogDescription || r.metaDescription,
+          twitterTitle: r.twitterTitle || r.metaTitle || r.name,
+          twitterDescription: r.twitterDescription || r.metaDescription,
+          ogImage: r.ogImage ? cleanImagePath(r.ogImage, baseUrl) : absoluteProfileImage,
+          twitterImage: r.twitterImage ? cleanImagePath(r.twitterImage, baseUrl) : absoluteProfileImage,
+          
+          schemaJson: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": r.name,
+            // ✅ Fix jobTitle to be text
+            "jobTitle": primarySkillName,
+            "url": `${baseUrl}/landing/astro/${astrologerSlug}`,
+            "image": absoluteProfileImage,
+            "description": r.loginBio || `Expert astrologer with ${r.experienceInYears}+ years of experience`,
+            "knowsAbout": allSkillNames ? allSkillNames.split(',').map((s: string) => s.trim()) : [],
+            "knowsLanguage": languageNames ? languageNames.split(',').map((l: string) => l.trim()) : []
+          }),
+        }
+      };
+    }).filter(Boolean);
 
     const safeResults = results.filter((r): r is NonNullable<typeof r> => r != null);
 
@@ -255,11 +241,9 @@ if (search) {
         ? `${search} - Find Astrologers | Page ${page}`
         : `Top Verified Astrologers Online | Page ${page}`,
       description: search
-        ? `Search results for "${search}". Browse ${total} verified astrologers specializing in various astrological services.`
-        : `Connect with ${total}+ verified astrologers. Get instant consultations for love, career, health & more. Page ${page} of ${Math.ceil(total / limit)}.`,
-      keywords: search
-        ? `${search}, astrologers, online astrology consultation`
-        : "astrologers, online astrology, verified astrologers, best astrologers, astrology consultation",
+        ? `Search results for "${search}". Browse verified astrologers.`
+        : `Connect with ${total}+ verified astrologers. Page ${page}.`,
+      keywords: "astrologers, online astrology, verified astrologers",
       canonical: `/landing/astro?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
       structuredData: {
         "@context": "https://schema.org",
@@ -270,9 +254,11 @@ if (search) {
           "position": skip + index + 1,
           "item": {
             "@type": "Person",
-            "@id": `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASEURL || 'https://yourdomain.com'}/landing/astro/${astro.slug || astro.id}`,
+            "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/landing/astro/${astro.slug}`,
             "name": astro.name,
             "image": astro.profileImage,
+            // ✅ Use text skill
+            "jobTitle": astro.primarySkill, 
             "description": astro.loginBio || `Expert astrologer specializing in ${astro.primarySkill}`,
             "aggregateRating": astro.avgRating ? {
               "@type": "AggregateRating",

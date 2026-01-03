@@ -17,14 +17,12 @@ import {
   Award,
   Calendar,
   GraduationCap,
-  Users,
   MessageSquare,
   Phone,
   Video,
   BookOpen,
   ArrowLeft,
   ChevronRight,
-  Sparkles,
   BadgeCheck,
   Share2
 } from "lucide-react";
@@ -32,7 +30,7 @@ import Link from "next/link";
 import { avatar } from "@/lib/images";
 import { motion, AnimatePresence } from "framer-motion";
 
-/* ================= TYPES (UNCHANGED) ================= */
+/* ================= TYPES ================= */
 interface Review {
   id: string;
   rating: number;
@@ -67,7 +65,8 @@ interface Assistant {
   profile: string | null;
 }
 
-interface Astrologer {
+// Ensure this matches the Server Component interface to avoid TS errors
+export interface Astrologer {
   id: string;
   userId: string;
   name: string;
@@ -122,6 +121,8 @@ interface Astrologer {
     callRequestCount: number;
     orderCount: number;
   };
+  // SEO is passed from server but not strictly needed in UI props unless used
+  seo?: any; 
 }
 
 interface Props {

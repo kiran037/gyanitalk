@@ -11,7 +11,6 @@ import {
   MapPin,
   Phone,
   ArrowRight,
-  Smartphone,
   ShieldCheck,
   CreditCard,
 } from "lucide-react";
@@ -20,18 +19,8 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   const zodiacSigns = [
-    "Aries",
-    "Taurus",
-    "Gemini",
-    "Cancer",
-    "Leo",
-    "Virgo",
-    "Libra",
-    "Scorpio",
-    "Sagittarius",
-    "Capricorn",
-    "Aquarius",
-    "Pisces",
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
   ];
 
   return (
@@ -72,8 +61,11 @@ export default function Footer() {
 
       <div className="mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 lg:px-8 lg:pt-16">
         <div className="xl:grid xl:grid-cols-12 xl:gap-8">
+          
           {/* Brand & Contact (Takes 4 columns on large screens) */}
           <div className="space-y-8 xl:col-span-4">
+            
+            {/* Logo */}
             <Link href="/" className="group flex w-fit items-center gap-3">
               <div className="relative h-14 w-14 overflow-hidden rounded-xl ring-1 ring-gray-200 transition-all duration-300 group-hover:ring-[#FF6B35]/50 dark:ring-gray-800">
                 <Image
@@ -88,11 +80,40 @@ export default function Footer() {
                   Gyani<span className="text-[#FF6B35]">Talk</span>
                 </span>
                 <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-500">
-                  India's #1 Astro App
+                  India's First Trusted Astrology Awareness Platform
                 </span>
               </div>
             </Link>
 
+            {/* --- NEW: Govt Recognition Section (Updated) --- */}
+            <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <p className="text-[10px] text-center font-bold uppercase tracking-widest text-gray-500">
+                  Recognized by
+                </p>
+                <div className="flex justify-around items-center gap-5">
+                    {/* iStart Logo - Larger, Rounded corners, No Background Box */}
+                    <div className="relative h-16 w-32 overflow-hidden rounded-xl">
+                      <Image 
+                        src="/footer/istart.jpg" 
+                        alt="iStart Rajasthan" 
+                        fill 
+                        className="object-contain" 
+                      />
+                    </div>
+                    
+                    {/* DOITC Logo - Larger, Circular/Free-floating, No Background Box */}
+                    <div className="relative h-20 w-20">
+                      <Image 
+                        src="/footer/doitc.png" 
+                        alt="Department of IT & Communication" 
+                        fill 
+                        className="object-contain drop-shadow-sm" 
+                      />
+                    </div>
+                </div>
+            </div>
+
+            {/* Address Card */}
             <div className="space-y-4 rounded-2xl bg-gray-50 p-6 dark:bg-gray-900/50">
               <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
                 <MapPin className="mt-1 h-5 w-5 shrink-0 text-[#FF6B35]" />
@@ -123,11 +144,12 @@ export default function Footer() {
                   href="mailto:career@gyanitalk.com"
                   className="font-medium hover:text-[#FF6B35]"
                 >
-                  career@gyanitalk.com
+                  contact@gyanitalk.com
                 </a>
               </div>
             </div>
 
+            {/* Social Media */}
             <div className="flex gap-4">
               {[
                 {
@@ -260,7 +282,12 @@ export default function Footer() {
               </p>
 
               <div className="mt-6 space-y-3">
-                <button className="flex w-full items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-white transition-transform hover:scale-105 hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100">
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.app.gyanitalk" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-white transition-transform hover:scale-105 hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100"
+                >
                   <svg
                     className="h-5 w-5"
                     viewBox="0 0 24 24"
@@ -272,8 +299,13 @@ export default function Footer() {
                     <span className="font-light opacity-80">Get it on</span>
                     <span className="text-sm font-bold">Google Play</span>
                   </div>
-                </button>
-                <button className="flex w-full items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-white transition-transform hover:scale-105 hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100">
+                </a>
+                <a 
+                  href="https://apps.apple.com/in/app/gyanitalk/id6742021396" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-white transition-transform hover:scale-105 hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100"
+                >
                   <svg
                     className="h-5 w-5"
                     viewBox="0 0 24 24"
@@ -287,7 +319,7 @@ export default function Footer() {
                     </span>
                     <span className="text-sm font-bold">App Store</span>
                   </div>
-                </button>
+                </a>
               </div>
 
               <div className="mt-8">
@@ -297,7 +329,6 @@ export default function Footer() {
                 <div className="mt-3 flex gap-2 text-gray-400">
                   <CreditCard className="h-6 w-6" />
                   <ShieldCheck className="h-6 w-6" />
-                  {/* You can add real payment icons here later */}
                   <span className="text-xs font-medium">
                     VISA / UPI / RuPay
                   </span>

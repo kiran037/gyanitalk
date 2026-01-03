@@ -1,12 +1,19 @@
-
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { 
-  Plus, Flag, ChevronDown, ChevronRight, Edit2, 
-  Search as SearchIcon, Image as ImageIcon, Upload, 
-  Link as LinkIcon, X, CheckCircle2, AlertCircle 
+import {
+  Plus,
+  Flag,
+  ChevronDown,
+  ChevronRight,
+  Edit2,
+  Search as SearchIcon,
+  Image as ImageIcon,
+  Upload,
+  Link as LinkIcon,
+  X,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/adminUI/PageHeader";
 import { Button } from "@/components/adminUI/Button";
@@ -18,7 +25,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { avatar } from "@/lib/images";
 
 // Assuming you have the upload utility saved at this path
-import { uploadImage } from "@/upload"; 
+import { uploadImage } from "@/upload";
 // ------------------------------------------------------------------------------------
 
 interface SystemFlag {
@@ -52,7 +59,7 @@ export default function SystemFlagsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
-  
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFlag, setSelectedFlag] = useState<SystemFlag | null>(null);
@@ -62,14 +69,16 @@ export default function SystemFlagsPage() {
     value: "",
     valueType: "text",
     description: "",
-    flagGroupId: 0, 
+    flagGroupId: 0,
   });
-  
+
   // Upload State
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageInputMode, setImageInputMode] = useState<"upload" | "url">("upload");
-  
+  const [imageInputMode, setImageInputMode] = useState<"upload" | "url">(
+    "upload",
+  );
+
   const addToast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,7 +96,9 @@ export default function SystemFlagsPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch("/api/settings/system-flags/groups?withFlags=false");
+      const response = await fetch(
+        "/api/settings/system-flags/groups?withFlags=false",
+      );
       const data = await response.json();
       if (data.success) {
         setGroups(data.data);
@@ -109,8 +120,8 @@ export default function SystemFlagsPage() {
         setFlags(data.data);
         // Auto expand all groups if searching
         if (searchQuery) {
-            const allGroupIds = data.data.map((f: SystemFlag) => f.flagGroupId);
-            setExpandedGroups([...new Set(allGroupIds)] as number[]);
+          const allGroupIds = data.data.map((f: SystemFlag) => f.flagGroupId);
+          setExpandedGroups([...new Set(allGroupIds)] as number[]);
         }
       }
     } catch (error) {
@@ -123,7 +134,9 @@ export default function SystemFlagsPage() {
   const fetchFlagsByGroup = async (groupId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/settings/system-flags/by-group/${groupId}`);
+      const response = await fetch(
+        `/api/settings/system-flags/by-group/${groupId}`,
+      );
       const data = await response.json();
       if (data.success) {
         setFlags(data.data.flags);
@@ -147,12 +160,12 @@ export default function SystemFlagsPage() {
       // Using the user's logic path
       // Define where you want these images stored. e.g., "system-flags"
       const response = await uploadImage(file, "system-flags");
-      
+
       // Assuming response contains { url: "https://..." } or { path: "..." }
       // Adjust based on your actual API response structure
-      const finalUrl = response.url || response.path || response.data?.url; 
-      
-      setFormData(prev => ({ ...prev, value: finalUrl }));
+      const finalUrl = response.url || response.path || response.data?.url;
+
+      setFormData((prev) => ({ ...prev, value: finalUrl }));
       addToast("success", "Uploaded", "Image uploaded successfully");
     } catch (error) {
       console.error(error);
@@ -207,27 +220,30 @@ export default function SystemFlagsPage() {
       description: flag.description || "",
       flagGroupId: flag.flagGroupId,
     });
-    
+
     // Auto-switch tab if value looks like a URL
-    if (flag.value && (flag.value.startsWith("http") || flag.value.startsWith("/"))) {
-        setImageInputMode("upload"); // or 'url' depending on preference, kept upload to show preview
+    if (
+      flag.value &&
+      (flag.value.startsWith("http") || flag.value.startsWith("/"))
+    ) {
+      setImageInputMode("upload"); // or 'url' depending on preference, kept upload to show preview
     }
-    
+
     setIsModalOpen(true);
   };
 
   const handleCreate = () => {
-      setSelectedFlag(null);
-      setFormData({
-        name: "",
-        displayName: "",
-        value: "",
-        valueType: "text",
-        description: "",
-        flagGroupId: selectedGroupId || (groups[0]?.id || 0), // Pre-select current group
-      });
-      setIsModalOpen(true);
-  }
+    setSelectedFlag(null);
+    setFormData({
+      name: "",
+      displayName: "",
+      value: "",
+      valueType: "text",
+      description: "",
+      flagGroupId: selectedGroupId || groups[0]?.id || 0, // Pre-select current group
+    });
+    setIsModalOpen(true);
+  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -237,21 +253,29 @@ export default function SystemFlagsPage() {
 
   const toggleGroup = (groupId: number) => {
     setExpandedGroups((prev) =>
-      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId],
     );
   };
 
-  const groupedFlags = flags.reduce((acc, flag) => {
-    const groupId = flag.flagGroupId;
-    if (!acc[groupId]) acc[groupId] = [];
-    acc[groupId].push(flag);
-    return acc;
-  }, {} as Record<number, SystemFlag[]>);
+  const groupedFlags = flags.reduce(
+    (acc, flag) => {
+      const groupId = flag.flagGroupId;
+      if (!acc[groupId]) acc[groupId] = [];
+      acc[groupId].push(flag);
+      return acc;
+    },
+    {} as Record<number, SystemFlag[]>,
+  );
 
   // Helper to determine if we are editing an Image group
   const isMasterImageGroup = () => {
-    const group = groups.find(g => g.id === formData.flagGroupId);
-    return group?.flagGroupName === "MasterImage" || formData.name.toLowerCase().includes("image");
+    const group = groups.find((g) => g.id === formData.flagGroupId);
+    return (
+      group?.flagGroupName === "MasterImage" ||
+      formData.name.toLowerCase().includes("image")
+    );
   };
 
   return (
@@ -263,7 +287,7 @@ export default function SystemFlagsPage() {
         actions={
           <Button
             variant="primary"
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="h-4 w-4" />}
             onClick={handleCreate}
           >
             Add Flag
@@ -271,44 +295,50 @@ export default function SystemFlagsPage() {
         }
       />
 
-      <div className="grid lg:grid-cols-12 gap-6 relative items-start">
+      <div className="relative grid items-start gap-6 lg:grid-cols-12">
         {/* Sidebar - Groups - Now Sticky */}
-        <div className="lg:col-span-3 lg:sticky lg:top-6">
-          <div className="bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-4 shadow-sm">
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-gray-400 mb-3 ml-2">
-                Groups
+        <div className="lg:sticky lg:top-6 lg:col-span-3">
+          <div className="rounded-xl border border-gray-200/60 bg-white/60 p-4 shadow-sm backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5">
+            <h3 className="mb-3 ml-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Groups
             </h3>
-            <div className="space-y-1 max-h-[80vh] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="custom-scrollbar max-h-[80vh] space-y-1 overflow-y-auto pr-1">
               <button
                 onClick={() => setSelectedGroupId(null)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                   selectedGroupId === null
                     ? "bg-[#FF6B35] text-white shadow-md shadow-orange-500/20"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                    <Flag className="w-4 h-4" />
-                    <span>All Flags</span>
+                  <Flag className="h-4 w-4" />
+                  <span>All Flags</span>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${selectedGroupId === null ? "bg-white/20" : "bg-gray-200 dark:bg-gray-600"}`}>
-                    {flags.length}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${selectedGroupId === null ? "bg-white/20" : "bg-gray-200 dark:bg-gray-600"}`}
+                >
+                  {flags.length}
                 </span>
               </button>
               {groups.map((group) => (
                 <button
                   key={group.id}
                   onClick={() => setSelectedGroupId(group.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                     selectedGroupId === group.id
                       ? "bg-[#FF6B35] text-white shadow-md shadow-orange-500/20"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span className="truncate text-left">{group.flagGroupName}</span>
+                  <span className="truncate text-left">
+                    {group.flagGroupName}
+                  </span>
                   {group._count && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${selectedGroupId === group.id ? "bg-white/20" : "bg-gray-200 dark:bg-gray-600"}`}>
-                        {group._count.systemflags}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${selectedGroupId === group.id ? "bg-white/20" : "bg-gray-200 dark:bg-gray-600"}`}
+                    >
+                      {group._count.systemflags}
                     </span>
                   )}
                 </button>
@@ -318,7 +348,7 @@ export default function SystemFlagsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-9 space-y-4">
+        <div className="space-y-4 lg:col-span-9">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -330,14 +360,14 @@ export default function SystemFlagsPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl p-6 animate-pulse"
+                  className="animate-pulse rounded-xl border border-gray-200/60 bg-white/60 p-6 backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
                 >
                   <div className="flex justify-between">
-                    <div className="space-y-2 w-1/2">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                    <div className="w-1/2 space-y-2">
+                      <div className="h-4 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
                     </div>
-                    <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                    <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                   </div>
                 </div>
               ))}
@@ -351,21 +381,23 @@ export default function SystemFlagsPage() {
                 return (
                   <div
                     key={groupId}
-                    className="bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl overflow-hidden shadow-sm"
+                    className="overflow-hidden rounded-xl border border-gray-200/60 bg-white/60 shadow-sm backdrop-blur-sm dark:border-gray-700/60 dark:bg-white/5"
                   >
                     <button
                       onClick={() => toggleGroup(parseInt(groupId))}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="flex w-full items-center justify-between bg-gray-50/50 p-4 transition-colors hover:bg-gray-50 dark:bg-gray-800/30 dark:hover:bg-gray-800"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-1 rounded-md transition-transform duration-200 ${isExpanded ? "rotate-90 bg-gray-200 dark:bg-gray-700" : ""}`}>
-                           <ChevronRight className="w-4 h-4 text-gray-500" />
+                        <div
+                          className={`rounded-md p-1 transition-transform duration-200 ${isExpanded ? "rotate-90 bg-gray-200 dark:bg-gray-700" : ""}`}
+                        >
+                          <ChevronRight className="h-4 w-4 text-gray-500" />
                         </div>
                         <div className="text-left">
-                          <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                             {group?.flagGroupName || "Ungrouped"}
-                            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                                {groupFlags.length}
+                            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-normal text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                              {groupFlags.length}
                             </span>
                           </h4>
                         </div>
@@ -380,67 +412,85 @@ export default function SystemFlagsPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="divide-y divide-gray-200 dark:divide-gray-700 border-t border-gray-200 dark:border-gray-700">
+                          <div className="divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-700 dark:border-gray-700">
                             {groupFlags.map((flag) => (
                               <div
                                 key={flag.id}
-                                className="p-5 hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors group relative"
+                                className="group relative p-5 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/50"
                               >
                                 <div className="flex items-start justify-between gap-6">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-1.5">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="mb-1.5 flex items-center gap-3">
                                       <h5 className="text-base font-semibold text-gray-900 dark:text-white">
                                         {flag.displayName || flag.name}
                                       </h5>
                                       {flag.isActive === "1" ? (
-                                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold uppercase tracking-wide rounded-full">
-                                          <CheckCircle2 className="w-3 h-3" /> Active
+                                        <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                          <CheckCircle2 className="h-3 w-3" />{" "}
+                                          Active
                                         </span>
                                       ) : (
-                                        <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wide rounded-full">
-                                           Inactive
+                                        <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                          Inactive
                                         </span>
                                       )}
                                     </div>
-                                    
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                        {flag.description || "No description provided."}
+
+                                    <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                                      {flag.description ||
+                                        "No description provided."}
                                     </p>
 
-                                    <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs">
-                                        <div className="flex items-center gap-2 text-gray-500">
-                                            <span className="font-medium">Key:</span>
-                                            <code className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-mono border border-gray-200 dark:border-gray-600">
-                                                {flag.name}
-                                            </code>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-500 font-medium">Value:</span>
-                                            {/* Preview Logic */}
-                                            {flag.valueType === 'boolean' ? (
-                                                <span className={`px-2 py-1 rounded font-bold ${flag.value === 'true' || flag.value === '1' ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>
-                                                    {flag.value}
-                                                </span>
-                                            ) : (flag.value && (flag.value.startsWith('http') || flag.value.match(/\.(jpeg|jpg|gif|png)$/))) ? (
-                                                <div className="flex items-center gap-2">
-                                                    <img src={avatar(flag.value)} alt="Preview" className="w-6 h-6 rounded object-cover border border-gray-200" />
-                                                    <span className="text-gray-400 italic truncate max-w-[150px]">{flag.value}</span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-900 dark:text-white truncate max-w-[200px]">
-                                                    {flag.value || "—"}
-                                                </span>
-                                            )}
-                                        </div>
+                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+                                      <div className="flex items-center gap-2 text-gray-500">
+                                        <span className="font-medium">
+                                          Key:
+                                        </span>
+                                        <code className="rounded border border-gray-200 bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                          {flag.name}
+                                        </code>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-500">
+                                          Value:
+                                        </span>
+                                        {/* Preview Logic */}
+                                        {flag.valueType === "boolean" ? (
+                                          <span
+                                            className={`rounded px-2 py-1 font-bold ${flag.value === "true" || flag.value === "1" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}
+                                          >
+                                            {flag.value}
+                                          </span>
+                                        ) : flag.value &&
+                                          (flag.value.startsWith("http") ||
+                                            flag.value.match(
+                                              /\.(jpeg|jpg|gif|png)$/,
+                                            )) ? (
+                                          <div className="flex items-center gap-2">
+                                            <img
+                                              src={avatar(flag.value)}
+                                              alt="Preview"
+                                              className="h-6 w-6 rounded border border-gray-200 object-cover"
+                                            />
+                                            <span className="max-w-[150px] truncate italic text-gray-400">
+                                              {flag.value}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <span className="max-w-[200px] truncate text-gray-900 dark:text-white">
+                                            {flag.value || "—"}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                  
+
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    icon={<Edit2 className="w-3.5 h-3.5" />}
+                                    icon={<Edit2 className="h-3.5 w-3.5" />}
                                     onClick={() => handleEdit(flag)}
-                                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                    className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                                   >
                                     Edit
                                   </Button>
@@ -466,179 +516,226 @@ export default function SystemFlagsPage() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Group Selection (Only if creating) */}
-           {!selectedFlag && (
-             <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    Flag Group
-                </label>
-                <select 
-                    value={formData.flagGroupId}
-                    onChange={(e) => setFormData({...formData, flagGroupId: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
-                >
-                    {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.flagGroupName}</option>
-                    ))}
-                </select>
-             </div>
-           )}
+          {/* Group Selection (Only if creating) */}
+          {!selectedFlag && (
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Flag Group
+              </label>
+              <select
+                value={formData.flagGroupId}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    flagGroupId: parseInt(e.target.value),
+                  })
+                }
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              >
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.flagGroupName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label="Key Name (Code Ref)"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                !selectedFlag &&
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="e.g., master_bg_image"
               required
-
+              readOnly={!!selectedFlag}
+              disabled={!!selectedFlag}
             />
             <Input
               label="Display Name"
               value={formData.displayName}
-              onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+              onChange={(e) =>
+                !selectedFlag &&
+                setFormData({ ...formData, displayName: e.target.value })
+              }
               placeholder="e.g., Master Background"
+              readOnly={!!selectedFlag}
+              disabled={!!selectedFlag}
             />
           </div>
 
           {/* Dynamic Value Input Section */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4">
-            <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Flag Value Configuration
-                </label>
-                <select
-                    value={formData.valueType}
-                    onChange={(e) => setFormData({ ...formData, valueType: e.target.value })}
-                    className="text-xs px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-[#FF6B35]/50"
-                >
-                    <option value="text">Text / URL</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Boolean</option>
-                    <option value="json">JSON</option>
-                </select>
+          <div className="space-y-4 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-900 dark:text-white">
+                Flag Value Configuration
+              </label>
+              <select
+                value={formData.valueType}
+                onChange={(e) =>
+                  setFormData({ ...formData, valueType: e.target.value })
+                }
+                className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800"
+              >
+                <option value="text">Text / URL</option>
+                <option value="number">Number</option>
+                <option value="boolean">Boolean</option>
+                <option value="json">JSON</option>
+              </select>
             </div>
 
             {/* Render Input based on Group Logic or Type */}
             {isMasterImageGroup() ? (
-                 <div className="space-y-3">
-                    <div className="flex p-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 w-fit">
-                        <button
-                            type="button"
-                            onClick={() => setImageInputMode("upload")}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${imageInputMode === 'upload' ? 'bg-orange-100 text-orange-700' : 'text-gray-500 hover:text-gray-900'}`}
-                        >
-                            <Upload className="w-3 h-3" /> Upload
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setImageInputMode("url")}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${imageInputMode === 'url' ? 'bg-orange-100 text-orange-700' : 'text-gray-500 hover:text-gray-900'}`}
-                        >
-                            <LinkIcon className="w-3 h-3" /> URL Path
-                        </button>
-                    </div>
-
-                    {imageInputMode === "upload" ? (
-                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer relative" onClick={() => fileInputRef.current?.click()}>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                className="hidden" 
-                                accept="image/*"
-                                onChange={handleFileUpload}
-                            />
-                            {uploadingImage ? (
-                                <div className="flex flex-col items-center">
-                                    <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                                    <p className="text-xs text-gray-500">Uploading...</p>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center">
-                                    <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mb-2 text-orange-500">
-                                        <ImageIcon className="w-5 h-5" />
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to upload image</p>
-                                    <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG or GIF</p>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <Input
-                            value={formData.value}
-                            onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                            placeholder="https://example.com/image.png"
-                            icon={<LinkIcon className="w-4 h-4" />}
-                        />
-                    )}
-
-                    {/* Image Preview Area */}
-                    {formData.value && (
-                        <div className="mt-2 p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 flex items-center gap-3">
-                            <img 
-                                src={formData.value} 
-                                alt="Preview" 
-                                className="w-12 h-12 rounded object-cover bg-gray-100"
-                                onError={(e) => (e.currentTarget.style.display = 'none')} 
-                            />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-gray-500 uppercase">Current Value</p>
-                                <p className="text-xs text-gray-900 dark:text-white truncate font-mono" title={formData.value}>{formData.value}</p>
-                            </div>
-                            <button 
-                                type="button" 
-                                onClick={() => setFormData({...formData, value: ''})}
-                                className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    )}
-                 </div>
-            ) : formData.valueType === 'boolean' ? (
-                <div className="flex items-center gap-4">
-                    <button
-                        type="button"
-                        onClick={() => setFormData({...formData, value: 'true'})}
-                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${formData.value === 'true' ? 'bg-green-50 border-green-200 text-green-700 ring-1 ring-green-500' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        True
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({...formData, value: 'false'})}
-                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${formData.value === 'false' ? 'bg-red-50 border-red-200 text-red-700 ring-1 ring-red-500' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        False
-                    </button>
+              <div className="space-y-3">
+                <div className="flex w-fit rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => setImageInputMode("upload")}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${imageInputMode === "upload" ? "bg-orange-100 text-orange-700" : "text-gray-500 hover:text-gray-900"}`}
+                  >
+                    <Upload className="h-3 w-3" /> Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageInputMode("url")}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${imageInputMode === "url" ? "bg-orange-100 text-orange-700" : "text-gray-500 hover:text-gray-900"}`}
+                  >
+                    <LinkIcon className="h-3 w-3" /> URL Path
+                  </button>
                 </div>
-            ) : (
-                <Input
+
+                {imageInputMode === "upload" ? (
+                  <div
+                    className="relative cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800/50"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                    />
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center">
+                        <div className="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
+                        <p className="text-xs text-gray-500">Uploading...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+                          <ImageIcon className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Click to upload image
+                        </p>
+                        <p className="mt-1 text-xs text-gray-400">
+                          SVG, PNG, JPG or GIF
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Input
                     value={formData.value}
-                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                    placeholder="Enter value"
-                />
+                    onChange={(e) =>
+                      setFormData({ ...formData, value: e.target.value })
+                    }
+                    placeholder="https://example.com/image.png"
+                    icon={<LinkIcon className="h-4 w-4" />}
+                  />
+                )}
+
+                {/* Image Preview Area */}
+                {formData.value && (
+                  <div className="mt-2 flex items-center gap-3 rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
+                    <img
+                      src={formData.value}
+                      alt="Preview"
+                      className="h-12 w-12 rounded bg-gray-100 object-cover"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium uppercase text-gray-500">
+                        Current Value
+                      </p>
+                      <p
+                        className="truncate font-mono text-xs text-gray-900 dark:text-white"
+                        title={formData.value}
+                      >
+                        {formData.value}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, value: "" })}
+                      className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : formData.valueType === "boolean" ? (
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, value: "true" })}
+                  className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-all ${formData.value === "true" ? "border-green-200 bg-green-50 text-green-700 ring-1 ring-green-500" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                >
+                  True
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, value: "false" })}
+                  className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-all ${formData.value === "false" ? "border-red-200 bg-red-50 text-red-700 ring-1 ring-red-500" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                >
+                  False
+                </button>
+              </div>
+            ) : (
+              <Input
+                value={formData.value}
+                onChange={(e) =>
+                  setFormData({ ...formData, value: e.target.value })
+                }
+                placeholder="Enter value"
+              />
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300">
               Description
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Describe what this flag controls..."
               rows={3}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 resize-none"
+              className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/50 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <Button variant="outline" onClick={handleCloseModal} className="flex-1">
+          <div className="flex gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
+            <Button
+              variant="outline"
+              onClick={handleCloseModal}
+              className="flex-1"
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" loading={submitting} className="flex-1">
+            <Button
+              type="submit"
+              variant="primary"
+              loading={submitting}
+              className="flex-1"
+            >
               {selectedFlag ? "Update Flag" : "Create Flag"}
             </Button>
           </div>
