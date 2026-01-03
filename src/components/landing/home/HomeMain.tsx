@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { Sparkles, Star, Wallet, Zap, Moon, Sun } from "lucide-react";
@@ -45,7 +43,7 @@ export default function HomeMain() {
         />
       </div>
 
-      {/* 3. Zodiac Wheel (Replacing the broken Image with reliable SVG) */}
+      {/* 3. Zodiac Wheel (SVG) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vw] h-[140vw] opacity-[0.04] dark:opacity-[0.06] pointer-events-none">
         <motion.div
           animate={{ rotate: 360 }}
@@ -56,7 +54,7 @@ export default function HomeMain() {
         </motion.div>
       </div>
 
-      {/* 4. Twinkling Stars (Desktop & Mobile) */}
+      {/* 4. Twinkling Stars */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {stars.map((star) => (
           <motion.div
@@ -82,7 +80,7 @@ export default function HomeMain() {
         ))}
       </div>
 
-      {/* 5. Ambient Orbs (Soft Glows) */}
+      {/* 5. Ambient Orbs */}
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-orange-400/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -107,7 +105,7 @@ export default function HomeMain() {
             >
               <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" />
               <span className="text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300">
-                #1 Trusted Astrology Platform
+                India's First Trusted Astrology Awareness Platform
               </span>
             </motion.div>
 
@@ -122,9 +120,8 @@ export default function HomeMain() {
 
             {/* Subtext */}
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">
-              Connect with verified astrologers instantly. Get your first chat or call 
-              <span className="font-semibold text-[#FF6B35]"> FREE</span>. 
-              No strings attached, just pure guidance.
+              Connect instantly with verified astrologers for clear, personalized guidance.
+              Real conversations, real insights — whenever you need them.
             </p>
 
             {/* Mobile Visual (Visible only on Mobile/Tablet) */}
@@ -135,9 +132,9 @@ export default function HomeMain() {
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3 w-full max-w-md sm:max-w-lg">
               {[
-                { label: "Active Users", value: "50K+" },
-                { label: "Astrologers", value: "400+" },
-                { label: "App Rating", value: "4.2★" },
+                { label: "Download Users", value: "75K+" },
+                { label: "Astrologers", value: "500+" },
+                { label: "App Rating", value: "4.5★" },
               ].map((stat, i) => (
                 <div 
                   key={i} 
@@ -189,39 +186,30 @@ export default function HomeMain() {
 
 // ================= SUB-COMPONENTS =================
 
-// 1. ZODIAC WHEEL SVG - Pure CSS/SVG replacement for the broken image
 function ZodiacWheel() {
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible opacity-50">
-      {/* Outer Ring */}
       <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="2 1" />
       <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" strokeWidth="0.1" />
-      
-      {/* Sectors */}
       {[...Array(12)].map((_, i) => (
         <g key={i} transform={`rotate(${i * 30} 50 50)`}>
           <line x1="50" y1="15" x2="50" y2="2" stroke="currentColor" strokeWidth="0.1" />
-          {/* Little dots for signs */}
           <circle cx="50" cy="10" r="0.5" fill="currentColor" />
         </g>
       ))}
-      
-      {/* Inner Geometry */}
       <path d="M50 2 L91.5 26 L91.5 74 L50 98 L8.5 74 L8.5 26 Z" fill="none" stroke="currentColor" strokeWidth="0.1" opacity="0.5" />
-      <path d="M50 2 L8.5 74 L91.5 74 Z" fill="none" stroke="currentColor" strokeWidth="0.05" opacity="0.3" />
-      <path d="M50 98 L8.5 26 L91.5 26 Z" fill="none" stroke="currentColor" strokeWidth="0.05" opacity="0.3" />
     </svg>
   );
 }
 
+// --- MOBILE VISUAL (Optimized Badges) ---
 function MobilePhoneVisual() {
   return (
     <div className="relative flex justify-center items-center py-4">
-      {/* Glowing Aura */}
       <div className="absolute w-48 h-48 bg-gradient-to-tr from-orange-400 to-pink-500 rounded-full blur-[60px] opacity-30 animate-pulse" />
       
       <div className="relative w-[180px] sm:w-[200px] z-10">
-        <div className="relative aspect-[9/19] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl ring-1 ring-white/10">
+        <div className="relative aspect-[9/19] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl ring-1 ring-white/10 z-20">
           <div className="relative h-full bg-white dark:bg-gray-950 rounded-[1.75rem] overflow-hidden">
             <Image
               src="/landing/bannerlight.jpeg"
@@ -234,19 +222,19 @@ function MobilePhoneVisual() {
           </div>
         </div>
 
-        {/* Floating Badges for Mobile */}
+        {/* Badges pushed further out using negative margins */}
         <FloatingBadge 
           icon={Star} 
           text="Verified" 
           subtext="Astrologers" 
-          position="top-8 -left-4" 
+          position="top-12 -left-12 sm:-left-16" 
           color="bg-gradient-to-br from-orange-400 to-pink-500" 
         />
         <FloatingBadge 
           icon={Wallet} 
           text="₹51 Bonus" 
           subtext="Free Sign-up" 
-          position="bottom-12 -right-4" 
+          position="bottom-16 -right-12 sm:-right-16" 
           color="bg-gradient-to-br from-emerald-400 to-teal-500" 
         />
       </div>
@@ -254,10 +242,11 @@ function MobilePhoneVisual() {
   );
 }
 
+// --- DESKTOP VISUAL (FIXED OVERLAP) ---
 function DesktopVisual() {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      {/* 1. Orbit Rings */}
+      {/* Orbits */}
       <motion.div 
         animate={{ rotate: 360 }}
         transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
@@ -268,8 +257,8 @@ function DesktopVisual() {
         transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
         className="absolute w-[400px] h-[400px] rounded-full border border-gray-200 dark:border-gray-800 opacity-60"
       />
-
-      {/* 2. Floating Planets */}
+      
+      {/* Planets */}
       <motion.div 
         animate={{ y: [0, -20, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -286,7 +275,7 @@ function DesktopVisual() {
         <Moon className="w-8 h-8 text-indigo-500" />
       </motion.div>
 
-      {/* 3. Central Phone */}
+      {/* Phone */}
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -304,14 +293,16 @@ function DesktopVisual() {
               priority
             />
           </div>
-          
-          {/* Glass Reflection */}
           <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
         </div>
 
-        {/* Feature Cards Attached to Phone */}
+        {/* 
+           FIX: Desktop Feature Badges 
+           Pushed further out using larger negative left/right values 
+           to ensure they don't cover the phone content.
+        */}
         <motion.div 
-          className="absolute top-20 -left-16 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-3 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-3"
+          className="absolute top-24 -left-32 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-3 z-30"
           animate={{ x: [0, 5, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
         >
@@ -325,7 +316,7 @@ function DesktopVisual() {
         </motion.div>
 
         <motion.div 
-          className="absolute bottom-32 -right-12 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-3 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-3"
+          className="absolute bottom-36 -right-28 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-3 z-30"
           animate={{ x: [0, -5, 0] }}
           transition={{ duration: 5, repeat: Infinity }}
         >
@@ -345,7 +336,7 @@ function DesktopVisual() {
 function FloatingBadge({ icon: Icon, text, subtext, position, color }: any) {
   return (
     <motion.div
-      className={`absolute ${position} bg-white/95 dark:bg-gray-900/95 backdrop-blur-md p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-2 z-20`}
+      className={`absolute ${position} bg-white/95 dark:bg-gray-900/95 backdrop-blur-md p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center gap-2 z-30`}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.5 }}

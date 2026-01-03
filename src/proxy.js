@@ -81,38 +81,30 @@ export async function proxy(req) {
     pathname.startsWith(prefix)
   );
 
-  // If user has token, verify and handle redirects
-  if (token) {
-    const secret = getSecret();
-    if (!secret) {
-      const resp = NextResponse.redirect(new URL("/", req.url));
-      resp.cookies.set("token", "", { path: "/", maxAge: 0 });
-      return resp;
-    }
-
-    try {
-      const { payload } = await jwtVerify(token, secret);
-      const role = payload?.role || payload?.roles || payload?.roleName || null;
-
-      // If logged in user hits landing/signin, redirect to dashboard
-      const isAuthLandingHit = pathname === "/sign-in" || pathname === "/";
-      if (isAuthLandingHit) {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-
-      // If admin hits public routes, redirect to dashboard
-      if (role === "admin" && isPublicRoute) {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-
-      return NextResponse.next();
-    } catch (err) {
-      // Invalid token - clear it and redirect to home
-      const response = NextResponse.redirect(new URL("/", req.url));
-      response.cookies.set("token", "", { path: "/", maxAge: 0 });
-      return response;
-    }
+if (token) {
+  const secret = getSecret();
+  if (!secret) {
+    const resp = NextResponse.redirect(new URL("/", req.url));
+    resp.cookies.set("token", "", { path: "/", maxAge: 0 });
+    return resp;
   }
+
+  try {
+    await jwtVerify(token, secret);
+
+    // Redirect ONLY from sign-in page
+    if (pathname === "/sign-in") {
+      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    }
+
+    // Allow admin to access EVERYTHING else (including "/")
+    return NextResponse.next();
+  } catch (err) {
+    const response = NextResponse.redirect(new URL("/", req.url));
+    response.cookies.set("token", "", { path: "/", maxAge: 0 });
+    return response;
+  }
+}
 
   // No token - check if trying to access protected routes
   if (isProtectedRoute) {

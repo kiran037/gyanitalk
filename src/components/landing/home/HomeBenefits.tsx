@@ -24,8 +24,8 @@ const benefits = [
 ];
 
 const stats = [
-  { value: "50K+", label: "Happy Users", icon: Users },
-  { value: "100+", label: "Astrologers", icon: Star },
+  { value: "75K+", label: "Happy Users", icon: Users },
+  { value: "500+", label: "Astrologers", icon: Star },
   { value: "99.9%", label: "Uptime", icon: Shield },
   { value: "24/7", label: "Support", icon: Clock },
 ];
