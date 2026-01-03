@@ -144,7 +144,7 @@ export default function Footer() {
                   href="mailto:career@gyanitalk.com"
                   className="font-medium hover:text-[#FF6B35]"
                 >
-                  career@gyanitalk.com
+                  contact@gyanitalk.com
                 </a>
               </div>
             </div>

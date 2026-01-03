@@ -10,6 +10,7 @@ interface InputProps {
   value: string | number | undefined | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
+  readOnly?: boolean; 
   required?: boolean;
   disabled?: boolean;
   icon?: ReactNode;
@@ -28,6 +29,7 @@ export function Input({
   placeholder,
   required = false,
   disabled = false,
+  readOnly = false,
   icon,
   min,
   max,
@@ -57,6 +59,7 @@ export function Input({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          readOnly={readOnly}
           min={min}
           max={max}
           step={step}
