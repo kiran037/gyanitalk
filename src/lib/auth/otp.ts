@@ -1,6 +1,6 @@
 // src/lib/auth/otp.ts
 import { prisma } from "@/lib/prisma";
-import fetch from 'node-fetch';
+import axios from "axios";
 
 type OTPType = "registration" | "login" | "password_reset" | "phone_verify";
 
@@ -74,18 +74,17 @@ export async function verifyOTP(
     userId: record.userId || undefined,
   };
 }
-
 export async function sendOTP(
   phone: string,
   countryCode: string,
   otp: string,
   type: OTPType
 ): Promise<boolean> {
-  const code = countryCode.includes("+") ? countryCode : `+${countryCode}`;
-  const formattedMobile = `${code}${phone}`;
+  // MSG91 expects format: 919999999999 (NO plus sign)
+  const code = countryCode.replace("+", ""); // Remove + if present
+  const formattedMobile = `${code}${phone}`; // No + sign
 
-  if (process.env.NODE_ENV === "development") {
-    console.log(`
+  console.log(`
 ╔════════════════════════════════════════╗
 ║          OTP GENERATED                 ║
 ╠════════════════════════════════════════╣
@@ -93,7 +92,12 @@ export async function sendOTP(
 ║ Type:   ${type}
 ║ OTP:    ${otp}
 ╚════════════════════════════════════════╝
-    `);
+  `);
+
+  // DEVELOPMENT MODE: Skip actual API call due to network issues
+  if (process.env.NODE_ENV === "development") {
+    console.log("⚠️  DEV MODE: Skipping MSG91 API (use OTP above)");
+    return true;
   }
 
   if (process.env.OTP_SERVICE_PROVIDER !== "msg91") {
@@ -110,35 +114,27 @@ export async function sendOTP(
       otp_length: 6,
       otp_expiry: 5,
       template_id: process.env.MSG91_TEMPLATE_ID,
-      mobile: formattedMobile,
+      mobile: formattedMobile, // WITHOUT the + sign
       authkey: process.env.OTP_API_KEY,
       realTimeResponse: 1,
     };
 
     console.log("📦 Request payload:", JSON.stringify(payload, null, 2));
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 15000);
+    const response = await axios.post(
+      "https://control.msg91.com/api/v5/otp",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 15000,
+      }
+    );
 
-    const response = await fetch("https://control.msg91.com/api/v5/otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+    console.log("✅ MSG91 Response:", JSON.stringify(response.data, null, 2));
 
-    clearTimeout(timeout);
-
-    const data = await response.json();
-    
-    console.log("✅ MSG91 Response:", JSON.stringify(data, null, 2));
-    console.log("📊 Response Status:", response.status);
-
-    if (data?.type === "success") {
+    if (response.data?.type === "success") {
       console.log("🎉 OTP sent successfully!");
       return true;
     }
@@ -147,17 +143,10 @@ export async function sendOTP(
     return false;
   } catch (error: any) {
     console.error("💥 MSG91 Request Error:");
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    
-    if (error.name === 'AbortError') {
-      console.error("⏱️  Request timed out");
-    }
-    
+    console.error("Message:", error.message);
     return false;
   }
 }
-
 /**
  * Check if OTP rate limit exceeded
  */
