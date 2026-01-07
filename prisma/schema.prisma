@@ -1295,7 +1295,7 @@ model oauth_personal_access_clients {
   client_id  BigInt    @db.UnsignedBigInt
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
-}
+} 
 
 model oauth_refresh_tokens {
   id              String    @id @db.VarChar(100)
@@ -1953,7 +1953,7 @@ model users {
   birthDate           DateTime?              @db.Timestamp(0)
   birthTime           String?                @db.VarChar(50)
   profile             String?                @db.Text
-  birthPlace          String?                @db.VarChar(50)
+  birthPlace          String?                @db.VarChar(255)
   addressLine1        String?                @db.Text
   addressLine2        String?                @db.Text
   location            String?                @db.VarChar(100)
@@ -1970,6 +1970,17 @@ model users {
   expirationDate      DateTime?              @db.Timestamp(0)
   countryCode         String?                @db.VarChar(45)
   deleted_at          DateTime?              @db.Timestamp(0)
+
+  email_verified        Boolean?               @default(false)
+  phone_verified        Boolean?               @default(false)
+  email_verified_at     DateTime?              @db.Timestamp(0)
+  phone_verified_at     DateTime?              @db.Timestamp(0)
+  last_login_at         DateTime?              @db.Timestamp(0)
+  account_status        String?                @default("active") @db.VarChar(20) // active, suspended, locked
+  failed_login_attempts Int?                   @default(0)
+  locked_until          DateTime?              @db.Timestamp(0)
+
+
   app_reviews         app_reviews[]
   astrologers         astrologers[]
   coupon_user_usages  coupon_user_usages[]
@@ -1988,6 +1999,11 @@ model users {
   chatrequests        chatrequest[]          @relation("UserChatRequests")
   callrequests        callrequest[]          @relation("UserToCallRequests")
   astrologerGifts     astrologer_gifts[]     @relation("UserGiftsRelation")
+
+  login_attempts        login_attempts[]       @relation("UserLoginAttempts")
+  otps                  otps[]                 @relation("UserOTPs")
+  sessions              user_sessions[]        @relation("UserSessions")
+  email_verifications   email_verifications[]  @relation("UserEmailVerifications")
 }
 
 model waitlist {
@@ -2125,6 +2141,75 @@ model aiastrologers {
   wallettransactions wallettransaction[]    @relation("AiAstroWalletRelation")
   aiFollowers        astrologer_followers[] @relation("AiAstroFollowers")
   order_requests     order_request[]        @relation("AiAstroOrders")
+}
+
+model login_attempts {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt?   @db.UnsignedBigInt
+  email      String    @db.VarChar(255)
+  success    Boolean
+  ipAddress  String?   @db.VarChar(45)
+  userAgent  String?   @db.Text
+  method     String    @db.VarChar(50) // password, otp, social
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  
+  user users? @relation("UserLoginAttempts", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, created_at], map: "login_attempts_user_date_idx")
+  @@index([email, created_at], map: "login_attempts_email_date_idx")
+}
+
+// 2. OTP Management
+model otps {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt?   @db.UnsignedBigInt
+  email      String?   @db.VarChar(255)
+  phone      String?   @db.VarChar(20)
+  otp_code   String    @db.VarChar(6)
+  otp_type   String    @db.VarChar(50) // registration, login, password_reset, phone_verify
+  is_used    Boolean   @default(false)
+  expires_at DateTime  @db.Timestamp(0)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  
+  user users? @relation("UserOTPs", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([email, otp_type, expires_at], map: "otps_email_type_exp_idx")
+  @@index([phone, otp_type, expires_at], map: "otps_phone_type_exp_idx")
+  @@index([userId, otp_type], map: "otps_user_type_idx")
+}
+
+// 3. Session Management
+model user_sessions {
+  id            BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId        BigInt   @db.UnsignedBigInt
+  session_token String   @unique @db.VarChar(255)
+  device_id     String?  @db.VarChar(255)
+  ip_address    String?  @db.VarChar(45)
+  user_agent    String?  @db.Text
+  last_activity DateTime @default(now()) @db.Timestamp(0)
+  expires_at    DateTime @db.Timestamp(0)
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+  
+  user users @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, expires_at], map: "user_sessions_user_exp_idx")
+  @@index([session_token], map: "user_sessions_token_idx")
+  @@index([expires_at], map: "user_sessions_cleanup_idx")
+}
+
+// 4. Email Verification
+model email_verifications {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId      BigInt    @db.UnsignedBigInt
+  token       String    @unique @db.VarChar(255)
+  verified_at DateTime? @db.Timestamp(0)
+  expires_at  DateTime  @db.Timestamp(0)
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+  
+  user users @relation("UserEmailVerifications", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId], map: "email_verifications_user_idx")
+  @@index([token], map: "email_verifications_token_idx")
 }
 
 enum pages_type {

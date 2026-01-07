@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/adminUI/PageHeader.tsx
 import { ReactNode } from "react";
 
 interface PageHeaderProps {

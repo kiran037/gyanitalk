@@ -55,7 +55,7 @@ function generateCompleteSEO(
     categoryName: string | null,
     relatedBlogs: any[]
 ) {
-    const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
     const plainDescription = extractPlainText(blog.description);
     const excerpt = plainDescription.substring(0, 160);

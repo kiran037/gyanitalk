@@ -4,6 +4,7 @@ import BlogClient from "./BlogClient";
 import { prisma } from "@/lib/prisma";
 import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
+import { headers } from "next/headers";
 
 const getBlogSEO = cache(async () => {
   const page = await prisma.pages.findFirst({
@@ -67,6 +68,8 @@ const getBlogSEO = cache(async () => {
   };
 });
 
+
+
 async function getBlogs(
   searchParams: Promise<Record<string, string | string[] | undefined>>,
 ) {
@@ -86,13 +89,16 @@ async function getBlogs(
     params.append("categoryId", sp.categoryId);
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/landing/blog?${params}`,
-    {
-      next: { revalidate: 300 },
-      cache: "force-cache",
-    },
-  );
+  const h = await headers();
+const host = h.get("host");
+  const protocol =
+    process.env.NODE_ENV === "production" ? "https" : "http";
+
+  const url = `${protocol}://${host}/api/landing/blog?${params}`;
+
+  const res = await fetch(url, {
+    next: { revalidate: 300 },
+  });
 
   if (!res.ok) return null;
   return res.json();

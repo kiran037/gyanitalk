@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import PanchangClient from "./PanchangClient";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 
 /* ================= SEO (SERVER ONLY) ================= */

@@ -1,4 +1,3 @@
-// app/api/astrologer-groups/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -76,12 +75,19 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Format response with member count
-    const groupsWithStats = groups.map((group) => ({
-      ...group,
-      memberCount: group.astrologerassign.length,
-      members: group.astrologerassign.map((assign) => assign.astrologer),
-      astrologerassign: undefined,
-    }));
+    const groupsWithStats = groups.map((group) => {
+      // Extract astrologers safely (filtering out nulls if relation is missing)
+      const members = group.astrologerassign
+        .map((assign) => assign.astrologer)
+        .filter((member) => member !== null);
+
+      return {
+        ...group,
+        memberCount: members.length,
+        members: members,
+        astrologerassign: undefined, // Remove the raw relation data from response
+      };
+    });
 
     const safe = convertPrismaTypes({
       success: true,

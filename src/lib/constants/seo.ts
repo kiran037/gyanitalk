@@ -14,9 +14,7 @@ export const SITE_CONFIG: SiteConfig = {
   defaultTwitterImage: `${process.env.NEXT_PUBLIC_BASEURL || 'https://gyanitalk.s3.ap-south-1.amazonaws.com/'}/twitter-images/default.jpg`,
 };
 
-/**
- * Default SEO values used as fallbacks
- */
+
 export const DEFAULT_SEO = {
   title: `${SITE_CONFIG.siteName} | Your Trusted Astrology Platform`,
   description:

@@ -2,10 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// JSON-safe helper
+// Helper: BigInt / Decimal / Date → JSON-safe
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
+
   if (typeof obj === "bigint") return obj.toString();
+
   if (
     typeof obj === "object" &&
     (obj as any).constructor &&
@@ -13,9 +15,13 @@ function convertPrismaTypes(obj: unknown): any {
   ) {
     return Number((obj as any).toString());
   }
+
   if (obj instanceof Date) return obj.toISOString();
+
   if (typeof obj !== "object") return obj;
+
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -23,7 +29,6 @@ function convertPrismaTypes(obj: unknown): any {
   return out;
 }
 
-// Next 15+ style
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -80,11 +85,18 @@ export async function GET(req: NextRequest, context: RouteContext) {
       );
     }
 
+    // Filter out any assignments where the astrologer might be null (deleted users)
+    const validMembers = group.astrologerassign
+      .map((assign) => assign.astrologer)
+      .filter((member) => member !== null);
+
     const safe = convertPrismaTypes({
       success: true,
       data: {
         ...group,
-        memberCount: group.astrologerassign.length,
+        memberCount: validMembers.length,
+        members: validMembers, // Return the clean list of members
+        astrologerassign: undefined, // Hide the pivot table structure
       },
     });
 
@@ -102,7 +114,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
   }
 }
 
-// PATCH - Update Group
+// PATCH - Update Group Name
 export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
@@ -170,12 +182,13 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 
     const groupId = BigInt(id);
 
-    // First delete all astrologer assignments
+    // 1. First, delete entries from 'astrologer_assign_group'
+    // This is the correct usage of the table you asked about
     await prisma.astrologer_assign_group.deleteMany({
       where: { group_id: groupId },
     });
 
-    // Then delete the group
+    // 2. Then delete the group itself
     await prisma.astrologer_groups.delete({
       where: { id: groupId },
     });

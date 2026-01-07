@@ -39,6 +39,17 @@ export const NAV_DATA = [
         items: [],
       },
       {
+        title: "Administration",
+        icon: Home,
+        items: [
+          {
+            title: "Role Management",
+            url: "/admin/roles",
+            icon: IndianRupee,
+          },
+        ],
+      },
+      {
         title: "Customers",
         url: "/admin/customers",
         icon: Users,

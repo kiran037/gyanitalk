@@ -1,4 +1,4 @@
-
+///Users/xeoren/Desktop/gyanitallk-admin/src/lib/images.ts
 export function ensureAbs(path?: string | null, fallback = "/default-avatar.svg"): string {
   // 1. Safety Check: If empty, return fallback
   if (!path || typeof path !== "string" || path.trim() === "") {
