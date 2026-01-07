@@ -19,7 +19,6 @@ function generateDetailedProductSEO(product: any) {
     `${product.name} - ${product.features?.substring(0, 150) || 'Premium astrology product with detailed insights and guidance'}`;
   
   const categoryName = product.product_category?.name || 'Astrology Products';
-  
   return {
     slug,
     metaTitle: product.metaTitle || 
@@ -28,7 +27,7 @@ function generateDetailedProductSEO(product: any) {
       `${defaultDescription}. Shop now at ₹${product.amount}. ${product.product_details?.length || 0} key features included.`,
     metaKeywords: product.metaKeywords || 
       `${product.name}, ${categoryName}, astrology, buy ${product.name}, astromall products, ${slug}`,
-    canonicalUrl: product.canonicalUrl || `/landing/mall/${slug}`,
+    canonicalUrl: product.canonicalUrl || `/mall/${slug}`,
     ogTitle: product.ogTitle || `${product.name} | ${categoryName}`,
     ogDescription: product.ogDescription || defaultDescription,
     ogImage: product.ogImage || product.productImage,

@@ -23,7 +23,7 @@ function generateProductSEO(product: any) {
     metaTitle: product.metaTitle || `${product.name} | AstroMall - Premium Astrology Products`,
     metaDescription: product.metaDescription || defaultDescription,
     metaKeywords: product.metaKeywords || `${product.name}, astrology products, astromall, buy ${product.name}`,
-    canonicalUrl: product.canonicalUrl || `/landing/mall/${slug}`,
+    canonicalUrl: product.canonicalUrl || `/mall/${slug}`,
     ogTitle: product.ogTitle || product.name,
     ogDescription: product.ogDescription || defaultDescription,
     ogImage: product.ogImage || product.productImage,
