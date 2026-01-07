@@ -2,7 +2,7 @@
 import type { Metadata, Viewport } from "next";
 import ContactClient from "./ContactClient";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 
 /* ================= SEO (SERVER ONLY) ================= */

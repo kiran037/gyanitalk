@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 
 interface PageData {
@@ -82,7 +82,6 @@ const getPageData = cache(async (): Promise<PageData | null> => {
     if (!page) return null;
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_BASEURL ||
       process.env.NEXT_PUBLIC_SITE_URL ||
       "";
 

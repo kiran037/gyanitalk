@@ -1,7 +1,7 @@
 // app/mall/page.tsx
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 import MallClient from "@/components/landing/MallClient";
 

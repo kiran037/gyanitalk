@@ -1,5 +1,5 @@
 
-
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/adminUI/Input.tsx
 import { ReactNode } from "react";
 
 interface InputProps {

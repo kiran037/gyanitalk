@@ -44,7 +44,7 @@ export function useSecretGyani() {
 
       if (bufferRef.current === SECRET && !triggeredRef.current) {
         triggeredRef.current = true;
-        router.push("/sign-in");
+        router.push("/login");
 
         bufferRef.current = "";
         lastKeyTimeRef.current = null;

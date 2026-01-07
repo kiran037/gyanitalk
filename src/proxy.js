@@ -1,7 +1,22 @@
-
 // src/proxy.js
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+
+// PUBLIC ROUTES - No authentication needed
+const PUBLIC_EXACT_ROUTES = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/sitemap-static.xml",
+  "/sitemap-blogs.xml",
+  "/sitemap-courses.xml",
+  "/sitemap-products.xml",
+  "/sitemap-astrologers.xml",
+  "/sitemap-horoscope.xml",
+];
 
 const PUBLIC_ROUTE_PREFIXES = [
   "/about-us",
@@ -15,28 +30,24 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/horoscope",
   "/panchang",
   "/free-kundali",
-  "/kundali-matching"
+  "/kundali-matching",
+  "/verify-email",
 ];
 
-const PUBLIC_EXACT_ROUTES = [
-  "/",
-  "/sign-in",
-  "/robots.txt",
-  "/sitemap.xml",
-  "/sitemap-static.xml",
-  "/sitemap-blogs.xml",
-  "/sitemap-courses.xml",
-  "/sitemap-products.xml",
-  "/sitemap-astrologers.xml",
-  "/sitemap-horoscope.xml",
-];
-
-// Define actual protected routes that require authentication
+// PROTECTED ROUTES - Require login (any role)
 const PROTECTED_ROUTE_PREFIXES = [
-  "/admin",
   "/profile",
-  "/dashboard"
+  "/dashboard",
+  "/security",
+  "/sessions",
 ];
+
+// ADMIN ROUTES - Require login + admin/staff role (NOT user/astrologer)
+const ADMIN_ROUTE_PREFIXES = ["/admin"];
+
+// USER/ASTROLOGER ROLE IDS (Cannot access admin routes)
+const USER_ROLE_ID = "3";
+const ASTROLOGER_ROLE_ID = "2";
 
 function getSecret() {
   if (!process.env.JWT_SECRET) {
@@ -50,69 +61,128 @@ function isStaticAsset(pathname) {
   return !!pathname.match(/\.[a-zA-Z0-9]+$/);
 }
 
-// NOTE: export name must be `proxy` (or default export) — Next.js will call this for each request.
+// Check if user has admin/staff role (NOT user or astrologer)
+async function hasAdminAccess(userId) {
+  try {
+   const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/me`, {
+      headers: {
+        Cookie: `token=${arguments[1]}`, // Pass token
+      },
+    });
+
+    if (!res.ok) return false;
+
+    const { data } = await res.json();
+    const roleIds = data.roles.map((r) => r.id);
+
+    // Admin access = NOT user (3) AND NOT astrologer (2)
+    return !roleIds.includes(USER_ROLE_ID) && !roleIds.includes(ASTROLOGER_ROLE_ID);
+  } catch (error) {
+    console.error("[proxy] Error checking admin access:", error);
+    return false;
+  }
+}
+
 export async function proxy(req) {
   const pathname = req.nextUrl?.pathname || new URL(req.url).pathname;
 
+  // Allow sitemaps and robots
   if (pathname === "/robots.txt" || pathname.startsWith("/sitemap")) {
     return NextResponse.next();
   }
-  
+
   // Allow open API endpoints
   if (
     pathname.startsWith("/api/landing") ||
     pathname.startsWith("/api/public") ||
-    pathname.startsWith("/api/indexnow")
+    pathname.startsWith("/api/indexnow") ||
+    pathname.startsWith("/api/auth") || // Auth endpoints are public
+    pathname.startsWith("/api/upload") // Upload endpoint
   ) {
     return NextResponse.next();
   }
 
-  // Allow static assets (matcher already excludes many, but this is safe)
+  // Allow static assets
   if (isStaticAsset(pathname)) return NextResponse.next();
 
   const token = req.cookies.get("token")?.value;
 
+  // Determine route type
   const isPublicRoute =
     PUBLIC_EXACT_ROUTES.includes(pathname) ||
     PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-  // Check if this is actually a protected route (not just "not public")
-  const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) => 
+  const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
   );
 
-if (token) {
-  const secret = getSecret();
-  if (!secret) {
-    const resp = NextResponse.redirect(new URL("/", req.url));
-    resp.cookies.set("token", "", { path: "/", maxAge: 0 });
-    return resp;
-  }
+  const isAdminRoute = ADMIN_ROUTE_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
 
-  try {
-    await jwtVerify(token, secret);
-
-    // Redirect ONLY from sign-in page
-    if (pathname === "/sign-in") {
-      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+  // ===== LOGGED IN USER =====
+  if (token) {
+    const secret = getSecret();
+    if (!secret) {
+      const resp = NextResponse.redirect(new URL("/", req.url));
+      resp.cookies.set("token", "", { path: "/", maxAge: 0 });
+      return resp;
     }
 
-    // Allow admin to access EVERYTHING else (including "/")
-    return NextResponse.next();
-  } catch (err) {
-    const response = NextResponse.redirect(new URL("/", req.url));
-    response.cookies.set("token", "", { path: "/", maxAge: 0 });
-    return response;
-  }
-}
+    try {
+      const { payload } = await jwtVerify(token, secret);
+      const userId = payload.userId;
 
-  // No token - check if trying to access protected routes
+      // Redirect logged-in users from auth pages
+      if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
+        // Check if admin
+        const isAdmin = await hasAdminAccess(userId, token);
+        return NextResponse.redirect(
+          new URL(isAdmin ? "/admin/dashboard" : "/", req.url)
+        );
+      }
+
+      // ADMIN ROUTE ACCESS CHECK
+      if (isAdminRoute) {
+        const isAdmin = await hasAdminAccess(userId, token);
+        if (!isAdmin) {
+          // User or Astrologer trying to access admin route
+          return NextResponse.redirect(new URL("/", req.url));
+        }
+      }
+
+      // Allow access to protected and public routes
+      return NextResponse.next();
+    } catch (err) {
+      // Invalid token - clear and redirect
+      const response = NextResponse.redirect(new URL("/", req.url));
+      response.cookies.set("token", "", { path: "/", maxAge: 0 });
+      return response;
+    }
+  }
+
+  // ===== NOT LOGGED IN =====
+
+  // Block admin routes
+  if (isAdminRoute) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  // Block protected routes
   if (isProtectedRoute) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // For all other routes (public or non-existent), let Next.js handle them
-  // This allows 404 pages to work properly
+  // Allow public routes
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
+  // For unknown routes, let Next.js handle (404 page)
   return NextResponse.next();
 }
 

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 import { prisma } from "@/lib/prisma";
-import { pages_type } from "@prisma/client";
+import { pages_type } from "@/generated/client/client";
 import { cache } from "react";
 
 interface PageData {
@@ -99,7 +99,7 @@ const getPageData = cache(async (): Promise<PageData | null> => {
           stripHtml(page.description).slice(0, 200),
         image: page.ogImage || null,
         url:
-          (process.env.NEXT_PUBLIC_BASEURL ||
+          (
             process.env.NEXT_PUBLIC_SITE_URL ||
             "") +
           (page.slug ? `/${page.slug}` : `/about-us`),

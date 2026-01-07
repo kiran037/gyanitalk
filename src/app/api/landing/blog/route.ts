@@ -7,7 +7,7 @@ type CategoryType = Awaited<ReturnType<typeof prisma.blog_categories.findFirst>>
 
 // Helper function to generate SEO metadata
 function generateSEOMetadata(blog: NonNullable<BlogType>, categoryName?: string | null) {
-    const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const truncateText = (text: string, maxLength: number) => {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength).trim() + '...';
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
             description: categoryId
                 ? `Explore ${categoryMap.get(categoryId)} articles and insights from expert astrologers.`
                 : `Discover astrology insights, horoscopes, and expert advice. Page ${page} of ${Math.ceil(totalCount / limit)}.`,
-            canonical: `${process.env.NEXT_PUBLIC_BASEURL || ''}/blog${categoryId ? `?categoryId=${categoryId}` : ''}${page > 1 ? `&page=${page}` : ''}`
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/blog${categoryId ? `?categoryId=${categoryId}` : ''}${page > 1 ? `&page=${page}` : ''}`
         };
 
         // Get popular blogs (top 5 by views)

@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/landing/kundali/LocationInput.tsx
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2, Navigation, X } from 'lucide-react';
 import { searchLocations, getCurrentLocation, LocationResult } from '@/lib/location-api';

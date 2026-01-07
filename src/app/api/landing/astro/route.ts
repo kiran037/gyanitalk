@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
     rows.forEach(r => rowById.set(r.id.toString(), r));
 
     // Used for SEO URLs (Canonical/Schema ID), NOT for images
-    const baseUrl = process.env.NEXT_PUBLIC_BASEURL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL|| '';
 
     // Helper: Map IDs to Names
     const mapIdsToNames = (idsString: string | null, map: Map<string, string>) => {

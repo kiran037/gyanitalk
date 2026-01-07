@@ -1,8 +1,6 @@
-// app/api/astrologer-groups/search-astrologers/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// same helper for safety (ids etc.)
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === "bigint") return obj.toString();
@@ -39,6 +37,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Base filter conditions
     const where: any = {
       isDelete: false,
       isActive: true,
@@ -49,7 +48,35 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    let astrologers = await prisma.astrologers.findMany({
+    // If groupId is provided, exclude astrologers already in this group
+    if (groupId) {
+      try {
+        const groupIdBigInt = BigInt(groupId);
+
+        // 1. Get IDs of astrologers already in the group
+        const astrologersInGroup = await prisma.astrologer_assign_group.findMany({
+          where: { group_id: groupIdBigInt },
+          select: { astrologerId: true },
+        });
+
+        const excludedIds = astrologersInGroup
+          .map((a) => a.astrologerId)
+          .filter((id) => id !== null);
+
+        // 2. Add exclusion to the main query
+        if (excludedIds.length > 0) {
+          where.id = {
+            notIn: excludedIds,
+          };
+        }
+      } catch (e) {
+        console.error("Invalid Group ID format", e);
+        // Continue search without exclusion if ID is invalid
+      }
+    }
+
+    // 3. Fetch astrologers with the exclusion applied at DB level
+    const astrologers = await prisma.astrologers.findMany({
       where,
       select: {
         id: true,
@@ -65,23 +92,6 @@ export async function GET(request: NextRequest) {
       },
       take: limit,
     });
-
-    if (groupId) {
-      const groupIdBigInt = BigInt(groupId);
-
-      const astrologersInGroup = await prisma.astrologer_assign_group.findMany({
-        where: { group_id: groupIdBigInt },
-        select: { astrologerId: true },
-      });
-
-      const astrologersInGroupIds = astrologersInGroup
-        .map((a) => a.astrologerId?.toString())
-        .filter(Boolean) as string[];
-
-      astrologers = astrologers.filter(
-        (a) => !astrologersInGroupIds.includes(a.id.toString())
-      );
-    }
 
     const safe = convertPrismaTypes({
       success: true,
