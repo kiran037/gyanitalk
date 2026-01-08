@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
           metaTitle: r.metaTitle || `${r.name} - Expert ${primarySkillName}`,
           metaDescription: r.metaDescription || `Consult with ${r.name}, experienced astrologer. Get expert guidance on ${primarySkillName}. ₹${r.charge}/min`,
           metaKeywords: r.metaKeywords || `${r.name}, astrologer, ${primarySkillName}, online consultation`,
-          canonicalUrl: r.canonicalUrl || `/landing/astro/${astrologerSlug}`,
+          canonicalUrl: r.canonicalUrl || `/talk-to-astrologers/${astrologerSlug}`,
           ogTitle: r.ogTitle || r.metaTitle || r.name,
           ogDescription: r.ogDescription || r.metaDescription,
           twitterTitle: r.twitterTitle || r.metaTitle || r.name,
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
             "@type": "Person",
             "name": r.name,
             "jobTitle": primarySkillName,
-            "url": `${baseUrl}/landing/astro/${astrologerSlug}`,
+            "url": `${baseUrl}/talk-to-astrologers/${astrologerSlug}`,
             "image": rawProfileImage, // Raw URL
             "description": r.loginBio || `Expert astrologer with ${r.experienceInYears}+ years of experience`,
             "knowsAbout": allSkillNames ? allSkillNames.split(',').map((s: string) => s.trim()) : [],
@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
         ? `Search results for "${search}". Browse verified astrologers.`
         : `Connect with ${total}+ verified astrologers. Page ${page}.`,
       keywords: "astrologers, online astrology, verified astrologers",
-      canonical: `/landing/astro?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+      canonical: `/talk-to-astrologers?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
       structuredData: {
         "@context": "https://schema.org",
         "@type": "ItemList",
@@ -253,7 +253,7 @@ export async function GET(request: NextRequest) {
           "position": skip + index + 1,
           "item": {
             "@type": "Person",
-            "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/landing/astro/${astro.slug}`,
+            "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/talk-to-astrologers/${astro.slug}`,
             "name": astro.name,
             "image": astro.profileImage, // Raw URL
             "jobTitle": astro.primarySkill,

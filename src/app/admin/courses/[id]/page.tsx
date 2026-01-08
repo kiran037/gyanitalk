@@ -202,7 +202,7 @@ export default function CourseDetailPage() {
               <Button
                 variant="primary"
                 icon={<Eye className="w-4 h-4" />}
-                onClick={() => window.open(`/landing/courses/${course.slug}`, "_blank")}
+                onClick={() => window.open(`/courses/${course.slug}`, "_blank")}
               >
                 Preview
               </Button>

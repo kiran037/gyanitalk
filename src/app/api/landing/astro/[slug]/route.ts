@@ -183,7 +183,7 @@ export async function GET(
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    const astrologerUrl = `${baseUrl}/landing/astro/${astrologerSlug}`;
+    const astrologerUrl = `${baseUrl}/talk-to-astrologers${astrologerSlug}`;
 
     // --- 5. FORCE GENERATE SEO ---
     const seoData = {
@@ -249,7 +249,7 @@ export async function GET(
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
-          { "@type": "ListItem", "position": 2, "name": "Astrologers", "item": `${baseUrl}/landing/astro` },
+          { "@type": "ListItem", "position": 2, "name": "Astrologers", "item": `${baseUrl}/talk-to-astrologers` },
           { "@type": "ListItem", "position": 3, "name": astrologer.name, "item": astrologerUrl }
         ]
       })

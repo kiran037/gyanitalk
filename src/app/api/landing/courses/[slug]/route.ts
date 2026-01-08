@@ -35,7 +35,7 @@ function generateDetailedCourseSEO(course: any) {
       `${defaultDescription}. ${course.chapters?.length || 0} chapters covering everything you need. ${discount > 0 ? `Save ${discount}%!` : ''} Enroll now.`,
     metaKeywords: course.metaKeywords || 
       `${course.name}, ${categoryName}, online learning, course, chapters, ${slug}, astrology education`,
-    canonicalUrl: course.canonicalUrl || `/landing/courses/${slug}`,
+    canonicalUrl: course.canonicalUrl || `/courses/${slug}`,
     ogTitle: course.ogTitle || `${course.name} | ${categoryName} Course`,
     ogDescription: course.ogDescription || defaultDescription,
     ogImage: course.ogImage || course.image,

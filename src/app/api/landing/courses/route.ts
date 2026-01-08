@@ -31,7 +31,7 @@ function generateCourseSEO(course: any) {
       `${defaultDescription.substring(0, 150)}... Enroll now at ${priceText}.`,
     metaKeywords: course.metaKeywords || 
       `${course.name}, ${categoryName}, online course, astrology learning, ${slug}`,
-    canonicalUrl: course.canonicalUrl || `/landing/courses/${slug}`,
+    canonicalUrl: course.canonicalUrl || `/courses/${slug}`,
     ogTitle: course.ogTitle || `${course.name} | ${categoryName}`,
     ogDescription: course.ogDescription || defaultDescription,
     ogImage: course.ogImage || course.image,

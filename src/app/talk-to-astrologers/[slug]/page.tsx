@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const seo = astrologer.seo;
   const absoluteImage = getAbsoluteSeoImage(seo.ogImage || astrologer.profileImage);
-  const canonicalUrl = `${SITE_URL}/astro/${astrologer.slug}`;
+  const canonicalUrl = `${SITE_URL}/talk-to-astrologers/${slug}`;
 
   return {
     metadataBase: new URL(SITE_URL),
