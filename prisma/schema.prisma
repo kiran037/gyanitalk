@@ -702,12 +702,13 @@ model chapters {
 }
 
 model chat_log {
-  id         Int       @id @default(autoincrement())
-  type       Int
-  duration   Int
-  chatid     Int
-  created_at DateTime  @default(now()) @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
+  id          Int         @id @default(autoincrement())
+  type        Int
+  duration    Int
+  chatid      Int
+  created_at  DateTime    @default(now()) @db.Timestamp(0)
+  updated_at  DateTime?   @db.Timestamp(0)
+  chatrequest chatrequest @relation(fields: [chatid], references: [id])
 }
 
 model chatrequest {
@@ -729,6 +730,7 @@ model chatrequest {
   isFreeSession           Boolean?
   user                    users?       @relation("UserChatRequests", fields: [userId], references: [id])
   astrologer              astrologers? @relation("AstrologerChatRequests", fields: [astrologerId], references: [id])
+  chatLogs                chat_log[]
 
   @@index([userId], map: "chat_request_users_idx")
   @@index([astrologerId], map: "chatrequest_astrologer_idx")
@@ -1295,7 +1297,7 @@ model oauth_personal_access_clients {
   client_id  BigInt    @db.UnsignedBigInt
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
-} 
+}
 
 model oauth_refresh_tokens {
   id              String    @id @db.VarChar(100)
@@ -1943,43 +1945,42 @@ model user_wallets {
 }
 
 model users {
-  id                  BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
-  user_id             Int?
-  name                String?                @db.VarChar(50)
-  refer_code          String?                @db.VarChar(255)
-  contactNo           String?                @db.VarChar(50)
-  email               String?                @db.VarChar(255)
-  password            String?                @db.VarChar(255)
-  birthDate           DateTime?              @db.Timestamp(0)
-  birthTime           String?                @db.VarChar(50)
-  profile             String?                @db.Text
-  birthPlace          String?                @db.VarChar(255)
-  addressLine1        String?                @db.Text
-  addressLine2        String?                @db.Text
-  location            String?                @db.VarChar(100)
-  pincode             Int?
-  gender              String?                @db.VarChar(30)
-  isActive            Boolean                @default(true)
-  isDelete            Boolean                @default(false)
-  created_at          DateTime?              @db.Timestamp(0)
-  updated_at          DateTime?              @db.Timestamp(0)
-  fcm_token           String?                @db.VarChar(400)
-  token               String?                @db.LongText
-  jwt_token           String?                @db.LongText
-  otp                 String?                @db.VarChar(50)
-  expirationDate      DateTime?              @db.Timestamp(0)
-  countryCode         String?                @db.VarChar(45)
-  deleted_at          DateTime?              @db.Timestamp(0)
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id        Int?
+  name           String?   @db.VarChar(50)
+  refer_code     String?   @db.VarChar(255)
+  contactNo      String?   @db.VarChar(50)
+  email          String?   @db.VarChar(255)
+  password       String?   @db.VarChar(255)
+  birthDate      DateTime? @db.Timestamp(0)
+  birthTime      String?   @db.VarChar(50)
+  profile        String?   @db.Text
+  birthPlace     String?   @db.VarChar(255)
+  addressLine1   String?   @db.Text
+  addressLine2   String?   @db.Text
+  location       String?   @db.VarChar(100)
+  pincode        Int?
+  gender         String?   @db.VarChar(30)
+  isActive       Boolean   @default(true)
+  isDelete       Boolean   @default(false)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  fcm_token      String?   @db.VarChar(400)
+  token          String?   @db.LongText
+  jwt_token      String?   @db.LongText
+  otp            String?   @db.VarChar(50)
+  expirationDate DateTime? @db.Timestamp(0)
+  countryCode    String?   @db.VarChar(45)
+  deleted_at     DateTime? @db.Timestamp(0)
 
-  email_verified        Boolean?               @default(false)
-  phone_verified        Boolean?               @default(false)
-  email_verified_at     DateTime?              @db.Timestamp(0)
-  phone_verified_at     DateTime?              @db.Timestamp(0)
-  last_login_at         DateTime?              @db.Timestamp(0)
-  account_status        String?                @default("active") @db.VarChar(20) // active, suspended, locked
-  failed_login_attempts Int?                   @default(0)
-  locked_until          DateTime?              @db.Timestamp(0)
-
+  email_verified        Boolean?  @default(false)
+  phone_verified        Boolean?  @default(false)
+  email_verified_at     DateTime? @db.Timestamp(0)
+  phone_verified_at     DateTime? @db.Timestamp(0)
+  last_login_at         DateTime? @db.Timestamp(0)
+  account_status        String?   @default("active") @db.VarChar(20) // active, suspended, locked
+  failed_login_attempts Int?      @default(0)
+  locked_until          DateTime? @db.Timestamp(0)
 
   app_reviews         app_reviews[]
   astrologers         astrologers[]
@@ -2000,10 +2001,10 @@ model users {
   callrequests        callrequest[]          @relation("UserToCallRequests")
   astrologerGifts     astrologer_gifts[]     @relation("UserGiftsRelation")
 
-  login_attempts        login_attempts[]       @relation("UserLoginAttempts")
-  otps                  otps[]                 @relation("UserOTPs")
-  sessions              user_sessions[]        @relation("UserSessions")
-  email_verifications   email_verifications[]  @relation("UserEmailVerifications")
+  login_attempts      login_attempts[]      @relation("UserLoginAttempts")
+  otps                otps[]                @relation("UserOTPs")
+  sessions            user_sessions[]       @relation("UserSessions")
+  email_verifications email_verifications[] @relation("UserEmailVerifications")
 }
 
 model waitlist {
@@ -2144,35 +2145,35 @@ model aiastrologers {
 }
 
 model login_attempts {
-  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  userId     BigInt?   @db.UnsignedBigInt
-  email      String    @db.VarChar(255)
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt?  @db.UnsignedBigInt
+  email      String   @db.VarChar(255)
   success    Boolean
-  ipAddress  String?   @db.VarChar(45)
-  userAgent  String?   @db.Text
-  method     String    @db.VarChar(50) // password, otp, social
-  created_at DateTime  @default(now()) @db.Timestamp(0)
-  
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.Text
+  method     String   @db.VarChar(50) // password, otp, social
+  created_at DateTime @default(now()) @db.Timestamp(0)
+
   user users? @relation("UserLoginAttempts", fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId, created_at], map: "login_attempts_user_date_idx")
   @@index([email, created_at], map: "login_attempts_email_date_idx")
 }
 
 // 2. OTP Management
 model otps {
-  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  userId     BigInt?   @db.UnsignedBigInt
-  email      String?   @db.VarChar(255)
-  phone      String?   @db.VarChar(20)
-  otp_code   String    @db.VarChar(6)
-  otp_type   String    @db.VarChar(50) // registration, login, password_reset, phone_verify
-  is_used    Boolean   @default(false)
-  expires_at DateTime  @db.Timestamp(0)
-  created_at DateTime  @default(now()) @db.Timestamp(0)
-  
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt?  @db.UnsignedBigInt
+  email      String?  @db.VarChar(255)
+  phone      String?  @db.VarChar(20)
+  otp_code   String   @db.VarChar(6)
+  otp_type   String   @db.VarChar(50) // registration, login, password_reset, phone_verify
+  is_used    Boolean  @default(false)
+  expires_at DateTime @db.Timestamp(0)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+
   user users? @relation("UserOTPs", fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([email, otp_type, expires_at], map: "otps_email_type_exp_idx")
   @@index([phone, otp_type, expires_at], map: "otps_phone_type_exp_idx")
   @@index([userId, otp_type], map: "otps_user_type_idx")
@@ -2189,9 +2190,9 @@ model user_sessions {
   last_activity DateTime @default(now()) @db.Timestamp(0)
   expires_at    DateTime @db.Timestamp(0)
   created_at    DateTime @default(now()) @db.Timestamp(0)
-  
+
   user users @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, expires_at], map: "user_sessions_user_exp_idx")
   @@index([session_token], map: "user_sessions_token_idx")
   @@index([expires_at], map: "user_sessions_cleanup_idx")
@@ -2205,11 +2206,20 @@ model email_verifications {
   verified_at DateTime? @db.Timestamp(0)
   expires_at  DateTime  @db.Timestamp(0)
   created_at  DateTime  @default(now()) @db.Timestamp(0)
-  
+
   user users @relation("UserEmailVerifications", fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId], map: "email_verifications_user_idx")
   @@index([token], map: "email_verifications_token_idx")
+}
+
+model cron_lock {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("cron_lock")
 }
 
 enum pages_type {

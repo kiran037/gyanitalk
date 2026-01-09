@@ -1,6 +1,8 @@
 // src/proxy.js
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { startCron } from "@/lib/cron";
+//startCron();
 
 // PUBLIC ROUTES - No authentication needed
 const PUBLIC_EXACT_ROUTES = [

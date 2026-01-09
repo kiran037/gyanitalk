@@ -16,7 +16,7 @@ const formatDate = (timestamp) => {
 class FirestoreService {
   constructor() {
     this.projectId = process.env.FIREBASE_PROJECT_ID;
-    this.apiKey = process.env.FIREBASE_PRIVATE_KEYY;
+    this.apiKey = process.env.FIREBASE_PRIVATE_KEY;
   }
 
   async getChatMessages(chatId) {
@@ -103,7 +103,7 @@ class FirestoreService {
     let nextPageToken = null;
 
     do {
-     const apiUrl = url + (nextPageToken ? `?orderBy=createdAt%20desc&pageToken=${nextPageToken}` : `?orderBy=createdAt%20desc`);
+      const apiUrl = url + (nextPageToken ? `?orderBy=createdAt%20desc&pageToken=${nextPageToken}` : `?orderBy=createdAt%20desc`);
       const response = await axios.get(apiUrl);
       const data = response.data;
 
@@ -138,24 +138,24 @@ class FirestoreService {
   }
 
   async sendMessage(chatId, senderId, receiverId, message, messageId) {
-   try { 
-    // Use messageId as the document ID
-    const url = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${senderId}/messages?documentId=${messageId}`;
-    const now = new Date().toISOString();
-    const data = {
-      fields: {
-        messageId: { stringValue: messageId }, // store messageId explicitly
-        userId1: { stringValue: senderId },
-        userId2: { stringValue: receiverId },
-        message: { stringValue: message },
-        createdAt: { timestampValue: now },
-        updatedAt: { timestampValue: now },
-      },
-    };
-    const response = await axios.post(url, data);
-    if (!response?.data) throw new Error("Empty Firestore response");
-    return response.data;
-     } catch (error) {
+    try {
+      // Use messageId as the document ID
+      const url = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents/chats/${chatId}/userschat/${senderId}/messages?documentId=${messageId}`;
+      const now = new Date().toISOString();
+      const data = {
+        fields: {
+          messageId: { stringValue: messageId }, // store messageId explicitly
+          userId1: { stringValue: senderId },
+          userId2: { stringValue: receiverId },
+          message: { stringValue: message },
+          createdAt: { timestampValue: now },
+          updatedAt: { timestampValue: now },
+        },
+      };
+      const response = await axios.post(url, data);
+      if (!response?.data) throw new Error("Empty Firestore response");
+      return response.data;
+    } catch (error) {
       console.error("🔥 Firestore sendMessage error:", error?.response?.data || error);
       throw error;
     }
