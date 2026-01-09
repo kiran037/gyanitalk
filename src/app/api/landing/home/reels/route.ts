@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     // 1. Fetch the list of video IDs from your backend
-    const res = await fetch("https://astro.gyanitalk.com/api/reels", {
+    const res = await fetch(`${process.env.API_PUBLIC_URL}/api/reels`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
