@@ -12,11 +12,13 @@ export default function RegisterPage() {
   ];
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-[#F2F4F7] p-0 dark:bg-[#050A14] lg:p-8">
-      {/* Main Card Container */}
-      <div className="flex w-full max-w-[1600px] overflow-hidden bg-white shadow-2xl ring-1 ring-gray-100 dark:bg-gray-900 dark:ring-gray-800 lg:h-[90vh] lg:min-h-[700px] lg:rounded-[32px]">
+    // 1. Outer Container: Full screen, centered on Desktop, flowing on Mobile
+    <main className="flex min-h-screen w-full items-center justify-center bg-white p-0 dark:bg-[#0B1121] lg:bg-[#F2F4F7] lg:p-8 lg:dark:bg-[#050A14]">
+      
+      {/* 2. Card Container: Shadow/Radius only on Large Screens */}
+      <div className="flex w-full max-w-[1600px] overflow-hidden bg-white dark:bg-gray-900 lg:h-[90vh] lg:min-h-[700px] lg:rounded-[32px] lg:shadow-2xl lg:ring-1 lg:ring-gray-100 lg:dark:ring-gray-800">
         
-        {/* LEFT SIDE: Visuals (Hidden on Mobile) */}
+        {/* LEFT SIDE: Visuals (Hidden on Mobile/Tablet) */}
         <div className="relative hidden w-5/12 flex-col justify-between p-16 text-white xl:flex">
           
           {/* Background Gradient */}
@@ -80,11 +82,12 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Form Area (Full width on mobile) */}
-        <div className="flex w-full flex-col bg-white dark:bg-[#0B1121] xl:w-7/12">
+        {/* RIGHT SIDE: Form Area */}
+        {/* Added 'relative h-full' to ensure it takes height */}
+        <div className="relative flex h-full w-full flex-col xl:w-7/12">
           
-          {/* Mobile Header (Visible only on small screens) */}
-          <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800 xl:hidden">
+          {/* Mobile Header (Fixed Top) */}
+          <div className="flex w-full items-center justify-between px-6 py-6 xl:hidden">
              <Link href="/" className="flex items-center gap-2">
                 <img 
                    src="https://gyanitalk.s3.ap-south-1.amazonaws.com/public/storage/images/astrologer_7851728112667.png"
@@ -93,15 +96,14 @@ export default function RegisterPage() {
                  />
                  <span className="font-bold text-gray-900 dark:text-white">GyaniTalk</span>
              </Link>
-             <Link href="/login" className="text-sm font-semibold text-[#FF6B35]">
-                Sign In
-             </Link>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-8 sm:px-8 lg:px-16 xl:py-12">
-            <div className="mx-auto w-full max-w-[600px]">
-               {/* Desktop Header */}
-               <div className="mb-8 hidden items-center justify-between xl:flex">
+          {/* 3. Centering Wrapper: This div forces the form to the center */}
+          <div className="flex flex-1 flex-col items-center justify-center px-6 py-4 sm:px-12 lg:px-20">
+            <div className="w-full max-w-[520px]">
+               
+               {/* Desktop Header Text (Hidden on Mobile to save space) */}
+               <div className="mb-10 hidden items-center justify-between xl:flex">
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-[#FF6B35]" />
@@ -115,7 +117,20 @@ export default function RegisterPage() {
                   </div>
                </div>
 
+               {/* Mobile Header Text */}
+               <div className="mb-8 xl:hidden">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Account</h1>
+                  <p className="mt-2 text-sm text-gray-500">Enter your details to begin your journey.</p>
+               </div>
+
+               {/* The Form */}
                <RegisterForm />
+
+               {/* Mobile Login Link (Bottom) */}
+               <div className="mt-8 text-center text-sm xl:hidden">
+                  <span className="text-gray-500 dark:text-gray-400">Already have an account?</span>
+                  <Link href="/login" className="ml-2 font-semibold text-[#FF6B35]">Sign In</Link>
+               </div>
                
             </div>
           </div>

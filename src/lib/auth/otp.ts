@@ -74,38 +74,36 @@ export async function verifyOTP(
     userId: record.userId || undefined,
   };
 }
+
 export async function sendOTP(
   phone: string,
-  countryCode: string,
+  countryCode: string, 
   otp: string,
   type: OTPType
 ): Promise<boolean> {
-  // MSG91 expects format: 919999999999 (NO plus sign)
-  const code = countryCode.replace("+", ""); // Remove + if present
-  const formattedMobile = `${code}${phone}`; // No + sign
+  
+  // 1. Prepare number for MSG91: Must be CountryCode + Phone (No + sign)
+  // Example: "91" + "9876543210" = "919876543210"
+  const cleanCountryCode = countryCode.replace(/\D/g, ""); 
+  const formattedMobileForAPI = `${cleanCountryCode}${phone}`;
 
   console.log(`
 ╔════════════════════════════════════════╗
 ║          OTP GENERATED                 ║
 ╠════════════════════════════════════════╣
-║ Mobile: ${formattedMobile}
+║ Mobile: ${phone}
+║ CC:     ${countryCode}
 ║ Type:   ${type}
 ║ OTP:    ${otp}
 ╚════════════════════════════════════════╝
   `);
-
-  // DEVELOPMENT MODE: Skip actual API call due to network issues
-  if (process.env.NODE_ENV === "development") {
-    console.log("⚠️  DEV MODE: Skipping MSG91 API (use OTP above)");
-    return true;
-  }
 
   if (process.env.OTP_SERVICE_PROVIDER !== "msg91") {
     console.error("OTP Error: OTP_SERVICE_PROVIDER is not set to 'msg91'");
     return false;
   }
 
-  console.log("📤 Sending OTP to MSG91...");
+  console.log(`📤 Sending OTP to MSG91 (Env: ${process.env.NODE_ENV})...`);
 
   try {
     const payload = {
@@ -114,7 +112,7 @@ export async function sendOTP(
       otp_length: 6,
       otp_expiry: 5,
       template_id: process.env.MSG91_TEMPLATE_ID,
-      mobile: formattedMobile, // WITHOUT the + sign
+      mobile: formattedMobileForAPI, // ✅ Now includes country code
       authkey: process.env.OTP_API_KEY,
       realTimeResponse: 1,
     };
@@ -125,9 +123,7 @@ export async function sendOTP(
       "https://control.msg91.com/api/v5/otp",
       payload,
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         timeout: 15000,
       }
     );
@@ -142,11 +138,11 @@ export async function sendOTP(
     console.error("❌ MSG91 returned non-success response");
     return false;
   } catch (error: any) {
-    console.error("💥 MSG91 Request Error:");
-    console.error("Message:", error.message);
+    console.error("💥 MSG91 Request Error:", error.message);
     return false;
   }
 }
+
 /**
  * Check if OTP rate limit exceeded
  */

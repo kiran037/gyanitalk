@@ -47,7 +47,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
-      <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link
