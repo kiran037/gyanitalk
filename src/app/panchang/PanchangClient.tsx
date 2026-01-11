@@ -1,14 +1,19 @@
-// app/landing/panchang/PanchangClient.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import LandingWrapper from "@/components/landing/LandingWrapper";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { Calendar, Sun, Sparkles, Loader2, Info } from "lucide-react";
+import { Loader2, Moon as MoonIcon, ChevronDown } from "lucide-react";
 import DateSelector from "@/components/landing/panchang/DateSelector";
 import PanchangDisplay from "@/components/landing/panchang/PanchangDisplay";
-import PanchangInfo from "@/components/landing/panchang/PanchangInfo";
+import PanchangExtendedInfo from "@/components/landing/panchang/PanchangExtendedInfo";
 import { useRouter, useSearchParams } from "next/navigation";
+
+const CosmicScene = dynamic(() => import("@/components/landing/panchang/3d/CosmicScene"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-transparent" />
+});
 
 export default function PanchangClient() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -20,11 +25,9 @@ export default function PanchangClient() {
   const searchParams = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
 
-  // Sync with URL params on load
   useEffect(() => {
     const dateParam = searchParams.get("date");
     let dateToUse = selectedDate;
-
     if (dateParam) {
       const parsedDate = new Date(dateParam);
       if (!isNaN(parsedDate.getTime())) {
@@ -32,7 +35,6 @@ export default function PanchangClient() {
         setSelectedDate(parsedDate);
       }
     }
-
     fetchPanchang(dateToUse);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -40,21 +42,26 @@ export default function PanchangClient() {
   const fetchPanchang = async (date: Date) => {
     setLoading(true);
     setError(null);
-
     try {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
       const response = await fetch("/api/landing/panchang", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          day: date.getDate(),
-          month: date.getMonth() + 1,
-          year: date.getFullYear(),
-          language: "en",
+          date: formattedDate,
+          lat: 28.6139,
+          lon: 77.2090,
+          tz: 5.5,
+          time: "05:20",
+          lang: "en",
         }),
       });
 
       const json = await response.json();
-
       if (json.success) {
         setPanchangData(json.data);
       } else {
@@ -62,7 +69,6 @@ export default function PanchangClient() {
       }
     } catch (err) {
       setError("Failed to fetch Panchang data. Please try again.");
-      console.error("Panchang fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -70,120 +76,104 @@ export default function PanchangClient() {
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
-    // Format date as YYYY-MM-DD manually to avoid timezone shifts
     const offset = date.getTimezoneOffset();
     const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
     const yyyyMMdd = adjustedDate.toISOString().split("T")[0];
-    
     router.push(`?date=${yyyyMMdd}`, { scroll: false });
   };
 
   return (
     <LandingWrapper>
-      {/* ================= HERO SECTION ================= */}
-      <section className="relative flex min-h-[40vh] items-center justify-center overflow-hidden px-4 pb-8 pt-24 sm:min-h-[50vh] sm:px-6 sm:pt-32 lg:px-8">
-        {/* Background Patterns */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(#FF6B35_1px,transparent_1px)] [background-size:20px_20px] opacity-[0.03] dark:opacity-[0.05]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white dark:via-gray-950/50 dark:to-gray-950" />
+      {/* 
+         HERO SECTION: 
+         Forced 'bg-gray-950' and 'text-white' to ensure 3D scene looks good 
+         regardless of Light/Dark mode preference. 
+      */}
+      <section className="relative flex min-h-[50vh] flex-col items-center justify-center overflow-hidden bg-gray-950 px-4 pb-12 pt-20 text-white sm:min-h-[65vh] sm:px-6 lg:px-8">
+        
+        {/* Dark Backgrounds for 3D Contrast */}
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-gray-950/60 to-gray-950" />
+        
+        {/* 3D Scene */}
+        <div className="absolute inset-0 z-10 opacity-80 mix-blend-screen">
+          {!prefersReducedMotion && (
+            <Suspense fallback={null}>
+               <CosmicScene 
+                 className="h-full w-full" 
+                 tithi={panchangData?.tithi} 
+               />
+            </Suspense>
+          )}
         </div>
 
-        {/* Floating Elements (Hidden on mobile for performance) */}
-        {!prefersReducedMotion && (
-          <div className="hidden md:block">
-            <motion.div
-              className="absolute left-[10%] top-[20%] h-64 w-64 rounded-full bg-orange-400/20 blur-[100px]"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 8, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute right-[10%] top-[30%] h-64 w-64 rounded-full bg-yellow-400/20 blur-[100px]"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 10, repeat: Infinity, delay: 1 }}
-            />
-          </div>
-        )}
-
-        <div className="relative z-10 mx-auto w-full max-w-4xl text-center">
+        {/* Hero Content */}
+        <div className="relative z-20 mx-auto mt-6 w-full max-w-4xl text-center sm:mt-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             className="flex flex-col items-center gap-4 sm:gap-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/20 bg-orange-50/50 px-3 py-1.5 backdrop-blur-sm dark:bg-orange-900/10 sm:px-4 sm:py-2">
-              <Calendar className="h-3.5 w-3.5 text-[#FF6B35] sm:h-4 sm:w-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6B35] sm:text-xs">
-                Daily Vedic Calendar
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur-md shadow-[0_0_15px_rgba(255,107,53,0.3)] sm:px-4 sm:py-1.5">
+              <MoonIcon className="h-3 w-3 text-[#FF6B35] sm:h-4 sm:w-4" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/90 sm:text-xs">
+                Live Cosmic Alignment
               </span>
             </div>
 
-            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-              Your <span className="bg-gradient-to-r from-[#FF6B35] to-[#FFB347] bg-clip-text text-transparent">Sacred Timing</span> Guide
+            <h1 className="bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-6xl lg:text-7xl">
+              Daily <span className="text-[#FF6B35]">Vedic</span><br />
+              Panchang
             </h1>
 
-            <p className="max-w-xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-lg">
-              Align your activities with cosmic rhythms. Discover Tithi, Nakshatra, Yoga, and auspicious Muhurats for the day.
+            <p className="max-w-md text-sm font-light leading-relaxed text-blue-100/70 sm:max-w-xl sm:text-lg">
+              Observe the celestial dance. Accurate Tithi, Nakshatra, and Auspicious Muhurats synchronized with the cosmos.
             </p>
           </motion.div>
         </div>
+
+        <motion.div 
+          className="absolute bottom-6 z-20 text-white/30 sm:bottom-10"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        >
+          <ChevronDown className="h-6 w-6 sm:h-8 sm:w-8" />
+        </motion.div>
       </section>
 
-      {/* ================= MAIN CONTENT ================= */}
-      <section className="relative z-20 px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
+      {/* MAIN CONTENT */}
+      <section className="relative z-30 -mt-8 px-3 pb-12 sm:-mt-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl space-y-6 rounded-t-[2rem] bg-white/90 p-4 shadow-2xl backdrop-blur-xl dark:bg-gray-950/90 sm:space-y-8 sm:rounded-t-[3rem] sm:p-10">
           
-          {/* 1. Date Selector - Sticky on Mobile for better UX */}
-          <div className="sticky top-[64px] z-30 -mx-4 bg-white/80 px-4 py-2 backdrop-blur-md dark:bg-gray-950/80 sm:static sm:mx-0 sm:bg-transparent sm:p-0">
-             <DateSelector
+          <div className="sticky top-[70px] z-40 mx-auto max-w-3xl sm:top-[80px]">
+            <DateSelector
               selectedDate={selectedDate}
               onDateChange={handleDateChange}
             />
           </div>
 
-          {/* 2. Content Area */}
-          <div className="min-h-[400px]">
-            <AnimatePresence mode="wait">
+          <div className="min-h-[300px] sm:min-h-[400px]">
+             <AnimatePresence mode="wait">
               {loading ? (
                 <motion.div
                   key="loading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex h-64 flex-col items-center justify-center gap-3 rounded-3xl border border-gray-100 bg-white/50 p-8 text-center backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50"
+                  className="flex h-48 flex-col items-center justify-center gap-3 py-10 sm:h-64"
                 >
-                  <Loader2 className="h-8 w-8 animate-spin text-[#FF6B35]" />
-                  <p className="text-sm font-medium text-gray-500">Calculating planetary positions...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-[#FF6B35] sm:h-10 sm:w-10" />
+                  <p className="text-xs font-medium text-gray-500 sm:text-sm">Calculating planetary positions...</p>
                 </motion.div>
               ) : error ? (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex h-64 flex-col items-center justify-center gap-4 rounded-3xl border border-red-100 bg-red-50/50 p-8 text-center dark:border-red-900/30 dark:bg-red-900/10"
-                >
-                  <div className="rounded-full bg-red-100 p-3 text-red-500 dark:bg-red-900/30">
-                    <Info className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Unable to load Panchang</h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{error}</p>
-                  </div>
-                  <button 
-                    onClick={() => fetchPanchang(selectedDate)}
-                    className="mt-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
-                  >
-                    Try Again
-                  </button>
-                </motion.div>
+                <div key="error" className="py-10 text-center text-sm text-red-500 sm:py-20">{error}</div>
               ) : (
                 <motion.div
                   key="content"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6 sm:space-y-8"
                 >
                   <PanchangDisplay
                     data={panchangData}
@@ -191,16 +181,14 @@ export default function PanchangClient() {
                     error={error}
                     selectedDate={selectedDate}
                   />
+                  
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <PanchangExtendedInfo data={panchangData} />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-
-          {/* 3. Educational Info - Separate container for cleaner reading */}
-          <div className="pt-8">
-            <PanchangInfo />
-          </div>
-
         </div>
       </section>
     </LandingWrapper>

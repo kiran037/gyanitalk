@@ -1,151 +1,110 @@
-// ============================================
-// FILE 1: app/api/landing/panchang/route.ts
-// ============================================
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { VedicAPI, formatDateForAPI, getDefaultLocation } from '@/lib/panchang/vedic-api';
 
-const ASTRO_BASE_URL = process.env.ASTROLOGYAPI_BASE_URL;
-const USER_ID = process.env.ASTROLOGYAPI_USER_ID;
-const API_KEY = process.env.ASTROLOGYAPI_API_KEY;
-
-async function fetchPanchang({
-  day,
-  month,
-  year,
-  language = "en",
-}: {
-  day: number;
-  month: number;
-  year: number;
-  language?: string;
-}) {
-  if (!USER_ID || !API_KEY || !ASTRO_BASE_URL) {
-    throw new Error("Astrology API config missing");
-  }
-
-  const payload = new URLSearchParams({
-    day: String(day),
-    month: String(month),
-    year: String(year),
-    hour: "5",
-    min: "20",
-    lat: "11.2",
-    lon: "77.0",
-    tzone: "5.5",
-    name: "AstroUser",
-  });
-
-  const authToken = Buffer.from(`${USER_ID}:${API_KEY}`).toString("base64");
-
-  const response = await fetch(
-    `${ASTRO_BASE_URL}/v1/advanced_panchang/`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${authToken}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        ...(language && { "Accept-Language": language }),
-      },
-      body: payload.toString(),
-    }
-  );
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("AstrologyAPI Error:", response.status, text);
-    throw new Error(`AstrologyAPI returned ${response.status}`);
-  }
-
-  return response.json();
+// Type for API response
+interface VedicAPIResponse {
+  status: number;
+  response: any;
+  remaining_api_calls: number;
 }
 
-export async function POST(req: NextRequest) {
+// ============================================
+// GET - Get today's Panchang or specific date
+// ============================================
+export async function GET(request: NextRequest) {
   try {
-    const { day, month, year, language = "en" } = await req.json();
+    const { searchParams } = new URL(request.url);
+    
+    // Parse query parameters
+    const dateParam = searchParams.get('date'); // DD/MM/YYYY format
+    const lat = searchParams.get('lat');
+    const lon = searchParams.get('lon');
+    const tz = searchParams.get('tz');
+    const time = searchParams.get('time') ?? undefined;
+    const lang = searchParams.get('lang') || 'en';
 
-    if (!day || !month || !year) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: "day, month, and year are required and must be numeric",
-        },
-        { status: 400 }
-      );
-    }
+    // Use provided location or default
+    const location = lat && lon && tz 
+      ? { lat: parseFloat(lat), lon: parseFloat(lon), tz: parseFloat(tz) }
+      : getDefaultLocation();
 
-    const d = Number(day);
-    const m = Number(month);
-    const y = Number(year);
+    // Use provided date or today
+    const date = dateParam || formatDateForAPI(new Date());
 
-    if ([d, m, y].some(Number.isNaN)) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: "day, month, and year are required and must be numeric",
-        },
-        { status: 400 }
-      );
-    }
+    // Fetch panchang data
+    const data: VedicAPIResponse = await VedicAPI.getPanchang({
+      date,
+      ...location,
+      time,
+      lang
+    }) as VedicAPIResponse;
 
-    const result = await fetchPanchang({
-      day: d,
-      month: m,
-      year: y,
-      language,
-    });
-
-    // Return in frontend-expected format
     return NextResponse.json({
       success: true,
-      data: result,
-      requestDate: { day: d, month: m, year: y },
+      data: data.response,
+      requestDate: date,
+      location,
+      remaining_api_calls: data.remaining_api_calls
     });
-  } catch (error) {
-    console.error("Panchang POST error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to fetch Panchang";
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: errorMessage,
-      },
-      { status: 500 }
-    );
+
+  } catch (error: any) {
+    console.error('Panchang GET error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Failed to fetch Panchang'
+    }, { status: 500 });
   }
 }
 
-export async function GET(req: NextRequest) {
+// ============================================
+// POST - Get Panchang for specific date/location
+// ============================================
+export async function POST(request: NextRequest) {
   try {
-    const today = new Date();
-    const { searchParams } = new URL(req.url);
-    const language = searchParams.get("language") || "en";
+    const body = await request.json();
+    const { 
+      date, 
+      lat, 
+      lon, 
+      tz = 5.5, 
+      time = '05:20',
+      lang = 'en' 
+    } = body;
 
-    const result = await fetchPanchang({
-      day: today.getDate(),
-      month: today.getMonth() + 1,
-      year: today.getFullYear(),
-      language,
-    });
+    // Validate required fields
+    if (!date) {
+      return NextResponse.json({
+        success: false,
+        error: 'Date is required (format: DD/MM/YYYY)'
+      }, { status: 400 });
+    }
 
-    // Return in frontend-expected format
+    // Use provided location or default
+    const location = lat && lon 
+      ? { lat: parseFloat(lat), lon: parseFloat(lon), tz: parseFloat(tz) }
+      : getDefaultLocation();
+
+    // Fetch panchang data
+    const data: VedicAPIResponse = await VedicAPI.getPanchang({
+      date,
+      ...location,
+      time,
+      lang
+    }) as VedicAPIResponse;
+
     return NextResponse.json({
       success: true,
-      data: result,
-      requestDate: {
-        day: today.getDate(),
-        month: today.getMonth() + 1,
-        year: today.getFullYear(),
-      },
+      data: data.response,
+      requestDate: date,
+      location,
+      remaining_api_calls: data.remaining_api_calls
     });
-  } catch (error) {
-    console.error("Panchang GET error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to fetch Panchang";
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: errorMessage,
-      },
-      { status: 500 }
-    );
+
+  } catch (error: any) {
+    console.error('Panchang POST error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Failed to fetch Panchang'
+    }, { status: 500 });
   }
 }
