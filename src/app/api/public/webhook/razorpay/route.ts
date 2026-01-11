@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
         }
 
         const event = JSON.parse(body);
-
+        console.log('Log Events', event.event)
+        console.log('row data log', body)
         switch (event.event) {
             case "payment.captured":
                 await handleAddMoneyFromWebhook(event.payload.payment.entity);
