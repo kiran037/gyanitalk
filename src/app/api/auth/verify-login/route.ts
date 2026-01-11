@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
+    // SANITIZATION: Get strictly the last 10 digits for DB lookup
+    const cleanContactNo = contactNo.replace(/\D/g, "").slice(-10);
+
+    // Find user (Using clean number)
     const user = await prisma.users.findFirst({
-      where: { contactNo, countryCode, isDelete: false },
+      where: { contactNo: cleanContactNo, countryCode, isDelete: false },
       select: {
         id: true,
         name: true,
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      await logLoginAttempt(null, contactNo, false, "otp", request);
+      await logLoginAttempt(null, cleanContactNo, false, "otp", request);
       return NextResponse.json(
         { success: false, error: "Invalid credentials" },
         { status: 401 }
@@ -44,9 +47,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify OTP
-    const otpVerification = await verifyOTP(contactNo, otp, "login");
+    const otpVerification = await verifyOTP(cleanContactNo, otp, "login");
     if (!otpVerification.valid) {
-      await logLoginAttempt(user.id, user.email || contactNo, false, "otp", request);
+      await logLoginAttempt(user.id, user.email || cleanContactNo, false, "otp", request);
       return NextResponse.json(
         { success: false, error: "Invalid or expired OTP" },
         { status: 400 }
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
     await resetFailedAttempts(user.id);
 
     // Log successful login
-    await logLoginAttempt(user.id, user.email || contactNo, true, "otp", request);
+    await logLoginAttempt(user.id, user.email || cleanContactNo, true, "otp", request);
 
     // Create session
     const deviceInfo = extractDeviceInfo(request);

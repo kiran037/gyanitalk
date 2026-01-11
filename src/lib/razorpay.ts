@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/lib/razorpay.ts
 import { prisma } from "@/lib/prisma";
 import Razorpay from "razorpay";
 
@@ -18,7 +19,6 @@ export async function handleAddMoneyFromWebhook(payment: any) {
         return;
     }
 
-    // 🔁 Idempotency check
     const alreadyProcessed = await prisma.payment.findFirst({
         where: {
             id: Number(pay_id),
@@ -178,4 +178,3 @@ export async function handlePaymentAuthorized(payment: any) {
         });
     }
 }
-

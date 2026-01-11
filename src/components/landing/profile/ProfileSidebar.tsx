@@ -20,7 +20,7 @@ export const PROFILE_MENU_ITEMS = [
   { icon: MapPin, label: "Addresses", href: "/profile/addresses", color: "text-orange-500" },
   { icon: Star, label: "Reviews", href: "/profile/reviews", color: "text-yellow-500" },
   { icon: Sparkles, label: "Kundali", href: "/profile/kundali", color: "text-violet-500" },
-  { icon: History, label: "Activity", href: "/profile/activity", color: "text-cyan-500" },
+  // { icon: History, label: "Activity", href: "/profile/activity", color: "text-cyan-500" },
   { icon: Settings, label: "Edit Profile", href: "/profile/edit", color: "text-gray-500" },
 ];
 

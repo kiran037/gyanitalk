@@ -1,20 +1,9 @@
-// components/landing/panchang/PanchangDisplay.tsx
 "use client";
 
 import { motion } from "framer-motion";
 import {
-  Moon,
-  Star,
-  Sun,
-  CloudMoon,
-  Sunrise,
-  Sunset,
-  Clock,
-  AlertCircle,
-  Loader2,
-  Calendar as CalendarIcon,
-  Info,
-  ChevronRight
+  Moon, Star, Sun, CloudMoon, Sunrise, Sunset, Clock, AlertCircle, Loader2,
+  Calendar as CalendarIcon, Sparkles
 } from "lucide-react";
 
 interface PanchangDisplayProps {
@@ -24,254 +13,138 @@ interface PanchangDisplayProps {
   selectedDate: Date;
 }
 
-export default function PanchangDisplay({
-  data,
-  loading,
-  error,
-}: PanchangDisplayProps) {
+export default function PanchangDisplay({ data, loading, error }: PanchangDisplayProps) {
   
-  // Robust time formatter handling both string "HH:MM" and object {hour, minute}
-  function formatTimeToAMPM(time: string | { hour: number; minute: number } | undefined) {
-    if (!time) return "--:--";
-    
-    let hours: number;
-    let minutes: number;
-
-    if (typeof time === "string") {
-      const parts = time.split(":");
-      hours = Number(parts[0]);
-      minutes = Number(parts[1] || 0);
-    } else {
-      hours = time.hour;
-      minutes = time.minute;
-    }
-
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-
-    return `${hours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+  function parseTime(timeStr: string): string {
+    if (!timeStr) return "--:--";
+    return timeStr.trim();
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white/80 p-8 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/50">
-        <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
-        <p className="mt-4 text-sm font-medium text-gray-500">Aligning with the cosmos...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-red-100 bg-red-50/50 p-8 text-center backdrop-blur-xl dark:border-red-900/30 dark:bg-red-900/10">
-        <div className="mb-4 rounded-full bg-red-100 p-3 text-red-500 dark:bg-red-900/20">
-          <AlertCircle className="h-8 w-8" />
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Data Unavailable</h3>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{error}</p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
+  if (loading || error || !data) return null; // Loading/Error handled in parent
 
   return (
     <div className="space-y-6 sm:space-y-8">
       
-      {/* 1. Core Panchang Elements (The "Big 4") */}
+      {/* 1. Core Panchang Elements */}
       <motion.div
-        className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8"
+        className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:rounded-3xl sm:p-8"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-xl bg-orange-50 p-2.5 text-[#FF6B35] dark:bg-orange-900/20">
-            <Star className="h-6 w-6" />
+        <div className="mb-4 flex items-center gap-3 sm:mb-6">
+          <div className="rounded-xl bg-orange-50 p-2 text-[#FF6B35] dark:bg-orange-900/20 sm:p-2.5">
+            <Star className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
             Core Elements
           </h3>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ElementCard 
-            title="Tithi" 
-            icon={Moon}
-            name={data.tithi?.details?.tithi_name}
-            endTime={data.tithi?.end_time}
-            extra={data.tithi?.details?.special}
-            formatter={formatTimeToAMPM}
-          />
-          <ElementCard 
-            title="Nakshatra" 
-            icon={Star}
-            name={data.nakshatra?.details?.nak_name}
-            endTime={data.nakshatra?.end_time}
-            extra={data.nakshatra?.details?.ruler ? `Ruler: ${data.nakshatra.details.ruler}` : null}
-            formatter={formatTimeToAMPM}
-          />
-          <ElementCard 
-            title="Yoga" 
-            icon={CloudMoon}
-            name={data.yog?.details?.yog_name}
-            endTime={data.yog?.end_time}
-            formatter={formatTimeToAMPM}
-          />
-          <ElementCard 
-            title="Karana" 
-            icon={Sun}
-            name={data.karan?.details?.karan_name}
-            endTime={data.karan?.end_time}
-            formatter={formatTimeToAMPM}
-          />
+        {/* Use grid-cols-1 on mobile to prevent squishing */}
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {data.tithi && <ElementCard title="Tithi" icon={Moon} name={data.tithi.name} number={data.tithi.number} endTime={data.tithi.end} type={data.tithi.type} special={data.tithi.special} />}
+          {data.nakshatra && <ElementCard title="Nakshatra" icon={Star} name={data.nakshatra.name} number={data.nakshatra.number} endTime={data.nakshatra.end} deity={data.nakshatra.diety} lord={data.nakshatra.lord} />}
+          {data.yoga && <ElementCard title="Yoga" icon={CloudMoon} name={data.yoga.name} number={data.yoga.number} endTime={data.yoga.end} meaning={data.yoga.meaning} />}
+          {data.karana && <ElementCard title="Karana" icon={Sun} name={data.karana.name} number={data.karana.number} endTime={data.karana.end} special={data.karana.special} />}
         </div>
       </motion.div>
 
-      {/* 2. Meta Info Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Day Info */}
-        {(data.day || data.paksha) && (
-          <InfoCard 
-            label="Day & Paksha"
-            icon={CalendarIcon}
-            value={data.day}
-            subValue={data.paksha}
-            color="blue"
-          />
+      {/* 2. Day & Meta Information */}
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        {(data.day?.name || data.rasi?.name) && (
+          <InfoCard label="Day & Rasi" icon={CalendarIcon} value={data.day?.name} subValue={data.rasi?.name ? `Rasi: ${data.rasi.name}` : null} color="blue" />
         )}
-
-        {/* Hindu Month */}
-        {data.hindu_maah && (
-          <InfoCard 
-            label="Hindu Month"
-            icon={Moon}
-            value={data.hindu_maah.purnimanta}
-            subValue={data.hindu_maah.amanta ? `Amanta: ${data.hindu_maah.amanta}` : null}
-            color="purple"
-          />
-        )}
-
-        {/* Zodiac Signs */}
-        {(data.sun_sign || data.moon_sign) && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        {(data.sun_position || data.moon_position) && (
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
             <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              <Star className="h-4 w-4 text-pink-500" />
-              Zodiac
+              <Sparkles className="h-4 w-4 text-yellow-500" />
+              Positions
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between border-b border-dashed border-gray-100 pb-2 dark:border-gray-800">
-                <span className="text-sm text-gray-500">Sun Sign</span>
-                <span className="font-bold text-gray-900 dark:text-white">{data.sun_sign || "--"}</span>
-              </div>
-              <div className="flex justify-between pt-1">
-                <span className="text-sm text-gray-500">Moon Sign</span>
-                <span className="font-bold text-gray-900 dark:text-white">{data.moon_sign || "--"}</span>
-              </div>
+              {data.sun_position && (
+                <div className="flex justify-between border-b border-dashed border-gray-100 pb-2 dark:border-gray-800">
+                  <span className="text-xs text-gray-500 sm:text-sm">Sun Sign</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
+                    {data.sun_position.zodiac || data.sun_position.rasi_no}
+                  </span>
+                </div>
+              )}
+              {data.moon_position && (
+                <div className="flex justify-between pt-1">
+                  <span className="text-xs text-gray-500 sm:text-sm">Moon Degree</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
+                    {Math.round(data.moon_position.moon_degree)}°
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}
+        {data.advanced_details?.masa && (
+          <InfoCard label="Hindu Month" icon={Moon} value={data.advanced_details.masa.amanta_name || data.advanced_details.masa.purnimanta_name} subValue={`Paksha: ${data.advanced_details.masa.paksha || ''}`} color="purple" />
+        )}
       </div>
 
-      {/* 3. Celestial Timings (Sun & Moon) */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Sun */}
-        {(data.sunrise || data.sunset) && (
-          <motion.div
-            className="rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50/50 to-amber-50/50 p-6 dark:border-orange-900/30 dark:from-orange-900/10 dark:to-amber-900/10"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-              <Sun className="h-5 w-5 text-orange-500" />
+      {/* 3. Celestial Timings */}
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+        {data.advanced_details && (
+          <motion.div className="rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50/50 to-amber-50/50 p-4 dark:border-orange-900/30 dark:from-orange-900/10 dark:to-amber-900/10 sm:p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:mb-5 sm:text-lg">
+              <Sun className="h-4 w-4 text-orange-500 sm:h-5 sm:w-5" />
               Solar Cycle
             </h3>
             <div className="space-y-1">
-              <TimeRow label="Sunrise" time={formatTimeToAMPM(data.sunrise)} icon={Sunrise} color="text-orange-500" />
-              <TimeRow label="Sunset" time={formatTimeToAMPM(data.sunset)} icon={Sunset} color="text-orange-600" />
-              <div className="my-2 h-px bg-orange-200/50 dark:bg-orange-800/30" />
-              <TimeRow label="Vedic Sunrise" time={formatTimeToAMPM(data.vedic_sunrise)} icon={Sun} color="text-yellow-600" />
-              <TimeRow label="Vedic Sunset" time={formatTimeToAMPM(data.vedic_sunset)} icon={Sunset} color="text-yellow-700" />
+              <TimeRow label="Sunrise" time={parseTime(data.advanced_details.sun_rise)} icon={Sunrise} color="text-orange-500" />
+              <TimeRow label="Sunset" time={parseTime(data.advanced_details.sun_set)} icon={Sunset} color="text-orange-600" />
             </div>
           </motion.div>
         )}
-
-        {/* Moon */}
-        {(data.moonrise || data.moonset) && (
-          <motion.div
-            className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-6 dark:border-blue-900/30 dark:from-blue-900/10 dark:to-indigo-900/10"
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-              <Moon className="h-5 w-5 text-blue-500" />
+        {data.advanced_details && (
+          <motion.div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-4 dark:border-blue-900/30 dark:from-blue-900/10 dark:to-indigo-900/10 sm:p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:mb-5 sm:text-lg">
+              <Moon className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
               Lunar Cycle
             </h3>
             <div className="space-y-1">
-              <TimeRow label="Moonrise" time={formatTimeToAMPM(data.moonrise)} icon={Moon} color="text-blue-500" />
-              <TimeRow label="Moonset" time={formatTimeToAMPM(data.moonset)} icon={CloudMoon} color="text-indigo-500" />
+              <TimeRow label="Moonrise" time={parseTime(data.advanced_details.moon_rise)} icon={Moon} color="text-blue-500" />
+              <TimeRow label="Moonset" time={parseTime(data.advanced_details.moon_set)} icon={CloudMoon} color="text-indigo-500" />
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* 4. Auspicious / Inauspicious */}
+      {/* 4. Timings */}
       <div className="space-y-4">
-        {/* Abhijit Muhurta - The Good Stuff */}
-        {data.abhijit_muhurta && (
-          <motion.div
-            className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-0 dark:border-emerald-900/50 dark:bg-emerald-900/20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+        {data.advanced_details?.abhijit_muhurta && (
+          <motion.div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-0 dark:border-emerald-900/50 dark:bg-emerald-900/20">
             <div className="flex flex-col sm:flex-row">
               <div className="flex items-center gap-3 bg-emerald-100/50 p-4 dark:bg-emerald-900/30 sm:w-48 sm:flex-col sm:justify-center sm:text-center">
-                <Clock className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <Clock className="h-5 w-5 text-emerald-600 dark:text-emerald-400 sm:h-6 sm:w-6" />
                 <h3 className="font-bold text-emerald-900 dark:text-emerald-100">Abhijit Muhurta</h3>
               </div>
               <div className="flex flex-1 flex-col justify-center p-4">
-                <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">
-                  {formatTimeToAMPM(data.abhijit_muhurta.start)} - {formatTimeToAMPM(data.abhijit_muhurta.end)}
+                <p className="text-xl font-bold text-emerald-800 dark:text-emerald-200 sm:text-2xl">
+                  {parseTime(data.advanced_details.abhijit_muhurta.start)} - {parseTime(data.advanced_details.abhijit_muhurta.end)}
                 </p>
-                <p className="mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 sm:text-sm">
                   Best time for auspicious activities
                 </p>
               </div>
             </div>
           </motion.div>
         )}
-
-        {/* The Bad Stuff - Grid */}
-        {(data.rahukaal || data.guliKaal || data.yamghant_kaal) && (
-          <motion.div
-            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-              <AlertCircle className="h-5 w-5 text-rose-500" />
+        
+        {/* Inauspicious Grid: 1 col on mobile, 3 on large */}
+        {(data.rahukaal || data.gulika || data.yamakanta) && (
+          <motion.div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+              <AlertCircle className="h-4 w-4 text-rose-500 sm:h-5 sm:w-5" />
               Inauspicious Timings
             </h3>
-
             <div className="grid gap-3 sm:grid-cols-3">
-              <BadTimeCard 
-                label="Rahu Kaal" 
-                data={data.rahukaal} 
-                formatter={formatTimeToAMPM} 
-              />
-              <BadTimeCard 
-                label="Gulika Kalam" 
-                data={data.guliKaal} 
-                formatter={formatTimeToAMPM} 
-              />
-              <BadTimeCard 
-                label="Yamaghanta" 
-                data={data.yamghant_kaal} 
-                formatter={formatTimeToAMPM} 
-              />
+              {data.rahukaal && <BadTimeCard label="Rahu Kaal" time={data.rahukaal} />}
+              {data.gulika && <BadTimeCard label="Gulika Kalam" time={data.gulika} />}
+              {data.yamakanta && <BadTimeCard label="Yamaghanta" time={data.yamakanta} />}
             </div>
           </motion.div>
         )}
@@ -280,63 +153,57 @@ export default function PanchangDisplay({
   );
 }
 
-/* --- Sub Components for cleaner JSX --- */
-
-function ElementCard({ title, icon: Icon, name, endTime, extra, formatter }: any) {
+function ElementCard({ title, icon: Icon, name, number, endTime, type, special, deity, lord, meaning }: any) {
   if (!name) return null;
   return (
-    <div className="flex flex-col justify-between rounded-xl bg-gray-50 p-4 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800/80">
-      <div>
-        <div className="mb-2 flex items-center gap-2">
-          <Icon className="h-4 w-4 text-[#FF6B35]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            {title}
+    <div className="group relative overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-white/60 to-white/30 p-4 shadow-lg backdrop-blur-md transition-all hover:translate-y-[-2px] hover:shadow-xl dark:border-gray-700/50 dark:from-gray-800/60 dark:to-gray-900/30 sm:p-5">
+      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br from-[#FF6B35]/20 to-purple-500/20 blur-3xl transition-opacity opacity-0 group-hover:opacity-100" />
+      <div className="relative z-10">
+        <div className="mb-2 flex items-center justify-between sm:mb-3">
+          <div className="flex items-center gap-2 rounded-lg bg-white/50 px-2 py-1 dark:bg-black/20">
+            <Icon className="h-3 w-3 text-[#FF6B35] sm:h-4 sm:w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              {title}
+            </span>
+          </div>
+          {number && <span className="font-mono text-[10px] font-bold text-gray-400 sm:text-xs">#{number}</span>}
+        </div>
+        <h3 className="text-lg font-bold leading-tight text-gray-900 dark:text-white sm:text-xl">{name}</h3>
+        {(special || type) && (
+          <span className="mt-2 inline-block rounded-md bg-orange-100/80 px-2 py-0.5 text-[10px] font-bold uppercase text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+            {special || type}
           </span>
-        </div>
-        <div className="text-lg font-bold leading-tight text-gray-900 dark:text-white">
-          {name}
-        </div>
-      </div>
-      
-      <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
-        {endTime && (
-          <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-            <span>Ends:</span>
-            <span className="font-medium">{formatter(endTime)}</span>
-          </div>
         )}
-        {extra && (
-          <div className="mt-1 text-xs font-medium text-[#FF6B35]">
-            {extra}
-          </div>
-        )}
+        <div className="mt-3 space-y-1 border-t border-gray-100/50 pt-2 dark:border-gray-700/50 sm:mt-4 sm:pt-3">
+          {endTime && (
+            <div className="flex items-center justify-between text-[10px] text-gray-600 dark:text-gray-300 sm:text-xs">
+              <span>Ends at</span>
+              <span className="font-mono font-bold bg-gray-100 px-1.5 py-0.5 rounded dark:bg-gray-800">{endTime}</span>
+            </div>
+          )}
+          {(deity || lord) && (
+             <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                <span className="text-gray-400">Ruler:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-200">{deity || lord}</span>
+             </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 function InfoCard({ label, icon: Icon, value, subValue, color }: any) {
-  const colors = {
-    blue: "text-blue-500",
-    purple: "text-purple-500",
-    pink: "text-pink-500"
-  };
-  
+  const colors = { blue: "text-blue-500", purple: "text-purple-500", pink: "text-pink-500" };
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 sm:mb-3">
         <Icon className={`h-4 w-4 ${colors[color as keyof typeof colors]}`} />
         {label}
       </div>
       <div>
-        <div className="text-xl font-bold text-gray-900 dark:text-white">
-          {value || "--"}
-        </div>
-        {subValue && (
-          <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {subValue}
-          </div>
-        )}
+        <div className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">{value || "--"}</div>
+        {subValue && <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">{subValue}</div>}
       </div>
     </div>
   );
@@ -344,30 +211,22 @@ function InfoCard({ label, icon: Icon, value, subValue, color }: any) {
 
 function TimeRow({ label, time, icon: Icon, color }: any) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-white/50 dark:hover:bg-white/5">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-white/50 dark:hover:bg-white/5 sm:py-2">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Icon className={`h-4 w-4 ${color}`} />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</span>
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-200 sm:text-sm">{label}</span>
       </div>
-      <span className="font-mono text-sm font-bold text-gray-900 dark:text-white">
-        {time}
-      </span>
+      <span className="font-mono text-xs font-bold text-gray-900 dark:text-white sm:text-sm">{time}</span>
     </div>
   );
 }
 
-function BadTimeCard({ label, data, formatter }: any) {
-  if (!data) return null;
+function BadTimeCard({ label, time }: any) {
+  if (!time) return null;
   return (
-    <div className="rounded-xl bg-gray-50 p-3.5 dark:bg-gray-800">
-      <div className="mb-1 text-xs font-bold uppercase text-gray-500 dark:text-gray-400">
-        {label}
-      </div>
-      <div className="flex items-center gap-1 font-mono text-sm font-bold text-gray-900 dark:text-white">
-        {formatter(data.start)} 
-        <ChevronRight className="h-3 w-3 text-gray-400" /> 
-        {formatter(data.end)}
-      </div>
+    <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800 sm:p-3.5">
+      <div className="mb-1 text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400 sm:text-xs">{label}</div>
+      <div className="flex items-center gap-1 text-xs font-bold text-gray-900 dark:text-white sm:text-sm">{time}</div>
     </div>
   );
 }

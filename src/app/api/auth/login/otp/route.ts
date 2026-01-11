@@ -17,9 +17,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
+    // SANITIZATION: Get strictly the last 10 digits for DB lookup
+    const cleanContactNo = contactNo.replace(/\D/g, "").slice(-10);
+
+    // Find user (Using clean 10 digit number)
     const user = await prisma.users.findFirst({
-      where: { contactNo, countryCode, isDelete: false },
+      where: { contactNo: cleanContactNo, countryCode, isDelete: false },
     });
 
     if (!user) {
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check OTP rate limit
-    const rateLimit = await checkOTPRateLimit(contactNo, "login");
+    const rateLimit = await checkOTPRateLimit(cleanContactNo, "login");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -66,14 +69,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate and send OTP
-    const otp = await generateOTP(contactNo, "login", user.id);
-    await sendOTP(contactNo, countryCode, otp, "login");
+    // Pass clean number to DB, but send countryCode to helper for API usage
+    const otp = await generateOTP(cleanContactNo, "login", user.id);
+    await sendOTP(cleanContactNo, countryCode, otp, "login");
 
     return NextResponse.json({
       success: true,
       message: "OTP sent successfully",
       data: {
-        contactNo,
+        contactNo: cleanContactNo,
         countryCode,
         expiresIn: 300, // 5 minutes
       },
