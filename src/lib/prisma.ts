@@ -1,25 +1,20 @@
 // src/lib/prisma.ts
 import 'dotenv/config'
-import { PrismaClient } from '@/generated/client/client' // Your custom path
+import { PrismaClient } from '@/generated/client/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
-import { createPool } from 'mariadb' 
 
 declare global {
-  var __prisma: PrismaClient | undefined
+var __prisma: PrismaClient | undefined
 }
 
-const prismaClientSingleton = () => {
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!)
 
-  const pool = createPool(process.env.DATABASE_URL!) 
-  const adapter = new PrismaMariaDb(pool as any)
-
-  return new PrismaClient({
-    adapter,
-  })
-}
-
-export const prisma = global.__prisma ?? prismaClientSingleton()
+export const prisma: PrismaClient =
+global.__prisma ??
+new PrismaClient({
+adapter,
+})
 
 if (process.env.NODE_ENV !== "production") {
-  global.__prisma = prisma
+global.__prisma = prisma
 }
