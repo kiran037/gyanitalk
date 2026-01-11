@@ -1,180 +1,134 @@
-///Users/xeoren/Desktop/gyanitallk-admin/src/lib/razorpay.ts
+
+
 import { prisma } from "@/lib/prisma";
 import Razorpay from "razorpay";
+import crypto from "crypto";
 
-const razorpay = new Razorpay({
+export const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID!,
     key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
 
-export async function handleAddMoneyFromWebhook(payment: any) {
-    const transaction_id = payment.id;
-    const amount = payment.amount / 100; // paise → rupees
-
-    const pay_id = payment.notes?.payment_id;
-    const userId = payment.notes?.user_id;
-
-    if (!pay_id || !userId) {
-        console.log("❌ Missing pay_id or user_id in Razorpay notes");
-        return;
-    }
-
-    const alreadyProcessed = await prisma.payment.findFirst({
-        where: {
-            id: Number(pay_id),
-            paymentStatus: "success",
-        },
-    });
-
-    if (alreadyProcessed) {
-        console.log("⚠️ Payment already processed");
-        return;
-    }
-
-    const gstFlag = await prisma.systemflag.findFirst({
-        where: { name: "Gst" },
-    });
-
-    const gstPercent = parseFloat(gstFlag?.value || "18");
-    const originalAmount = amount / (1 + gstPercent / 100);
-
+/**
+ * 🔐 SHARED LOGIC: Processes the recharge, adds balance, and logs transaction.
+ * This is called by BOTH the Webhook and the Frontend Verification API.
+ */
+export async function processRecharge(paymentId: number, razorpayPaymentId: string) {
+    // 1. Check if payment exists and isn't already processed
     const paymentRecord = await prisma.payment.findFirst({
-        where: { id: Number(pay_id) },
+        where: { id: paymentId },
     });
 
-    if (!paymentRecord || paymentRecord.paymentStatus !== "pending") {
-        console.log("❌ Invalid or already used payment record");
-        return;
-    }
+    if (!paymentRecord) return { success: false, message: "Payment record not found" };
+    if (paymentRecord.paymentStatus === "success") return { success: true, message: "Already processed" };
 
-    // ✅ Update payment
-    await prisma.payment.update({
-        where: { id: Number(pay_id) },
-        data: {
-            paymentMode: "razorpay",
-            paymentReference: transaction_id,
-            paymentStatus: "success",
-        },
-    });
+    const userId = paymentRecord.userId;
+    if (!userId) return { success: false, message: "User ID not attached to payment" };
 
+    // 2. GST Logic (Inclusive GST)
+    // If User pays ₹118, and GST is 18%: Real Balance = 100, Tax = 18.
+    const gstFlag = await prisma.systemflag.findFirst({ where: { name: "Gst" } });
+    const gstPercent = parseFloat(gstFlag?.value || "18");
+    const amountPaid = paymentRecord.amount || 0;
+    
+    // Calculate Base Amount (Excluding GST)
+    const baseWalletAmount = amountPaid / (1 + gstPercent / 100);
+
+    // 3. Cashback Logic
+    // We already calculated the specific VALUE in 'create-order', so we just read it here.
     const cashbackAmount = paymentRecord.cashback_amount || 0;
 
-    // 💰 Cashback entry
-    if (cashbackAmount > 0) {
-        await prisma.wallettransaction.create({
+    const totalToAdd = baseWalletAmount + cashbackAmount;
+
+    // 4. 🔥 ATOMIC TRANSACTION (Fixes Issue #3 - Missing Transactions)
+    // We use $transaction to ensure everything happens, or nothing happens.
+    await prisma.$transaction(async (tx) => {
+        // A. Mark Payment as Success
+        await tx.payment.update({
+            where: { id: paymentId },
             data: {
-                userId: Number(userId),
-                amount: cashbackAmount,
+                paymentStatus: "success",
+                paymentReference: razorpayPaymentId,
+            },
+        });
+
+        // B. Update/Create User Wallet
+        const wallet = await tx.user_wallets.findFirst({ where: { userId } });
+        
+        if (wallet) {
+            await tx.user_wallets.update({
+                where: { id: wallet.id },
+                data: { amount: { increment: totalToAdd } },
+            });
+        } else {
+            await tx.user_wallets.create({
+                data: {
+                    userId,
+                    amount: totalToAdd,
+                    createdBy: Number(userId),
+                    modifiedBy: Number(userId),
+                },
+            });
+        }
+
+        // C. Create Transaction Entry: Main Topup
+        await tx.wallettransaction.create({
+            data: {
+                userId,
+                amount: baseWalletAmount,
                 isCredit: true,
-                transactionType: "Cashback",
+                transactionType: "Topup",
+                transaction_id: razorpayPaymentId,
+                created_at: new Date(),
             },
         });
-    }
 
-    // 💳 Topup entry
-    await prisma.wallettransaction.create({
-        data: {
-            userId: Number(userId),
-            amount: originalAmount,
-            isCredit: true,
-            transactionType: "Topup",
-            transaction_id,
-        },
+        // D. Create Transaction Entry: Cashback (If applicable)
+        if (cashbackAmount > 0) {
+            await tx.wallettransaction.create({
+                data: {
+                    userId,
+                    amount: cashbackAmount,
+                    isCredit: true,
+                    transactionType: "Cashback",
+                    transaction_id: `CB-${razorpayPaymentId}`, // Unique ref
+                    created_at: new Date(),
+                },
+            });
+        }
     });
 
-    // 👛 Wallet update
-    const wallet = await prisma.user_wallets.findFirst({
-        where: { userId: Number(userId) },
-    });
-
-    const finalAmount = originalAmount + cashbackAmount;
-
-    if (wallet) {
-        await prisma.user_wallets.update({
-            where: { id: wallet.id },
-            data: {
-                amount: Number(wallet.amount) + finalAmount,
-            },
-        });
-    } else {
-        await prisma.user_wallets.create({
-            data: {
-                userId: Number(userId),
-                amount: finalAmount,
-                createdBy: Number(userId),
-                modifiedBy: Number(userId),
-            },
-        });
-    }
-
-    console.log("✅ Wallet updated successfully via webhook");
+    return { success: true };
 }
-export async function handlePaymentFailed(payment: any) {
-    const pay_id = payment.notes?.payment_id;
 
+// --- WEBHOOK HELPERS ---
+
+export async function handleAddMoneyFromWebhook(paymentEntity: any) {
+    const pay_id = paymentEntity.notes?.payment_id;
+    if (!pay_id) return;
+    
+    // Redirect logic to the shared function
+    console.log(`Webhook processing payment: ${pay_id}`);
+    await processRecharge(Number(pay_id), paymentEntity.id);
+}
+
+export async function handlePaymentFailed(paymentEntity: any) {
+    const pay_id = paymentEntity.notes?.payment_id;
     if (!pay_id) return;
 
     await prisma.payment.updateMany({
-        where: {
-            id: Number(pay_id),
-            paymentStatus: "pending",
-        },
-        data: {
-            paymentStatus: "failed",
-            paymentReference: payment.id
-        },
+        where: { id: Number(pay_id), paymentStatus: "pending" },
+        data: { paymentStatus: "failed", paymentReference: paymentEntity.id },
     });
-
-    console.log("❌ Payment marked as failed:", payment.id);
 }
-export async function handlePaymentAuthorized(payment: any) {
-    const pay_id = payment.notes?.payment_id;
 
-    if (!pay_id) {
-        console.log("❌ pay_id missing in notes");
-        return;
-    }
-
+export async function handlePaymentAuthorized(paymentEntity: any) {
+    // We attempt to capture it. If captured, the 'payment.captured' event will fire later
+    // and trigger handleAddMoneyFromWebhook.
     try {
-        // 🔒 Idempotency: agar already captured / success ho chuka hai
-        if (payment.status === "captured") {
-            console.log("✅ Payment already captured");
-            return;
-        }
-
-        console.log("⚠️ Capturing authorized payment:", payment.id);
-
-        // ✅ CAPTURE PAYMENT
-        await razorpay.payments.capture(
-            payment.id,
-            payment.amount, // paise
-            payment.currency || "INR"
-        );
-
-        // ✅ DB update (authorized → success)
-        await prisma.payment.updateMany({
-            where: {
-                id: Number(pay_id),
-                paymentStatus: "pending",
-            },
-            data: {
-                paymentStatus: "success",
-                paymentReference: payment.id,
-            },
-        });
-
-        console.log("✅ Payment captured successfully:", payment.id);
-    } catch (err: any) {
-        console.error("❌ Error while capturing payment:", err.message);
-
-        // ❌ Mark failed if capture fails
-        await prisma.payment.updateMany({
-            where: {
-                id: Number(pay_id),
-            },
-            data: {
-                paymentStatus: "failed",
-            },
-        });
+        if (paymentEntity.status === "captured") return;
+        await razorpay.payments.capture(paymentEntity.id, paymentEntity.amount, paymentEntity.currency);
+    } catch (err) {
+        console.error("Capture failed", err);
     }
 }

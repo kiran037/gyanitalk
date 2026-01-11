@@ -10,8 +10,8 @@ interface UserProfile {
   name: string;
   email: string;
   contactNo: string;
-  profile: string;
-  wallet_balance: string;
+  profile: string | null; // Handle nulls from DB
+  wallet_balance: string; // Prisma might return Decimal, API converts to Number or String
   statistics: {
     total_orders: number;
     total_chats: number;
@@ -19,9 +19,9 @@ interface UserProfile {
     total_reviews: number;
     following_count: number;
   };
-  email_verified: boolean;
-  phone_verified: boolean;
-  account_status: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  account_status?: string;
 }
 
 export default function ProfilePage() {

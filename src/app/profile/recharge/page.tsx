@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 
 export default function RechargePage() {
   const router = useRouter();
@@ -81,11 +80,12 @@ export default function RechargePage() {
 
     setRechargeLoading(true);
 
+    // ✅ Get the percentage
     let cashback = 0;
     if (selectedPlanId) {
       const plan = rechargeOptions.find((p) => p.id === selectedPlanId);
       if (plan && plan.cashback) {
-        cashback = plan.cashback;
+        cashback = plan.cashback; // Sending percentage (e.g., 10)
       }
     }
 
@@ -97,17 +97,24 @@ export default function RechargePage() {
     }
 
     try {
+      // 1. Create Order
       const res = await fetch("/api/landing/recharge/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
-          cashback,
+          cashback, // Sending percentage
         }),
       });
 
       const data = await res.json();
+      if (!data.success) {
+        alert("Error creating order");
+        setRechargeLoading(false);
+        return;
+      }
 
+      // 2. Open Razorpay
       const rzp = new (window as any).Razorpay({
         key: data.key,
         amount: data.amount,
@@ -115,9 +122,35 @@ export default function RechargePage() {
         order_id: data.orderId,
         name: "Wallet Recharge",
         description: `Add ₹${amount} to wallet`,
-        handler: () => {
-          router.push("/profile/wallet");
-          router.refresh();
+
+        // 3. 🔥 Handle Success: Call Verify API
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch(
+              "/api/landing/recharge/verify-payment",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  internal_payment_id: data.internalPaymentId, // from create-order response
+                }),
+              }
+            );
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              router.push("/profile/wallet");
+              router.refresh();
+            } else {
+              alert("Payment verification failed. Check wallet history.");
+            }
+          } catch (e) {
+            console.error(e);
+          }
         },
         theme: { color: "#FF6B35" },
       });
@@ -132,6 +165,16 @@ export default function RechargePage() {
   };
 
   const activePlan = rechargeOptions.find((p) => p.id === selectedPlanId);
+
+  // 🔥 CALCULATE UI VALUES HERE
+  const currentAmount = parseInt(rechargeAmount || "0");
+  const cashbackPercentage = activePlan?.cashback || 0;
+  
+  // Calculate value: (Amount * Percentage) / 100
+  const cashbackValue = (currentAmount * cashbackPercentage) / 100;
+  
+  // Total Credit = Amount + Calculated Value
+  const totalCredit = currentAmount + cashbackValue;
 
   return (
     <div className="mx-auto min-h-screen w-full px-4 py-8 md:px-6">
@@ -218,7 +261,8 @@ export default function RechargePage() {
                       >
                         {opt.cashback && (
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 text-[8px] font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white dark:ring-[#111]">
-                            +₹{opt.cashback} Extra
+                            {/* 🔥 UPDATED TO SHOW PERCENTAGE */}
+                            +{opt.cashback}% Extra
                           </div>
                         )}
                         <span
@@ -263,12 +307,14 @@ export default function RechargePage() {
                   </span>
                 </div>
 
+                {/* 🔥 UPDATED CASHBACK DISPLAY LOGIC */}
                 {activePlan?.cashback && (
                   <div className="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2 text-green-700 dark:bg-green-900/20 dark:text-green-400">
                     <span className="flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-4 w-4" /> Cashback
+                      <Sparkles className="h-4 w-4" /> Cashback ({activePlan.cashback}%)
                     </span>
-                    <span className="font-bold">+₹{activePlan.cashback}</span>
+                    {/* Show Calculated Value */}
+                    <span className="font-bold">+₹{cashbackValue.toFixed(2)}</span>
                   </div>
                 )}
 
@@ -278,12 +324,9 @@ export default function RechargePage() {
                   <span className="text-gray-900 dark:text-white">
                     Total Credit
                   </span>
+                  {/* 🔥 UPDATED TOTAL CALCULATION */}
                   <span className="text-[#FF6B35]">
-                    ₹
-                    {(
-                      parseInt(rechargeAmount || "0") +
-                      (activePlan?.cashback || 0)
-                    ).toFixed(2)}
+                    ₹{totalCredit.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -315,29 +358,29 @@ export default function RechargePage() {
                   <ShieldCheck className="h-4 w-4 text-green-500" />
                   <span>Bank Grade Security (256-bit SSL)</span>
                 </div>
-                
+
                 {/* Trust Logos */}
                 <div className="flex flex-wrap justify-center gap-3 opacity-70 grayscale transition-all hover:grayscale-0">
-                   {/* Razorpay */}
-                   <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" 
-                    alt="Razorpay" 
+                  {/* Razorpay */}
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg"
+                    alt="Razorpay"
                     className="h-5 object-contain"
-                   />
-                   <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                   {/* UPI */}
-                   <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" 
-                    alt="UPI" 
+                  />
+                  <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+                  {/* UPI */}
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg"
+                    alt="UPI"
                     className="h-5 object-contain"
-                   />
-                   <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                   
-                   <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
-                    alt="VISA" 
+                  />
+                  <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+                    alt="VISA"
                     className="h-5 object-contain"
-                   />
+                  />
                 </div>
               </div>
             </div>
