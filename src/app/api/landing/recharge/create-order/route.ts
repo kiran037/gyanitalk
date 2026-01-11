@@ -1,9 +1,10 @@
+
+
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { prisma } from "@/lib/prisma";
 import { verifyUserJWT } from "@/lib/auth";
 
-// 🔐 Same helper pattern as /api/me
 async function getSession(request: NextRequest) {
   const token =
     request.cookies.get("token")?.value ||
@@ -11,7 +12,6 @@ async function getSession(request: NextRequest) {
     request.headers.get("authorization")?.replace("Bearer ", "");
 
   if (!token) return null;
-
   try {
     return await verifyUserJWT(token);
   } catch {
@@ -28,21 +28,25 @@ export async function POST(request: NextRequest) {
   const session = await getSession(request);
 
   if (!session?.userId) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const { amount, cashback = 0 } = await request.json();
+  // ✅ Renaming cashback to cashbackPercent for clarity
+  const { amount, cashback: cashbackPercent = 0 } = await request.json();
   const userId = BigInt(session.userId);
+
+  const amountNum = Number(amount);
+  
+  // 🔥 FIX: Calculate the actual cashback money value
+  // If amount is 100 and cashbackPercent is 10, cashbackValue becomes 10
+  const cashbackValue = (amountNum * Number(cashbackPercent)) / 100;
 
   // 1️⃣ Create payment row
   const payment = await prisma.payment.create({
     data: {
       userId,
-      amount: Number(amount),
-      cashback_amount: cashback,
+      amount: amountNum,
+      cashback_amount: cashbackValue, // ✅ Storing calculated amount, not percentage
       paymentMode: "razorpay",
       paymentStatus: "pending",
     },
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   // 2️⃣ Create Razorpay order
   const order = await razorpay.orders.create({
-    amount: Number(amount) * 100,
+    amount: amountNum * 100, // Razorpay takes paise
     currency: "INR",
     notes: {
       payment_id: payment.id.toString(),
@@ -70,5 +74,6 @@ export async function POST(request: NextRequest) {
     orderId: order.id,
     amount: order.amount,
     currency: order.currency,
+    internalPaymentId: payment.id, // ✅ Sending this back for verification step
   });
 }

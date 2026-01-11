@@ -196,6 +196,8 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
                   alt="Profile"
                   fill
                   className="object-cover"
+                  // Bypass server-side check to prevent private IP/SSRF errors
+                  unoptimized={true} 
                 />
                 <div
                   className={`absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center transition-all duration-300 ${
@@ -438,9 +440,7 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
 
             {/* Phone */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                Phone Number
-              </label>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide" />
               <div className="relative group">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
                 <div className="flex gap-2 pl-11">

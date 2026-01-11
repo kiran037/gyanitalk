@@ -1,27 +1,25 @@
-
-
 "use client";
 
 import { motion } from "framer-motion";
 import {
   ShoppingBag, MessageSquare, Phone, Star, Wallet, TrendingUp,
-  CheckCircle2, AlertCircle, ChevronRight, Plus
+  CheckCircle2, AlertCircle, ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { avatar } from "@/lib/images";
-import { PROFILE_MENU_ITEMS } from "./ProfileSidebar"; // Import shared menu
+import { avatar } from "@/lib/images"; 
+import { PROFILE_MENU_ITEMS } from "./ProfileSidebar";
 
 interface ProfileOverviewProps {
   profile: {
     name: string;
     email: string;
-    profile: string;
+    profile: string | null; 
     contactNo: string;
-    wallet_balance: string;
-    email_verified: boolean;
-    phone_verified: boolean;
-    account_status: string;
+    wallet_balance: string | number;
+    email_verified?: boolean; 
+    phone_verified?: boolean;
+    account_status?: string;
     statistics: {
       total_orders: number;
       total_chats: number;
@@ -41,28 +39,34 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
     { icon: Star, label: "Reviews", value: profile.statistics.total_reviews, color: "text-yellow-500", bg: "bg-yellow-500/10" },
   ];
 
+  const formatCurrency = (val: string | number) => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? "0.00" : num.toFixed(2);
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8 pb-20 lg:pb-0">
       
-      {/* 1. Header Section (Combines Greeting & Mobile Profile Pic) */}
+      {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex items-center gap-4">
-            {/* Mobile/Desktop Avatar */}
             <div className="relative">
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-full p-[2px] bg-gradient-to-r from-[#FF6B35] to-[#FFB347]">
                     <Image
                         src={avatar(profile.profile)}
-                        alt={profile.name}
+                        alt={profile.name || "User"}
                         width={80}
                         height={80}
                         className="rounded-full border-4 border-[#FAFAFA] dark:border-[#050505] bg-white object-cover h-full w-full"
+                        // ADD THIS LINE: This bypasses the server-side check that is causing the crash
+                        unoptimized={true} 
                     />
                 </div>
                 <div className="absolute bottom-0 right-0 p-1.5 rounded-full bg-green-500 border-4 border-[#FAFAFA] dark:border-[#050505]" />
             </div>
             <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Hi, {profile.name.split(" ")[0]}!
+                Hi, {profile.name ? profile.name.split(" ")[0] : "User"}!
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
                     <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/5">
@@ -73,7 +77,6 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
             </div>
         </div>
         
-        {/* Verification Badges (Desktop) / Status (Mobile) */}
         <div className="hidden md:flex gap-2">
             {!profile.email_verified && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-xs font-bold">
@@ -90,8 +93,8 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
 
       {/* 2. Wallet Card & Stats Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ... (Rest of the component remains exactly the same) ... */}
         
-        {/* Premium Wallet Card */}
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -101,7 +104,6 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B35] via-[#FF8F50] to-[#FFB347]" />
                 <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
                 
-                {/* Decorative Circles */}
                 <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
                 <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-black/10 blur-2xl" />
 
@@ -116,7 +118,7 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
                     <div>
                         <p className="text-white/80 text-sm font-medium mb-1">Total Balance</p>
                         <h3 className="text-4xl font-bold tracking-tight">
-                        ₹{parseFloat(profile.wallet_balance).toFixed(2)}
+                        ₹{formatCurrency(profile.wallet_balance)}
                         </h3>
                     </div>
 
@@ -132,7 +134,6 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
             </div>
         </motion.div>
 
-        {/* Stats Grid */}
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {stats.map((stat, i) => (
                 <motion.div
@@ -156,11 +157,11 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
         </div>
       </div>
 
-      {/* 3. Mobile Navigation Grid (Hidden on Desktop) */}
+      {/* 3. Mobile Navigation Grid */}
       <div className="lg:hidden">
         <h3 className="text-lg font-bold mb-4 px-1">Menu</h3>
         <div className="grid grid-cols-2 gap-3">
-            {PROFILE_MENU_ITEMS.filter(i => i.href !== '/profile').map((item, i) => { // Filter out 'Overview'
+            {PROFILE_MENU_ITEMS.filter(i => i.href !== '/profile').map((item) => {
                 const Icon = item.icon;
                 return (
                     <Link
@@ -181,11 +182,11 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
         </div>
       </div>
 
-      {/* 4. Desktop Quick Actions (Alternative to Sidebar for quick access) */}
+      {/* 4. Desktop Quick Actions */}
       <div className="hidden lg:block">
         <h3 className="text-xl font-bold mb-4">Quick Shortcuts</h3>
         <div className="grid grid-cols-4 gap-4">
-             {['Edit Profile', 'My Kundali', 'Addresses', 'Favorites'].map((action, i) => (
+             {['Edit', 'Kundali', 'Addresses', 'Favorites'].map((action) => (
                 <Link
                     key={action}
                     href={`/profile/${action.toLowerCase().replace(' ', '-')}`}

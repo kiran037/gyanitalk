@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/panchang/moon/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { VedicAPI, formatDateForAPI, getDefaultLocation } from '@/lib/panchang/vedic-api';
 
