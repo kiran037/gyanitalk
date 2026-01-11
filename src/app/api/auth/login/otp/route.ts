@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // Find user (Using clean 10 digit number)
     const user = await prisma.users.findFirst({
-      where: { contactNo: cleanContactNo, countryCode, isDelete: false },
+      where: { contactNo: cleanContactNo, isDelete: false },
     });
 
     if (!user) {
