@@ -57,7 +57,7 @@ export async function getAgoraChannelUsage(
     } catch (error) {
         return {
             status: false,
-            data: error.message
+            data: error
 
         };
     }
