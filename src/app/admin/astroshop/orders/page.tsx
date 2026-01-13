@@ -321,7 +321,7 @@ export default function OrdersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Link href={`/astroshop/orders/${order.id}`}>
+                          <Link href={`/admin/astroshop/orders/${order.id}`}>
                             <Button
                               variant="outline"
                               size="sm"
