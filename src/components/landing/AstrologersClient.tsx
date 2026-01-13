@@ -381,6 +381,7 @@ export default function AstrologersClient({
                                   alt={astro.name}
                                   fill
                                   sizes="72px"
+                                  unoptimized={true} 
                                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
                               </div>

@@ -1,9 +1,9 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/profile/kundali/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyUserJWT } from "@/lib/auth";
 import { verifySession } from "@/lib/auth/session";
 
-// Helper: Serialize BigInt for JSON response
 function serializeData(data: any): any {
   return JSON.parse(JSON.stringify(data, (key, value) => {
     if (typeof value === 'bigint') return value.toString();
@@ -13,35 +13,24 @@ function serializeData(data: any): any {
 
 export async function GET(request: NextRequest) {
   try {
-    // 1. Get JWT Token
-    const token =
-      request.cookies.get("token")?.value ||
-      request.cookies.get("auth_token")?.value ||
-      request.headers.get("authorization")?.replace("Bearer ", "");
-
+    const token = request.cookies.get("token")?.value || request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
-    // 2. Verify JWT
     let jwtPayload;
-    try {
-      jwtPayload = await verifyUserJWT(token);
-    } catch (e) {
-      return NextResponse.json({ success: false, error: "Invalid Token" }, { status: 401 });
-    }
+    try { jwtPayload = await verifyUserJWT(token); } catch { return NextResponse.json({ success: false, error: "Invalid Token" }, { status: 401 }); }
 
-    // 3. Verify Session
     if (jwtPayload?.sessionId) {
       const sessionCheck = await verifySession(jwtPayload.sessionId as string);
       if (!sessionCheck.valid) return NextResponse.json({ success: false, error: "Session Expired" }, { status: 401 });
     }
 
-    const userId = BigInt(jwtPayload.userId);
+    // Schema Note: users.id is BigInt, but kundalis.createdBy is Int.
+    // Ensure userId fits in Int, otherwise this query might fail or needs schema fix.
+    const userId = Number(jwtPayload.userId);
 
-    // 4. Fetch Kundalis
-    // Note: Schema says 'createdBy' is Int, but userId is BigInt. Casting to Number.
     const kundalis = await prisma.kundalis.findMany({
       where: { 
-        createdBy: Number(userId), 
+        createdBy: userId, 
         isActive: true, 
         isDelete: false 
       },

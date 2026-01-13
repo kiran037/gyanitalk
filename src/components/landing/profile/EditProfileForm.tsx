@@ -3,21 +3,8 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Camera,
-  Clock,
-  Home,
-  Globe,
-  ChevronDown,
-  Upload,
-  MapPin,
-  X,
+  User, Mail, Phone, Calendar, Loader2, CheckCircle2, AlertCircle,
+  Camera, Clock, Home, ChevronDown, Upload, Globe
 } from "lucide-react";
 import { avatar } from "@/lib/images";
 import { uploadImage } from "@/upload";
@@ -35,9 +22,7 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
     email: profile.email || "",
     contactNo: profile.contactNo || "",
     countryCode: profile.countryCode || "+91",
-    birthDate: profile.birthDate
-      ? new Date(profile.birthDate).toISOString().split("T")[0]
-      : "",
+    birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split("T")[0] : "",
     birthTime: profile.birthTime || "",
     birthPlace: profile.birthPlace || "",
     gender: profile.gender || "",
@@ -50,27 +35,16 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
   const [profileImage, setProfileImage] = useState(profile.profile);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (message) setMessage(null);
   };
 
-  const handleLocationChange = (
-    field: "birthPlace" | "city",
-    locationResult: any
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: locationResult.place,
-    }));
+  const handleLocationChange = (field: "birthPlace" | "city", locationResult: any) => {
+    setFormData((prev) => ({ ...prev, [field]: locationResult.place }));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,12 +52,12 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setMessage({ type: "error", text: "Please select a valid image file" });
+      setMessage({ type: "error", text: "Invalid file type" });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setMessage({ type: "error", text: "Image size must be less than 5MB" });
+      setMessage({ type: "error", text: "Max size 5MB" });
       return;
     }
 
@@ -99,14 +73,12 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
       const data = await res.json();
       if (res.ok && data.success) {
         setProfileImage(result.path);
-        setMessage({ type: "success", text: "Profile photo updated successfully!" });
+        setMessage({ type: "success", text: "Photo updated!" });
         onUpdate();
         setTimeout(() => setMessage(null), 3000);
-      } else {
-        setMessage({ type: "error", text: data.error || "Failed to update avatar" });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to upload image" });
+      setMessage({ type: "error", text: "Upload failed" });
     } finally {
       setUploadingImage(false);
     }
@@ -125,453 +97,328 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
       });
 
       const data = await res.json();
-
       if (res.ok && data.success) {
-        setMessage({ type: "success", text: "Profile updated successfully!" });
+        setMessage({ type: "success", text: "Saved successfully!" });
         onUpdate();
-        window.scrollTo({ top: 0, behavior: "smooth" });
         setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to update profile" });
+        setMessage({ type: "error", text: data.error || "Failed to update" });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Something went wrong" });
+      setMessage({ type: "error", text: "Error saving profile" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      {/* Toast Message - Fixed positioning */}
+    <form onSubmit={handleSubmit} className="w-full space-y-4 pb-24 lg:pb-0 px-4 sm:px-0">
+      
+      {/* Toast Notification */}
       <AnimatePresence>
         {message && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-50"
+            initial={{ opacity: 0, y: -20, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -20, x: "-50%" }}
+            className="fixed top-20 left-1/2 z-50 w-[90%] max-w-sm pointer-events-none"
           >
-            <div
-              className={`flex items-start gap-3 p-4 rounded-xl shadow-lg backdrop-blur-sm border ${
-                message.type === "success"
-                  ? "bg-emerald-50/95 dark:bg-emerald-950/95 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800"
-                  : "bg-red-50/95 dark:bg-red-950/95 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800"
-              }`}
-            >
-              {message.type === "success" ? (
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              ) : (
-                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              )}
-              <p className="text-sm font-medium flex-1">{message.text}</p>
-              <button
-                type="button"
-                onClick={() => setMessage(null)}
-                className="flex-shrink-0 hover:opacity-70 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div className={`pointer-events-auto flex items-center gap-2.5 p-3 rounded-xl shadow-lg backdrop-blur-md border ${
+              message.type === "success"
+                ? "bg-emerald-500/90 text-white border-emerald-400/50"
+                : "bg-red-500/90 text-white border-red-400/50"
+            }`}>
+              {message.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+              <p className="text-xs font-semibold flex-1">{message.text}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Profile Photo Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-white to-gray-50/50 dark:from-[#111] dark:to-[#0A0A0A] rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm"
-      >
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          {/* Avatar */}
-          <div className="relative">
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="relative h-28 w-28 rounded-full p-1 bg-gradient-to-br from-[#FF6B35] via-[#FFB347] to-[#FF6B35] cursor-pointer group transition-transform hover:scale-105"
-            >
-              <div className="h-full w-full rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-4 border-white dark:border-[#111] relative">
-                <Image
+      {/* 1. Avatar Card - Compact */}
+      <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-white/5 flex flex-row items-center gap-4">
+        <div className="relative group shrink-0">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-20 h-20 md:w-24 md:h-24 rounded-full p-1 bg-gradient-to-br from-[#FF6B35] to-[#FFB347] cursor-pointer"
+          >
+            <div className="w-full h-full rounded-full border-2 border-white dark:border-[#1C1C1E] overflow-hidden relative bg-gray-100">
+               <Image
                   src={avatar(profileImage)}
                   alt="Profile"
                   fill
-                  className="object-cover"
-                  // Bypass server-side check to prevent private IP/SSRF errors
-                  unoptimized={true} 
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  unoptimized={true}
                 />
-                <div
-                  className={`absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center transition-all duration-300 ${
-                    uploadingImage
-                      ? "opacity-100"
-                      : "opacity-0 group-hover:opacity-100"
-                  }`}
-                >
-                  {uploadingImage ? (
-                    <Loader2 className="h-7 w-7 animate-spin text-white" />
-                  ) : (
-                    <Camera className="h-7 w-7 text-white" />
-                  )}
-                </div>
-              </div>
-              <div className="absolute -bottom-1 -right-1 p-2 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#FF8C42] text-white border-4 border-white dark:border-[#111] shadow-lg group-hover:scale-110 transition-transform">
-                <Upload className="h-4 w-4" />
-              </div>
+               <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${uploadingImage ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                 {uploadingImage ? <Loader2 className="h-6 w-6 text-white animate-spin" /> : <Camera className="h-6 w-6 text-white" />}
+               </div>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              aria-label="Upload profile picture"
-            />
           </div>
-
-          {/* Info */}
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-              Profile Photo
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Click to upload a new profile picture (Max 5MB)
-            </p>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+        </div>
+        <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white truncate">{formData.name || "User"}</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Update your photo</p>
             <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-sm font-semibold text-[#FF6B35] hover:text-[#E55A2B] transition-colors inline-flex items-center gap-2"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs font-semibold text-[#FF6B35] bg-[#FF6B35]/10 px-3 py-1.5 rounded-lg active:bg-[#FF6B35]/20 transition-colors"
             >
-              <Upload className="h-4 w-4" />
-              Change Photo
+                Change Photo
             </button>
-          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Basic Information */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm"
-      >
-        <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
-          <div className="p-2 rounded-lg bg-[#FF6B35]/10">
-            <User className="h-5 w-5 text-[#FF6B35]" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Basic Information
-          </h3>
+      {/* 2. Personal Information */}
+      <FormSection title="Personal Info">
+        <div className="space-y-3 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
+           <InputField 
+             label="Full Name" 
+             name="name" 
+             value={formData.name} 
+             onChange={handleChange} 
+             icon={User} 
+             placeholder="Name" 
+           />
+           <SelectField 
+             label="Gender" 
+             name="gender" 
+             value={formData.gender} 
+             onChange={handleChange} 
+             icon={User}
+           >
+             <option value="">Select Gender</option>
+             <option value="Male">Male</option>
+             <option value="Female">Female</option>
+             <option value="Other">Other</option>
+           </SelectField>
         </div>
+      </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Full Name */}
-          <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Full Name *
-            </label>
-            <div className="relative group">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all"
-                placeholder="Enter your full name"
-              />
-            </div>
-          </div>
-
-          {/* Gender */}
-          <div className="space-y-2">
-            <label
-              htmlFor="gender"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Gender
-            </label>
-            <div className="relative group">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <select
-                id="gender"
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full pl-11 pr-10 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all appearance-none cursor-pointer"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Birth Details */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm"
-      >
-        <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
-          <div className="p-2 rounded-lg bg-[#FF6B35]/10">
-            <Calendar className="h-5 w-5 text-[#FF6B35]" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Birth Details
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Birth Date */}
-          <div className="space-y-2">
-            <label
-              htmlFor="birthDate"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Date of Birth
-            </label>
-            <div className="relative group">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <input
-                id="birthDate"
-                type="date"
-                name="birthDate"
-                value={formData.birthDate}
-                onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all dark:[color-scheme:dark]"
-              />
-            </div>
-          </div>
-
-          {/* Birth Time */}
-          <div className="space-y-2">
-            <label
-              htmlFor="birthTime"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Time of Birth
-            </label>
-            <div className="relative group">
-              <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <input
-                id="birthTime"
-                type="time"
-                name="birthTime"
-                value={formData.birthTime}
-                onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all dark:[color-scheme:dark]"
-              />
-            </div>
-          </div>
-
-          {/* Birth Place */}
-          <div className="space-y-2">
-            <label
-              htmlFor="birthPlace"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Place of Birth
-            </label>
-            <div className="relative group">
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <div className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] focus-within:bg-white dark:focus-within:bg-black focus-within:border-[#FF6B35] focus-within:ring-2 focus-within:ring-[#FF6B35]/20 transition-all">
-                <LocationInput
-                  value={formData.birthPlace}
-                  onChange={(res: any) => handleLocationChange("birthPlace", res)}
-                  placeholder="Search birth city..."
-                  name="birthPlace"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Contact & Address */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm"
-      >
-        <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
-          <div className="p-2 rounded-lg bg-[#FF6B35]/10">
-            <Globe className="h-5 w-5 text-[#FF6B35]" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Contact & Address
-          </h3>
-        </div>
-
-        <div className="space-y-5">
-          {/* Email & Phone Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Email */}
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-              >
-                Email Address
+      {/* 3. Birth Details - Compact Grid */}
+      <FormSection title="Birth Details">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+           <InputField 
+             label="Birth Date" 
+             name="birthDate" 
+             type="date"
+             value={formData.birthDate} 
+             onChange={handleChange} 
+             icon={Calendar}
+             className="col-span-1"
+           />
+           <InputField 
+             label="Birth Time" 
+             name="birthTime" 
+             type="time"
+             value={formData.birthTime} 
+             onChange={handleChange} 
+             icon={Clock} 
+             className="col-span-1"
+           />
+           <div className="col-span-2 md:col-span-1 space-y-1">
+              <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider ml-1">
+                Place of Birth
               </label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all"
-                  placeholder="email@example.com"
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide" />
-              <div className="relative group">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-                <div className="flex gap-2 pl-11">
-                  <div className="relative w-24 flex-shrink-0 -ml-11">
-                    <select
-                      name="countryCode"
-                      value={formData.countryCode}
-                      onChange={handleChange}
-                      className="w-full h-full pl-11 pr-8 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all appearance-none"
-                    >
-                      <option value="+91">+91</option>
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                  </div>
-                  <input
-                    type="tel"
-                    name="contactNo"
-                    value={formData.contactNo}
-                    onChange={handleChange}
-                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all"
-                    placeholder="9876543210"
-                  />
+                <div className="location-input-wrapper">
+                    <LocationInput
+                        value={formData.birthPlace}
+                        onChange={(res: any) => handleLocationChange("birthPlace", res)}
+                        placeholder="City"
+                        name="birthPlace"
+                    />
                 </div>
               </div>
-            </div>
-          </div>
+           </div>
+        </div>
+      </FormSection>
 
-          {/* Address Line */}
-          <div className="space-y-2">
-            <label
-              htmlFor="addressLine1"
-              className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-            >
-              Street Address
-            </label>
-            <div className="relative group">
-              <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-              <input
-                id="addressLine1"
-                type="text"
-                name="addressLine1"
-                value={formData.addressLine1}
-                onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all"
-                placeholder="123 Main Street"
-              />
-            </div>
-          </div>
+      {/* 4. Contact & Address */}
+      <FormSection title="Contact Info">
+        <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <InputField 
+                    label="Email" 
+                    name="email" 
+                    type="email"
+                    value={formData.email} 
+                    onChange={handleChange} 
+                    icon={Mail} 
+                    placeholder="Email"
+                />
+                
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider ml-1">
+                        Phone
+                    </label>
+                    <div className="flex gap-2">
+                        <div className="relative w-[4.5rem] shrink-0">
+                            <select
+                            name="countryCode"
+                            value={formData.countryCode}
+                            onChange={handleChange}
+                            className="w-full h-10 pl-2 pr-6 rounded-xl bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-white/10 text-xs font-medium focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] outline-none appearance-none transition-all text-gray-900 dark:text-white"
+                            >
+                            <option value="+91">+91</option>
+                            <option value="+1">+1</option>
+                            </select>
+                            <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+                        </div>
+                        <input
+                            type="tel"
+                            name="contactNo"
+                            value={formData.contactNo}
+                            onChange={handleChange}
+                            placeholder="Mobile"
+                            className="flex-1 h-10 px-3 rounded-xl bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-white/10 text-sm font-medium focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] outline-none transition-all text-gray-900 dark:text-white placeholder:text-gray-400"
+                        />
+                    </div>
+                </div>
+           </div>
 
-          {/* City & Pincode Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* City */}
-            <div className="space-y-2">
-              <label
-                htmlFor="city"
-                className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-              >
-                City
-              </label>
-              <div className="relative group">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-                <div className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] focus-within:bg-white dark:focus-within:bg-black focus-within:border-[#FF6B35] focus-within:ring-2 focus-within:ring-[#FF6B35]/20 transition-all">
-                  <LocationInput
-                    value={formData.city}
-                    onChange={(res: any) => handleLocationChange("city", res)}
-                    placeholder="Search city..."
-                    name="city"
-                  />
+           <InputField 
+             label="Address" 
+             name="addressLine1" 
+             value={formData.addressLine1} 
+             onChange={handleChange} 
+             icon={Home} 
+             placeholder="House / Street"
+           />
+           
+           <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider ml-1">
+                    City
+                </label>
+                <div className="relative group">
+                    <div className="location-input-wrapper">
+                        <LocationInput
+                            value={formData.city}
+                            onChange={(res: any) => handleLocationChange("city", res)}
+                            placeholder="City"
+                            name="city"
+                        />
+                    </div>
                 </div>
               </div>
-            </div>
-
-            {/* Pincode */}
-            <div className="space-y-2">
-              <label
-                htmlFor="pincode"
-                className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
-              >
-                Pincode
-              </label>
-              <div className="relative group">
-                <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
-                <input
-                  id="pincode"
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-black focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 outline-none transition-all"
-                  placeholder="400001"
-                />
-              </div>
-            </div>
-          </div>
+              <InputField 
+                label="Pincode" 
+                name="pincode" 
+                value={formData.pincode} 
+                onChange={handleChange} 
+                icon={Globe} 
+                placeholder="Zip Code"
+              />
+           </div>
         </div>
-      </motion.div>
+      </FormSection>
 
-      {/* Submit Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="flex flex-col sm:flex-row gap-3 justify-end pt-2"
-      >
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#111] text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all active:scale-[0.98] shadow-sm"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FF8C42] hover:from-[#E55A2B] hover:to-[#FF6B35] text-white font-bold shadow-lg hover:shadow-xl hover:shadow-[#FF6B35]/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 min-w-[140px]"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Save Changes
-            </>
-          )}
-        </button>
-      </motion.div>
+      {/* Action Bar - Mobile Optimized */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/90 dark:bg-[#111]/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10 lg:static lg:bg-transparent lg:border-none lg:p-0 z-40 safe-area-pb">
+        <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="flex-1 lg:flex-none lg:px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 transition-colors"
+            >
+            Cancel
+            </button>
+            <button
+            type="submit"
+            disabled={loading}
+            className="flex-[2] lg:flex-none lg:px-8 py-3 rounded-xl bg-[#FF6B35] hover:bg-[#e55a2b] text-white text-sm font-bold shadow-lg shadow-orange-500/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {loading ? "Saving..." : "Save Changes"}
+            </button>
+        </div>
+      </div>
+      
+      {/* Location Input Global Override */}
+      <style jsx global>{`
+        .location-input-wrapper input {
+            width: 100%;
+            height: 2.5rem; /* h-10 (40px) */
+            padding-left: 1rem; /* Adjusted since icon is removed */
+            padding-right: 0.75rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--input-text);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .dark .location-input-wrapper input {
+            --input-bg: #0A0A0A;
+            --input-border: rgba(255,255,255,0.1);
+            --input-text: white;
+        }
+        .light .location-input-wrapper input, .location-input-wrapper input {
+            --input-bg: #F9FAFB;
+            --input-border: #E5E7EB;
+            --input-text: #111827;
+        }
+        .location-input-wrapper input:focus {
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 1px #FF6B35;
+        }
+        .safe-area-pb {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+      `}</style>
     </form>
   );
+}
+
+// ==========================================
+// Compact Sub Components
+// ==========================================
+
+function FormSection({ title, children }: any) {
+    return (
+        <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-white/5">
+            <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 opacity-80">{title}</h3>
+            {children}
+        </div>
+    );
+}
+
+function InputField({ label, icon: Icon, className, ...props }: any) {
+    return (
+        <div className={`space-y-1 ${className}`}>
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider ml-1">
+                {label}
+            </label>
+            <div className="relative group">
+                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
+                <input
+                    {...props}
+                    className="w-full h-10 pl-9 pr-3 rounded-xl bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-transparent focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] outline-none transition-all dark:[color-scheme:dark]"
+                />
+            </div>
+        </div>
+    );
+}
+
+function SelectField({ label, icon: Icon, children, ...props }: any) {
+    return (
+        <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider ml-1">
+                {label}
+            </label>
+            <div className="relative group">
+                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors pointer-events-none z-10" />
+                <select
+                    {...props}
+                    className="w-full h-10 pl-9 pr-8 rounded-xl bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-900 dark:text-white focus:bg-white dark:focus:bg-transparent focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] outline-none appearance-none cursor-pointer transition-all"
+                >
+                    {children}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+            </div>
+        </div>
+    );
 }

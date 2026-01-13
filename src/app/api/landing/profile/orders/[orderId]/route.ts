@@ -10,12 +10,8 @@ function serializeData(data: any): any {
   }));
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { orderId: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    // 1. Auth Check
     const token = request.cookies.get("token")?.value || request.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
@@ -28,35 +24,64 @@ export async function GET(
     }
 
     const userId = BigInt(jwtPayload.userId);
-    const orderId = BigInt(params.orderId);
+    const { searchParams } = new URL(request.url);
+    
+    // FILTERS
+    const orderStatus = searchParams.get("orderStatus");
+    const search = searchParams.get("search");
+    
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
-    // 2. Fetch Order Detail
-    const order = await prisma.order_request.findFirst({
-        where: { 
-            id: orderId,
-            userId: userId
-        },
-        include: {
-            product: true,
-            product_category: true,
-            astrologer: {
-                select: { id: true, name: true, profileImage: true }
-            },
-            order_address: true,
-            walletTransactions: true, // If you want to show payment breakdown
-        }
-    });
+    const whereClause: any = { 
+        userId: userId,
+        isDelete: "0",
+        // Force filter for products only
+        OR: [
+            { orderType: "Product" },
+            { orderType: "mall" }, // Cover variations
+            { productId: { not: null } }
+        ]
+    };
 
-    if (!order) {
-      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+    if (orderStatus) whereClause.orderStatus = orderStatus;
+    
+    if (search) {
+        whereClause.product = {
+            name: { contains: search }
+        };
     }
+
+    const [orders, total] = await Promise.all([
+      prisma.order_request.findMany({
+        where: whereClause,
+        orderBy: { created_at: "desc" },
+        skip,
+        take: limit,
+        include: {
+            product: { select: { name: true, productImage: true } },
+            product_category: { select: { name: true } },
+            // Removed astrologer/call relations to ensure we focus on products
+        }
+      }),
+      prisma.order_request.count({ where: whereClause })
+    ]);
 
     return NextResponse.json({
       success: true,
-      data: serializeData(order),
+      data: {
+        orders: serializeData(orders),
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      },
     });
   } catch (error) {
-    console.error("Get order details error:", error);
+    console.error("Get orders error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
