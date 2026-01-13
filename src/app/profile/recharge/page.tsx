@@ -80,12 +80,11 @@ export default function RechargePage() {
 
     setRechargeLoading(true);
 
-    // ✅ Get the percentage
     let cashback = 0;
     if (selectedPlanId) {
       const plan = rechargeOptions.find((p) => p.id === selectedPlanId);
       if (plan && plan.cashback) {
-        cashback = plan.cashback; // Sending percentage (e.g., 10)
+        cashback = plan.cashback;
       }
     }
 
@@ -97,14 +96,10 @@ export default function RechargePage() {
     }
 
     try {
-      // 1. Create Order
       const res = await fetch("/api/landing/recharge/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          cashback, // Sending percentage
-        }),
+        body: JSON.stringify({ amount, cashback }),
       });
 
       const data = await res.json();
@@ -114,7 +109,6 @@ export default function RechargePage() {
         return;
       }
 
-      // 2. Open Razorpay
       const rzp = new (window as any).Razorpay({
         key: data.key,
         amount: data.amount,
@@ -122,8 +116,6 @@ export default function RechargePage() {
         order_id: data.orderId,
         name: "Wallet Recharge",
         description: `Add ₹${amount} to wallet`,
-
-        // 3. 🔥 Handle Success: Call Verify API
         handler: async function (response: any) {
           try {
             const verifyRes = await fetch(
@@ -135,7 +127,7 @@ export default function RechargePage() {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
-                  internal_payment_id: data.internalPaymentId, // from create-order response
+                  internal_payment_id: data.internalPaymentId,
                 }),
               }
             );
@@ -165,120 +157,99 @@ export default function RechargePage() {
   };
 
   const activePlan = rechargeOptions.find((p) => p.id === selectedPlanId);
-
-  // 🔥 CALCULATE UI VALUES HERE
   const currentAmount = parseInt(rechargeAmount || "0");
   const cashbackPercentage = activePlan?.cashback || 0;
-  
-  // Calculate value: (Amount * Percentage) / 100
   const cashbackValue = (currentAmount * cashbackPercentage) / 100;
-  
-  // Total Credit = Amount + Calculated Value
   const totalCredit = currentAmount + cashbackValue;
 
   return (
-    <div className="mx-auto min-h-screen w-full px-4 py-8 md:px-6">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-0 pb-10 space-y-6">
+      
       {/* Header */}
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/profile/wallet"
-            className="group rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-[#111] dark:hover:bg-white/5"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-700 transition-transform group-hover:-translate-x-1 dark:text-gray-300" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Add Money
-            </h1>
-            <div className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
-              <Lock className="h-3 w-3" />
-              <span className="font-medium">Secure Payment Gateway</span>
-            </div>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/profile/wallet"
+          className="p-2 rounded-full bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+            Add Money
+          </h1>
+          <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mt-0.5">
+            <Lock className="h-3 w-3" />
+            <span className="font-medium">100% Secure Payment</span>
           </div>
         </div>
       </div>
 
       {loading ? (
         <div className="flex h-60 items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-[#FF6B35]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#FF6B35]" />
         </div>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[1fr,380px]">
-          {/* Left Column: Input & Plans */}
-          <div className="space-y-8">
-            {/* Main Input Section */}
-            <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-[#111] md:p-8">
-              <div className="relative z-10">
-                <label className="mb-3 block text-xs font-bold uppercase tracking-wider text-gray-500">
-                  Enter Amount
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-6 text-3xl font-bold text-gray-400">
-                    ₹
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={rechargeAmount}
-                    onChange={handleAmountChange}
-                    placeholder="0"
-                    className="w-full rounded-2xl border-2 border-gray-100 bg-gray-50 py-6 pl-12 pr-6 text-4xl font-bold text-gray-900 outline-none transition-all focus:border-[#FF6B35] focus:bg-white focus:ring-4 focus:ring-orange-500/10 dark:border-white/10 dark:bg-black/20 dark:text-white dark:focus:border-[#FF6B35]"
-                  />
-                  {rechargeAmount && parseInt(rechargeAmount) > 0 && (
-                    <div className="absolute right-6 rounded-full bg-green-100 p-1 text-green-600 dark:bg-green-900/30">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </div>
-                  )}
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          
+          {/* Left Column: Input & Plans (8 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            
+            {/* Input Section */}
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/5 shadow-sm">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4 block">
+                Enter Amount
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-3xl font-bold text-gray-400">₹</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={rechargeAmount}
+                  onChange={handleAmountChange}
+                  placeholder="0"
+                  className="w-full pl-10 pr-4 py-4 text-4xl font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-black/40 rounded-xl border-2 border-transparent focus:border-[#FF6B35] focus:bg-white dark:focus:bg-black outline-none transition-all placeholder-gray-300"
+                />
+                {rechargeAmount && parseInt(rechargeAmount) > 0 && (
+                  <div className="absolute right-4 rounded-full bg-green-100 dark:bg-green-900/30 p-1 text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Quick Select Options */}
             {rechargeOptions.length > 0 && (
               <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <label className="text-sm font-bold uppercase tracking-wider text-gray-500">
-                    Recommended Plans
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Recommended Packs
                   </label>
-                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-[#FF6B35] dark:bg-orange-900/20">
-                    GET CASHBACK
+                  <span className="text-[10px] font-bold bg-orange-100 text-[#FF6B35] px-2 py-0.5 rounded-full dark:bg-orange-900/20">
+                    EXTRA CASHBACK
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
                   {rechargeOptions.map((opt) => {
                     const isSelected = selectedPlanId === opt.id;
                     return (
                       <button
                         key={opt.id}
                         onClick={() => handleSelectPlan(opt)}
-                        className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 px-4 py-6 transition-all active:scale-95 ${
+                        className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 ${
                           isSelected
-                            ? "border-[#FF6B35] bg-orange-50 shadow-lg shadow-orange-500/10 dark:bg-orange-900/10"
-                            : "border-gray-100 bg-white hover:border-gray-300 hover:shadow-md dark:border-white/10 dark:bg-[#111] dark:hover:border-white/20"
+                            ? "border-[#FF6B35] bg-orange-50 dark:bg-orange-900/10 shadow-md"
+                            : "border-gray-100 bg-white dark:bg-[#1C1C1E] dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10"
                         }`}
                       >
                         {opt.cashback && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 text-[8px] font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white dark:ring-[#111]">
-                            {/* 🔥 UPDATED TO SHOW PERCENTAGE */}
+                          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
                             +{opt.cashback}% Extra
                           </div>
                         )}
-                        <span
-                          className={`text-1xl font-bold ${
-                            isSelected
-                              ? "text-[#FF6B35]"
-                              : "text-gray-900 dark:text-white"
-                          }`}
-                        >
+                        <span className={`text-lg font-bold ${isSelected ? "text-[#FF6B35]" : "text-gray-900 dark:text-white"}`}>
                           ₹{opt.amount}
                         </span>
-                        {opt.cashback && (
-                          <span className="mt-1 text-[10px] font-medium text-gray-400 group-hover:text-green-500">
-                            Cashback Applied
-                          </span>
-                        )}
                       </button>
                     );
                   })}
@@ -287,100 +258,55 @@ export default function RechargePage() {
             )}
           </div>
 
-          {/* Right Column: Summary & Trust */}
-          <div className="space-y-6">
-            <div className="sticky top-6 rounded-3xl border border-gray-100 bg-gray-50 p-6 dark:border-white/5 dark:bg-white/5 md:p-8">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-white/10">
-                  <Wallet className="h-5 w-5 text-[#FF6B35]" />
+          {/* Right Column: Summary (4 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 dark:bg-[#111] dark:border-white/5 p-5">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shadow-sm text-[#FF6B35]">
+                  <Wallet className="h-4 w-4" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Payment Summary
-                </h3>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Summary</h3>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-gray-500">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between text-gray-500 dark:text-gray-400">
                   <span>Recharge Amount</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    ₹{rechargeAmount || "0"}
-                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">₹{rechargeAmount || "0"}</span>
                 </div>
 
-                {/* 🔥 UPDATED CASHBACK DISPLAY LOGIC */}
                 {activePlan?.cashback && (
-                  <div className="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2 text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-4 w-4" /> Cashback ({activePlan.cashback}%)
+                  <div className="flex justify-between items-center bg-green-100 dark:bg-green-900/20 p-2 rounded-lg text-green-700 dark:text-green-400 text-xs font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-3 w-3" /> Cashback ({activePlan.cashback}%)
                     </span>
-                    {/* Show Calculated Value */}
-                    <span className="font-bold">+₹{cashbackValue.toFixed(2)}</span>
+                    <span>+₹{cashbackValue.toFixed(2)}</span>
                   </div>
                 )}
 
-                <div className="border-t border-gray-200 dark:border-white/10" />
-
-                <div className="flex items-center justify-between text-lg font-bold">
-                  <span className="text-gray-900 dark:text-white">
-                    Total Credit
-                  </span>
-                  {/* 🔥 UPDATED TOTAL CALCULATION */}
-                  <span className="text-[#FF6B35]">
-                    ₹{totalCredit.toFixed(2)}
-                  </span>
+                <div className="border-t border-gray-200 dark:border-white/10 pt-3 flex justify-between items-center text-base font-bold">
+                  <span className="text-gray-900 dark:text-white">Total Credit</span>
+                  <span className="text-[#FF6B35]">₹{totalCredit.toFixed(2)}</span>
                 </div>
               </div>
 
-              <div className="mt-8">
-                <button
-                  onClick={handlePayment}
-                  disabled={
-                    rechargeLoading ||
-                    !rechargeAmount ||
-                    parseInt(rechargeAmount) <= 0
-                  }
-                  className="w-full rounded-2xl bg-[#FF6B35] py-4 text-lg font-bold text-white shadow-xl shadow-orange-500/20 transition-all hover:bg-[#ff5514] hover:shadow-orange-500/30 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none dark:disabled:bg-gray-700"
-                >
-                  {rechargeLoading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Processing...
-                    </div>
-                  ) : (
-                    `Pay ₹${rechargeAmount || "0"}`
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handlePayment}
+                disabled={rechargeLoading || !rechargeAmount || parseInt(rechargeAmount) <= 0}
+                className="w-full mt-6 py-3.5 rounded-xl bg-[#FF6B35] hover:bg-[#e55a2b] text-white font-bold shadow-lg shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {rechargeLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${rechargeAmount || "0"}`}
+              </button>
 
-              {/* Security Badge */}
-              <div className="mt-6 flex flex-col items-center gap-3 text-center">
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                  <ShieldCheck className="h-4 w-4 text-green-500" />
-                  <span>Bank Grade Security (256-bit SSL)</span>
+              {/* Trust Footer */}
+              <div className="mt-5 pt-5 border-t border-gray-200 dark:border-white/5 text-center">
+                <div className="flex items-center justify-center gap-2 text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">
+                    <ShieldCheck className="h-3 w-3" /> Secure Payment via
                 </div>
-
-                {/* Trust Logos */}
-                <div className="flex flex-wrap justify-center gap-3 opacity-70 grayscale transition-all hover:grayscale-0">
-                  {/* Razorpay */}
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg"
-                    alt="Razorpay"
-                    className="h-5 object-contain"
-                  />
-                  <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                  {/* UPI */}
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg"
-                    alt="UPI"
-                    className="h-5 object-contain"
-                  />
-                  <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-                    alt="VISA"
-                    className="h-5 object-contain"
-                  />
+                <div className="flex justify-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
+                    {/* Simple Text Placeholders if images fail, or SVG usage */}
+                    <span className="font-bold text-xs">UPI</span>
+                    <span className="font-bold text-xs">VISA</span>
+                    <span className="font-bold text-xs">MasterCard</span>
                 </div>
               </div>
             </div>

@@ -10,12 +10,13 @@ export default function ProfileLayout({
 }) {
   return (
     <LandingWrapper>
-      <div className="relative min-h-screen bg-gray-50 dark:bg-black selection:bg-[#FF6B35]/10">
-        {/* Main Content */}
-        <div className="relative z-10 px-4 pt-20 pb-8 sm:px-6 lg:px-8">
+      <div className="relative min-h-screen bg-[#F2F2F7] dark:bg-[#000] selection:bg-[#FF6B35]/20">
+        {/* Changed pb-20 to pb-6 for mobile, lg:pb-12 for desktop */}
+        <div className="relative z-10 px-0 sm:px-6 lg:px-8 pt-16 lg:pt-24 pb-6 lg:pb-12">
           <div className="mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-              {/* Desktop Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8">
+              
+              {/* Desktop Sidebar - Hidden on Mobile */}
               <aside className="hidden lg:block lg:col-span-3">
                 <div className="sticky top-24">
                   <ProfileSidebar />
@@ -24,9 +25,7 @@ export default function ProfileLayout({
 
               {/* Main Content Area */}
               <main className="lg:col-span-9 w-full">
-                <div className="min-h-[60vh]">
-                  {children}
-                </div>
+                {children}
               </main>
             </div>
           </div>

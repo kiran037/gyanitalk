@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { RateLimiter } from '@/lib/rate-limiter';
@@ -11,6 +10,7 @@ import { BirthDetails } from '@/types/kundli';
 import { APIError } from '@/lib/error-response';
 import { getClientIP } from '@/lib/ip-helper';
 import { formatDateForAPI } from '@/lib/date-formatter';
+import { getSession } from "@/lib/auth/index"; 
 
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
@@ -22,118 +22,116 @@ export async function POST(request: NextRequest) {
             language: string;
         };
 
-        console.log('🚀 Starting kundli generation for:', birthDetails.name);
-
-        // Get IP address
+        // 1. Get IP address
         const ipAddress = getClientIP(request);
 
-        // Validate input
-        const validation = Validator.validateBirthDetails(birthDetails);
-        if (!validation.isValid) {
-            return APIError.badRequest('Validation failed', validation.errors);
-        }
+        // 2. Check Authentication Status
+        const session = await getSession(request);
+        const isLoggedIn = !!(session && session.userId);
+        
+        let ownerUserId: number;
 
-        // Validate mobile number
-        if (!birthDetails.contactNo || birthDetails.contactNo.length < 10) {
-            return APIError.badRequest('Valid mobile number is required');
-        }
-
-        // Validate and normalize timezone
-        if (!TimezoneHelper.isValid(birthDetails.timezone)) {
-            return APIError.badRequest('Invalid timezone value. Must be between -12 and 14');
-        }
-        const normalizedTimezone = TimezoneHelper.toDBFormat(birthDetails.timezone);
-
-        // Truncate fields to prevent database errors
-        const truncatedName = birthDetails.name.substring(0, 50);
-        const truncatedBirthPlace = birthDetails.birthPlace.substring(0, 50);
-
-        // Find or create user based on mobile number
-        let user = await prisma.users.findFirst({
-            where: { contactNo: birthDetails.contactNo }
-        });
-
-        if (!user) {
-            user = await prisma.users.create({
-                data: {
-                    name: truncatedName,
-                    contactNo: birthDetails.contactNo,
-                    countryCode: birthDetails.countryCode || '+91',
-                    gender: birthDetails.gender,
-                    birthDate: new Date(birthDetails.birthDate),
-                    birthTime: birthDetails.birthTime,
-                    birthPlace: truncatedBirthPlace,
-                    isActive: true,
-                    isDelete: false
-                }
-            });
-
-            await prisma.user_wallets.create({
-                data: {
-                    userId: user.id,
-                    amount: 0,
-                    isActive: true,
-                    isDelete: false,
-                    createdBy: Number(user.id),
-                    modifiedBy: Number(user.id)
-                }
-            });
-
-            console.log('✓ New user created:', Number(user.id));
+        // 3. DETERMINE OWNERSHIP LOGIC
+        if (isLoggedIn) {
+            // CASE A: User is logged in. 
+            // The Kundli belongs to THEM, regardless of the phone number entered.
+            ownerUserId = Number(session!.userId);
+            console.log(`✓ User Logged In. associating Kundli with ID: ${ownerUserId}`);
         } else {
-            console.log('✓ Existing user found:', Number(user.id));
+            // CASE B: Guest User.
+            // We must find or create a user based on the phone number provided in the form.
+            
+            // Validate mobile number for guest creation
+            if (!birthDetails.contactNo || birthDetails.contactNo.length < 10) {
+                return APIError.badRequest('Valid mobile number is required');
+            }
+
+            const truncatedName = birthDetails.name.substring(0, 50);
+            const truncatedBirthPlace = birthDetails.birthPlace.substring(0, 50);
+
+            let user = await prisma.users.findFirst({
+                where: { contactNo: birthDetails.contactNo }
+            });
+
+            if (!user) {
+                user = await prisma.users.create({
+                    data: {
+                        name: truncatedName,
+                        contactNo: birthDetails.contactNo,
+                        countryCode: birthDetails.countryCode || '+91',
+                        gender: birthDetails.gender,
+                        birthDate: new Date(birthDetails.birthDate),
+                        birthTime: birthDetails.birthTime,
+                        birthPlace: truncatedBirthPlace,
+                        isActive: true,
+                        isDelete: false
+                    }
+                });
+
+                // Create wallet for new user
+                await prisma.user_wallets.create({
+                    data: {
+                        userId: user.id,
+                        amount: 0,
+                        isActive: true,
+                        isDelete: false,
+                        createdBy: Number(user.id),
+                        modifiedBy: Number(user.id)
+                    }
+                });
+            }
+            ownerUserId = Number(user.id);
+            console.log(`✓ Guest User. Associated/Created User ID: ${ownerUserId} based on phone.`);
         }
 
-        const userId = Number(user.id);
-        const identifier = `user_${userId}`;
-        const rateLimitResult = await RateLimiter.checkLimit(identifier, true);
+        // 4. Rate Limiting
+        const identifier = isLoggedIn ? `user_${ownerUserId}` : `ip_${ipAddress}`;
+        const rateLimitResult = await RateLimiter.checkLimit(identifier, isLoggedIn);
 
         if (!rateLimitResult.allowed) {
             return APIError.rateLimitExceeded(
                 rateLimitResult.resetAt,
                 rateLimitResult.remaining,
-                false
+                !isLoggedIn
             );
         }
 
-        console.log('✓ Rate limit check passed. Remaining:', rateLimitResult.remaining);
+        // 5. Validate Input Data
+        const validation = Validator.validateBirthDetails(birthDetails);
+        if (!validation.isValid) {
+            return APIError.badRequest('Validation failed', validation.errors);
+        }
 
-        // Prepare API params
+        if (!TimezoneHelper.isValid(birthDetails.timezone)) {
+            return APIError.badRequest('Invalid timezone value. Must be between -12 and 14');
+        }
+        const normalizedTimezone = TimezoneHelper.toDBFormat(birthDetails.timezone);
+        const truncatedName = birthDetails.name.substring(0, 50);
+        const truncatedBirthPlace = birthDetails.birthPlace.substring(0, 50);
+
+        // 6. Prepare API Params
         const apiParams = {
             dob: formatDateForAPI(birthDetails.birthDate),
             tob: birthDetails.birthTime,
             lat: birthDetails.latitude,
             lon: birthDetails.longitude,
-            tz: TimezoneHelper.toAPIFormat(birthDetails.timezone), // Use API format
+            tz: TimezoneHelper.toAPIFormat(birthDetails.timezone),
             lang: language
         };
 
-        console.log('📊 Fetching kundli data from APIs...');
-
-        // ===== FETCH ALL KUNDLI DATA IN PARALLEL =====
+        // 7. Fetch External APIs (Parallel)
         const allApiResults = await Promise.allSettled([
-            // Core horoscope data (0-2)
             VedicGenAPI.getPlanetDetails(apiParams),
             VedicGenAPI.getAscendantReport(apiParams),
             VedicGenAPI.getPersonalCharacteristics(apiParams),
-            
-            // Charts (3-6)
             VedicGenAPI.getDivisionalCharts({ ...apiParams, div: 'D1' }),
             VedicGenAPI.getDivisionalCharts({ ...apiParams, div: 'D9' }),
             VedicGenAPI.getChartImage({ ...apiParams, div: 'D1', style: 'north' }),
             VedicGenAPI.getChartImage({ ...apiParams, div: 'D9', style: 'north' }),
-            
-            // Ashtakvarga (7)
             VedicGenAPI.getAshtakvarga(apiParams),
-            
-            // Planetary information (8-9)
             VedicGenAPI.getPlanetaryAspects({ ...apiParams, type: 'houses' }),
             VedicGenAPI.getPlanetsInHouses(apiParams),
-            
-            // Western astrology (10)
             VedicGenAPI.getWesternPlanets(apiParams),
-            
-            // Extended horoscope (11-18)
             VedicGenAPI.getShadBala(apiParams),
             VedicGenAPI.getSadeSatiTable(apiParams),
             VedicGenAPI.getCurrentSadeSati(apiParams),
@@ -143,46 +141,25 @@ export async function POST(request: NextRequest) {
             VedicGenAPI.getVarshapalDetails(apiParams),
             VedicGenAPI.getYogaList(apiParams),
             VedicGenAPI.getExtendedKundliDetails(apiParams),
-            
-            // Signs and ascendant (19-21)
             VedicGenAPI.getFindMoonSign(apiParams),
             VedicGenAPI.getFindSunSign(apiParams),
             VedicGenAPI.getFindAscendant(apiParams),
-            
-            // Friendship (22)
             VedicGenAPI.getFriendship(apiParams),
-            
-            // Suggestions (23-24)
             VedicGenAPI.getGemSuggestion(apiParams),
             VedicGenAPI.getRudrakshSuggestion(apiParams),
-            
-            // Jaimini and Arutha (25-26)
             VedicGenAPI.getAruthaPadas(apiParams),
             VedicGenAPI.getJaiminiKarakas(apiParams),
-            
-            // Doshas (27-31)
             VedicGenAPI.getMangalDosh(apiParams),
             VedicGenAPI.getKaalsarpDosh(apiParams),
             VedicGenAPI.getManglikDosh(apiParams),
             VedicGenAPI.getPitraDosh(apiParams),
             VedicGenAPI.getPapasamaya(apiParams),
-            
-            // AI Predictions (32)
             VedicGenAPI.getAI12MonthPrediction(apiParams),
-            
-            // Numerology (33)
             VedicGenAPI.getNumeroTable({ ...apiParams, name: truncatedName })
         ]);
 
-        const apiTime = Date.now() - startTime;
-        console.log(`✓ All API calls completed in ${apiTime}ms`);
-
-        // Count successes and failures
-        const successCount = allApiResults.filter(r => r.status === 'fulfilled').length;
-        const failCount = allApiResults.filter(r => r.status === 'rejected').length;
-        console.log(`📈 API Results: ${successCount} succeeded, ${failCount} failed`);
-
-        // Create kundali record
+        // 8. Create Kundali Record
+        // CRITICAL: We use 'ownerUserId' for createdBy/modifiedBy
         const kundali = await prisma.kundalis.create({
             data: {
                 name: truncatedName,
@@ -192,68 +169,48 @@ export async function POST(request: NextRequest) {
                 birthPlace: truncatedBirthPlace,
                 latitude: birthDetails.latitude,
                 longitude: birthDetails.longitude,
-                timezone: normalizedTimezone, // Use normalized string timezone
+                timezone: normalizedTimezone,
                 isActive: true,
                 isDelete: false,
-                createdBy: userId,
-                modifiedBy: userId,
+                createdBy: ownerUserId,  // <--- FIXED: Points to logged in user or guest user
+                modifiedBy: ownerUserId, // <--- FIXED
                 pdf_type: 'free',
                 forMatch: '0'
             }
         });
 
-        console.log('✓ Kundali record created:', Number(kundali.id));
-
-        // Format complete kundli data using formatter
+        // 9. Create Session
         const kundliData = KundliDataFormatter.formatCompleteKundli(
             birthDetails,
             allApiResults,
             language
         );
 
-        // Create session
         const sessionId = await SessionManager.createSession(
             kundliData,
             ipAddress,
             Number(kundali.id),
-            userId
+            ownerUserId
         );
 
         const totalTime = Date.now() - startTime;
-        console.log(`✅ Kundli generation completed in ${totalTime}ms`);
-        console.log('📦 Session ID:', sessionId);
 
         return NextResponse.json({
             success: true,
             data: {
                 sessionId,
                 kundaliId: Number(kundali.id),
-                userId: userId,
+                userId: ownerUserId,
                 kundli: kundliData
             },
             isFreeTier: true,
             remainingFreeGenerations: rateLimitResult.remaining,
             resetAt: rateLimitResult.resetAt,
             message: 'Comprehensive kundli generated successfully',
-            meta: {
-                totalApis: allApiResults.length,
-                successfulApis: successCount,
-                failedApis: failCount,
-                generationTime: `${totalTime}ms`
-            }
         });
 
     } catch (error: any) {
-        const totalTime = Date.now() - startTime;
-        console.error(`❌ Kundli generation error after ${totalTime}ms:`, error);
-        
-        return APIError.internalError(
-            'Failed to generate kundli',
-            process.env.NODE_ENV === 'development' ? {
-                message: error.message,
-                stack: error.stack,
-                time: `${totalTime}ms`
-            } : undefined
-        );
+        console.error("Kundli gen error:", error);
+        return APIError.internalError('Failed to generate kundli');
     }
 }
