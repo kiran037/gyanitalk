@@ -108,8 +108,9 @@ export function GroupMembersList({ groupId, onMemberRemoved }: GroupMembersListP
                     className="w-12 h-12 rounded-full object-cover"
                   />
                   <div>
+                    {/* UPDATED: Fallback to showing ID if name is unknown */}
                     <h4 className="font-semibold text-gray-900 dark:text-white">
-                      {member.astrologer?.name || "Unknown"}
+                      {member.astrologer?.name || `Unknown (ID: ${member.astrologerId})`}
                     </h4>
                     <div className="flex items-center gap-2 mt-1">
                       {member.astrologer?.isVerified && (
@@ -117,6 +118,12 @@ export function GroupMembersList({ groupId, onMemberRemoved }: GroupMembersListP
                           Verified
                         </span>
                       )}
+                       {/* Debug info if missing */}
+                       {!member.astrologer && (
+                        <span className="text-xs text-red-500">
+                          Data mismatch: Astrologer record not found
+                        </span>
+                       )}
                     </div>
                   </div>
                 </div>
@@ -124,7 +131,8 @@ export function GroupMembersList({ groupId, onMemberRemoved }: GroupMembersListP
                   variant="outline"
                   size="sm"
                   icon={<Trash2 className="w-4 h-4" />}
-                  onClick={() => setRemovingId(member.astrologerId?.toString() || null)}
+                  // Fallback to member.astrologerId if the relation is broken
+                  onClick={() => setRemovingId(member.astrologer?.id?.toString() || member.astrologerId?.toString())}
                 >
                   Remove
                 </Button>

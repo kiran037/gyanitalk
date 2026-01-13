@@ -1,16 +1,10 @@
-
-// app/api/astrologers/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // Helper: convert BigInt / Decimal / Date → JSON-safe primitives
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
-
-  // BigInt -> string
   if (typeof obj === "bigint") return obj.toString();
-
-  // Prisma Decimal -> number
   if (
     typeof obj === "object" &&
     (obj as any).constructor &&
@@ -18,17 +12,9 @@ function convertPrismaTypes(obj: unknown): any {
   ) {
     return Number((obj as any).toString());
   }
-
-  // Date -> ISO string
   if (obj instanceof Date) return obj.toISOString();
-
-  // primitives
   if (typeof obj !== "object") return obj;
-
-  // arrays
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
-
-  // objects
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -54,9 +40,7 @@ export async function GET(request: NextRequest) {
     const callStatus = searchParams.get("callStatus");
 
     // Build where clause
-    const where: any = {
-      isDelete: false,
-    };
+    const where: any = { isDelete: false };
 
     if (search) {
       where.OR = [
@@ -81,20 +65,17 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (chatStatus) {
-      where.chatStatus = chatStatus;
-    }
+    if (chatStatus) where.chatStatus = chatStatus;
+    if (callStatus) where.callStatus = callStatus;
 
-    if (callStatus) {
-      where.callStatus = callStatus;
-    }
-
-    // Get astrologers with related data (WITHOUT pagination first for sorting)
+    // 1. Fetch RAW Astrologers (No includes to avoid broken joins)
     const [allAstrologers, total] = await Promise.all([
       prisma.astrologers.findMany({
         where,
+        // Fetch ALL necessary fields directly
         select: {
           id: true,
+          userId: true, // Crucial for manual join
           name: true,
           email: true,
           contactNo: true,
@@ -114,74 +95,130 @@ export async function GET(request: NextRequest) {
           top_select: true,
           featured_select: true,
           created_at: true,
-          users: {
-            select: {
-              name: true,
-              email: true,
-              contactNo: true,
-            },
-          },
-          followers: {
-            where: { isDelete: false, isActive: true },
-            select: { id: true },
-          },
-          walletTransactions: {
-            select: {
-              amount: true,
-              isCredit: true,
-            },
-          },
         },
       }),
       prisma.astrologers.count({ where }),
     ]);
 
-    // Calculate wallet balance for each astrologer
-    const astrologersWithWallet = allAstrologers.map((astrologer) => {
-      const walletBalance = astrologer.walletTransactions.reduce(
-        (sum: number, transaction: any) => {
-          const amountNum = Number(transaction.amount || 0);
-          return transaction.isCredit ? sum + amountNum : sum - amountNum;
+    // 2. Extract IDs for Manual Fetching
+    const userIds = new Set<string>();
+    const astroIds = new Set<string>();
+
+    allAstrologers.forEach(a => {
+      if (a.userId) userIds.add(a.userId.toString());
+      if (a.id) astroIds.add(a.id.toString());
+    });
+
+    // 3. Manual Fetch - USER Details (Fallback for name/image)
+    const userMap = new Map();
+    if (userIds.size > 0) {
+      const users = await prisma.users.findMany({
+        where: { id: { in: Array.from(userIds).map(id => BigInt(id)) } },
+        select: { id: true, name: true, email: true, contactNo: true, profile: true }
+      });
+      users.forEach(u => userMap.set(u.id.toString(), u));
+    }
+
+    // 4. Manual Fetch - WALLET Transactions (For Balance)
+    const walletMap = new Map<string, number>();
+    if (astroIds.size > 0) {
+      // Group by astrologerId to get sum directly (much faster)
+      // Note: Prisma aggregate doesn't support groupBy well for this specific calculation 
+      // without raw query, so we'll fetch light objects and reduce in memory
+      const transactions = await prisma.wallettransaction.findMany({
+        where: { 
+            astrologerId: { in: Array.from(astroIds).map(id => BigInt(id)) } 
         },
-        0
-      );
+        select: { astrologerId: true, amount: true, isCredit: true }
+      });
+
+      transactions.forEach(t => {
+        const aId = t.astrologerId?.toString();
+        if (aId) {
+            const current = walletMap.get(aId) || 0;
+            const amt = Number(t.amount || 0);
+            walletMap.set(aId, t.isCredit ? current + amt : current - amt);
+        }
+      });
+    }
+
+    // 5. Manual Fetch - FOLLOWERS Count
+    const followerMap = new Map<string, number>();
+    if (astroIds.size > 0) {
+      // Use aggregate to count efficiently
+      const followers = await prisma.astrologer_followers.groupBy({
+        by: ['astrologerId'],
+        where: {
+            astrologerId: { in: Array.from(astroIds).map(id => BigInt(id)) },
+            isDelete: false,
+            isActive: true
+        },
+        _count: { userId: true }
+      });
+      
+      followers.forEach(f => {
+        followerMap.set(f.astrologerId.toString(), f._count.userId);
+      });
+    }
+
+    // 6. Stitch Everything Together
+    const astrologersWithData = allAstrologers.map((astrologer) => {
+      const userIdStr = astrologer.userId?.toString();
+      const user = userIdStr ? userMap.get(userIdStr) : null;
+      
+      const astroIdStr = astrologer.id.toString();
+      const walletBalance = walletMap.get(astroIdStr) || 0;
+      const followerCount = followerMap.get(astroIdStr) || 0;
+
+      // RESOLVE NAME & IMAGE
+      // Priority: Astrologer Table -> User Table -> Unknown
+      const finalName = astrologer.name || user?.name || "Unknown";
+      const finalEmail = astrologer.email || user?.email || "";
+      const finalContact = astrologer.contactNo || user?.contactNo || "";
+      const finalImage = astrologer.profileImage || user?.profile || null;
 
       return {
         ...astrologer,
-        followerCount: astrologer.followers.length,
+        name: finalName,
+        email: finalEmail,
+        contactNo: finalContact,
+        profileImage: finalImage,
+        // Attach user object for frontend compatibility if needed
+        users: user ? {
+            name: user.name,
+            email: user.email,
+            contactNo: user.contactNo,
+            profile: user.profile
+        } : null,
+        followerCount,
         walletBalance: walletBalance.toFixed(2),
-        walletTransactions: undefined,
-        followers: undefined,
       };
     });
 
-    const sortedAstrologers = astrologersWithWallet.sort((a, b) => {
+    // 7. Sort Logic (Same as before)
+    const sortedAstrologers = astrologersWithData.sort((a, b) => {
       const aTopAndVerified = a.top_select === 1 && a.isVerified;
       const bTopAndVerified = b.top_select === 1 && b.isVerified;
 
       const aOnlyVerified = a.isVerified && a.top_select === 0;
       const bOnlyVerified = b.isVerified && b.top_select === 0;
 
-      // Priority 1: Top + Verified first
       if (aTopAndVerified && !bTopAndVerified) return -1;
       if (!aTopAndVerified && bTopAndVerified) return 1;
 
-      // Priority 2: Only Verified second
       if (aOnlyVerified && !bOnlyVerified && !bTopAndVerified) return -1;
       if (!aOnlyVerified && bOnlyVerified && !aTopAndVerified) return 1;
 
-      // Priority 3: Within same category, sort by follower count (highest first)
       if (b.followerCount !== a.followerCount) {
         return b.followerCount - a.followerCount;
       }
 
-      // Priority 4: If same followers, sort by created_at (newest first)
       const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
       const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
       return bDate - aDate;
     });
 
-    // Calculate stats from ALL filtered astrologers (before pagination)
+    // Stats
     const stats = {
       totalVerified: sortedAstrologers.filter((a) => a.isVerified).length,
       totalActive: sortedAstrologers.filter((a) => a.isActive).length,
@@ -189,10 +226,9 @@ export async function GET(request: NextRequest) {
       totalCallOnline: sortedAstrologers.filter((a) => a.callStatus === "online").length,
     };
 
-    // Apply pagination AFTER sorting
+    // Pagination
     const paginatedAstrologers = sortedAstrologers.slice(skip, skip + limit);
 
-    // Convert all BigInt/Decimal/Date before sending
     const safeData = convertPrismaTypes(paginatedAstrologers);
     const safeStats = convertPrismaTypes(stats);
 
@@ -220,7 +256,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ✅ NEW: POST method for creating astrologer
+// POST method remains unchanged
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

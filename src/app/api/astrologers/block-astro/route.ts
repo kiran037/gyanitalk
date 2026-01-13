@@ -1,27 +1,16 @@
-// app/api/astrologers/block-astro/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // Helper: convert BigInt / Decimal / Date → JSON-safe
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
-
   if (typeof obj === "bigint") return obj.toString();
-
-  if (
-    typeof obj === "object" &&
-    (obj as any).constructor &&
-    (obj as any).constructor.name === "Decimal"
-  ) {
+  if (typeof obj === "object" && (obj as any).constructor && (obj as any).constructor.name === "Decimal") {
     return Number((obj as any).toString());
   }
-
   if (obj instanceof Date) return obj.toISOString();
-
   if (typeof obj !== "object") return obj;
-
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
-
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -29,7 +18,7 @@ function convertPrismaTypes(obj: unknown): any {
   return out;
 }
 
-// GET - List all blocked astrologers with filters, search, pagination
+// GET - List all blocked astrologers
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -51,66 +40,91 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: any = {};
 
-    if (astrologerId) {
-      where.astrologerId = BigInt(astrologerId);
-    }
+    if (astrologerId) where.astrologerId = BigInt(astrologerId);
+    if (userId) where.userId = BigInt(userId);
 
-    if (userId) {
-      where.userId = BigInt(userId);
-    }
-
-    // Date range filter
     if (startDate || endDate) {
       where.created_at = {};
-      if (startDate) {
-        where.created_at.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.created_at.lte = new Date(endDate);
-      }
+      if (startDate) where.created_at.gte = new Date(startDate);
+      if (endDate) where.created_at.lte = new Date(endDate);
     }
 
-    // Get total count
-    const totalCount = await prisma.blockastrologer.count({ where });
+    // 1. Get raw block records
+    const [rawBlocks, totalCount] = await Promise.all([
+      prisma.blockastrologer.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.blockastrologer.count({ where }),
+    ]);
 
-    // Get blocked astrologers with relations
-    const blockedAstrologers = await prisma.blockastrologer.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
-      include: {
-        astrologer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            contactNo: true,
-            profileImage: true,
-            primarySkill: true,
-            experienceInYears: true,
-            charge: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            contactNo: true,
-            profile: true,
-          },
-        },
-      },
+    // 2. Extract IDs
+    const astroIds = new Set<string>();
+    const userIds = new Set<string>();
+
+    rawBlocks.forEach((b) => {
+      if (b.astrologerId) astroIds.add(b.astrologerId.toString());
+      if (b.userId) userIds.add(b.userId.toString());
     });
 
-    // Apply search filter if provided (search in astrologer/user name, reason)
-    let filteredData = blockedAstrologers;
+    // 3. Manual Fetch - ASTROLOGERS (With Image Fallback)
+    const astroMap = new Map();
+    if (astroIds.size > 0) {
+      const astros = await prisma.astrologers.findMany({
+        where: { id: { in: Array.from(astroIds).map(id => BigInt(id)) } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactNo: true,
+          profileImage: true,
+          primarySkill: true,
+          experienceInYears: true,
+          charge: true,
+          users: { select: { profile: true } } // Fallback image
+        }
+      });
+      astros.forEach(a => {
+        // Resolve image
+        const img = a.profileImage || a.users?.profile || null;
+        astroMap.set(a.id.toString(), { ...a, profileImage: img, users: undefined });
+      });
+    }
+
+    // 4. Manual Fetch - USERS
+    const userMap = new Map();
+    if (userIds.size > 0) {
+      const users = await prisma.users.findMany({
+        where: { id: { in: Array.from(userIds).map(id => BigInt(id)) } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactNo: true,
+          profile: true,
+        }
+      });
+      users.forEach(u => userMap.set(u.id.toString(), u));
+    }
+
+    // 5. Stitch Data
+    let blockedAstrologers = rawBlocks.map(block => {
+      const astroId = block.astrologerId?.toString();
+      const uId = block.userId?.toString();
+
+      return {
+        ...block,
+        astrologer: astroId ? astroMap.get(astroId) || { name: "Unknown", profileImage: null } : null,
+        user: uId ? userMap.get(uId) || { name: "Unknown", profile: null } : null,
+      };
+    });
+
+    // 6. Apply Search Filter (In Memory, since we constructed names manually)
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredData = blockedAstrologers.filter((block) => {
+      blockedAstrologers = blockedAstrologers.filter((block) => {
         return (
           block.astrologer?.name?.toLowerCase().includes(searchLower) ||
           block.user?.name?.toLowerCase().includes(searchLower) ||
@@ -119,10 +133,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const total = search ? filteredData.length : totalCount;
+    // Recalculate total if searching
+    const total = search ? blockedAstrologers.length : totalCount;
+
     const safeData = convertPrismaTypes({
       success: true,
-      data: filteredData,
+      data: blockedAstrologers,
       pagination: {
         page,
         limit,
@@ -135,58 +151,41 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error("Error fetching blocked astrologers:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to fetch blocked astrologers",
-      },
+      { success: false, error: error.message || "Failed to fetch blocked astrologers" },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Remove block (unblock astrologer for user)
+// DELETE - Remove block
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const blockId = searchParams.get("id");
 
     if (!blockId) {
-      return NextResponse.json(
-        { success: false, error: "Block ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Block ID is required" }, { status: 400 });
     }
 
     const idNum = parseInt(blockId, 10);
 
-    // Check if block exists
     const existingBlock = await prisma.blockastrologer.findUnique({
       where: { id: idNum },
     });
 
     if (!existingBlock) {
-      return NextResponse.json(
-        { success: false, error: "Block record not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Block record not found" }, { status: 404 });
     }
 
-    // Delete the block record
     await prisma.blockastrologer.delete({
       where: { id: idNum },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Astrologer unblocked successfully",
-    });
+    return NextResponse.json({ success: true, message: "Astrologer unblocked successfully" });
   } catch (error: any) {
     console.error("Error unblocking astrologer:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to unblock astrologer",
-      },
+      { success: false, error: error.message || "Failed to unblock astrologer" },
       { status: 500 }
     );
   }

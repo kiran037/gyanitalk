@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Eye, MoreVertical, Trash2, Edit, Users, Calendar } from "lucide-react";
 import { Button } from "@/components/adminUI/Button";
 import { ActionModal } from "@/components/adminUI/ActionModal";
-import { avatar } from "@/lib/images";
+import { avatar } from "@/lib/images"; // Ensure this import exists
 
 interface GroupCardProps {
   group: any;
@@ -19,10 +19,14 @@ export function GroupCard({ group, index, onEdit, onDelete, onView }: GroupCardP
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const count = group.memberCount || 0;
+  // Get members (ensure we don't exceed 5 for the visual stack)
+  const displayMembers = (group.members || []).slice(0, 5);
+
   return (
     <>
       <motion.div
-        className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl overflow-hidden hover:shadow-xl transition-all"
+        className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-xl hover:shadow-xl transition-all"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
@@ -37,7 +41,7 @@ export function GroupCard({ group, index, onEdit, onDelete, onView }: GroupCardP
               <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3" />
-                  {group.memberCount} members
+                  {count} {count === 1 ? "member" : "members"}
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
@@ -55,32 +59,23 @@ export function GroupCard({ group, index, onEdit, onDelete, onView }: GroupCardP
               </button>
 
               {showMenu && (
-                <div className="absolute right-0 top-10 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-10">
+                <div className="absolute right-0 top-10 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
                   <button
-                    onClick={() => {
-                      onView();
-                      setShowMenu(false);
-                    }}
+                    onClick={() => { onView(); setShowMenu(false); }}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
                     View Details
                   </button>
                   <button
-                    onClick={() => {
-                      onEdit(group);
-                      setShowMenu(false);
-                    }}
+                    onClick={() => { onEdit(group); setShowMenu(false); }}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                   >
                     <Edit className="w-4 h-4" />
                     Edit
                   </button>
                   <button
-                    onClick={() => {
-                      setShowDeleteModal(true);
-                      setShowMenu(false);
-                    }}
+                    onClick={() => { setShowDeleteModal(true); setShowMenu(false); }}
                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -91,28 +86,35 @@ export function GroupCard({ group, index, onEdit, onDelete, onView }: GroupCardP
             </div>
           </div>
 
-          {/* Members Preview */}
-          {group.members && group.members.length > 0 && (
-            <div className="mb-4">
+          {/* AVATAR STACK */}
+          <div className="mb-4 min-h-[2.5rem] flex items-center">
+            {displayMembers.length > 0 ? (
               <div className="flex -space-x-2">
-                {group.members.slice(0, 5).map((member: any, i: number) => (
+                {displayMembers.map((member: any, i: number) => (
                   <img
                     key={i}
-                    src={avatar(member.profileImage) || "/placeholder-avatar.png"}
+                    src={avatar(member.profileImage)} 
                     alt={member.name}
-                    className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 object-cover"
+                    title={member.name}
+                    // Fallback to placeholder if image fails to load
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/placeholder-avatar.png";
+                    }}
+                    className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 object-cover bg-gray-200 dark:bg-gray-700"
                   />
                 ))}
-                {group.members.length > 5 && (
-                  <div className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      +{group.members.length - 5}
-                    </span>
+                
+                {/* Count Badge */}
+                {count > 5 && (
+                  <div className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300">
+                    +{count - 5}
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-gray-400 italic">No members assigned</p>
+            )}
+          </div>
 
           <Button variant="outline" size="sm" icon={<Eye className="w-4 h-4" />} onClick={onView} className="w-full">
             View Members

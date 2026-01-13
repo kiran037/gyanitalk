@@ -1,4 +1,4 @@
-// app/api/dashboard/overview/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -8,16 +8,12 @@ import {
 } from "../utils/dateFilter";
 import { DashboardResponse } from "../utils/types";
 
-
-
 // 🔹 Helper: convert BigInt / Decimal / Date → JSON-safe
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
 
-  // bigint → string
   if (typeof obj === "bigint") return obj.toString();
 
-  // Prisma Decimal (runtime class name "Decimal") → number
   if (
     typeof obj === "object" &&
     (obj as any).constructor &&
@@ -26,16 +22,12 @@ function convertPrismaTypes(obj: unknown): any {
     return Number((obj as any).toString());
   }
 
-  // Date → ISO string
   if (obj instanceof Date) return obj.toISOString();
 
-  // primitives
   if (typeof obj !== "object") return obj;
 
-  // arrays
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
 
-  // objects: recurse
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -57,7 +49,7 @@ export async function GET(request: NextRequest) {
     );
     const previousRange = getPreviousDateRange(dateRange);
 
-    // Parallel queries for better performance
+    // Parallel queries for stats
     const [
       currentRevenue,
       previousRevenue,
@@ -72,148 +64,66 @@ export async function GET(request: NextRequest) {
       // Current Revenue
       prisma.order_request.aggregate({
         where: {
-          created_at: {
-            gte: dateRange.startDate,
-            lte: dateRange.endDate,
-          },
+          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
           orderStatus: { not: "cancelled" },
         },
         _sum: { totalPayable: true },
       }),
-
       // Previous Revenue
       prisma.order_request.aggregate({
         where: {
-          created_at: {
-            gte: previousRange.startDate,
-            lte: previousRange.endDate,
-          },
+          created_at: { gte: previousRange.startDate, lte: previousRange.endDate },
           orderStatus: { not: "cancelled" },
         },
         _sum: { totalPayable: true },
       }),
-
-      // Current Active Users
+      // Users
       prisma.users.count({
         where: {
           isActive: true,
           isDelete: false,
-          created_at: {
-            gte: dateRange.startDate,
-            lte: dateRange.endDate,
-          },
+          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
         },
       }),
-
-      // Previous Active Users
       prisma.users.count({
         where: {
           isActive: true,
           isDelete: false,
-          created_at: {
-            gte: previousRange.startDate,
-            lte: previousRange.endDate,
-          },
+          created_at: { gte: previousRange.startDate, lte: previousRange.endDate },
         },
       }),
-
-      // Active Astrologers (currently online or available)
+      // Active Astrologers
       prisma.astrologers.count({
-        where: {
-          isActive: true,
-          isDelete: false,
-          chatStatus: "online",
-        },
+        where: { isActive: true, isDelete: false, chatStatus: "online" },
       }),
-
-      // Today's Consultations
+      // Consultations (Current)
       prisma.$transaction([
-        prisma.chatrequest.count({
-          where: {
-            created_at: {
-              gte: dateRange.startDate,
-              lte: dateRange.endDate,
-            },
-          },
-        }),
-        prisma.callrequest.count({
-          where: {
-            created_at: {
-              gte: dateRange.startDate,
-              lte: dateRange.endDate,
-            },
-          },
-        }),
+        prisma.chatrequest.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+        prisma.callrequest.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
       ]),
-
-      // Previous Consultations
+      // Consultations (Previous)
       prisma.$transaction([
-        prisma.chatrequest.count({
-          where: {
-            created_at: {
-              gte: previousRange.startDate,
-              lte: previousRange.endDate,
-            },
-          },
-        }),
-        prisma.callrequest.count({
-          where: {
-            created_at: {
-              gte: previousRange.startDate,
-              lte: previousRange.endDate,
-            },
-          },
-        }),
+        prisma.chatrequest.count({ where: { created_at: { gte: previousRange.startDate, lte: previousRange.endDate } } }),
+        prisma.callrequest.count({ where: { created_at: { gte: previousRange.startDate, lte: previousRange.endDate } } }),
       ]),
-
-      // Current Orders
-      prisma.order_request.count({
-        where: {
-          created_at: {
-            gte: dateRange.startDate,
-            lte: dateRange.endDate,
-          },
-        },
-      }),
-
-      // Previous Orders
-      prisma.order_request.count({
-        where: {
-          created_at: {
-            gte: previousRange.startDate,
-            lte: previousRange.endDate,
-          },
-        },
-      }),
+      // Orders
+      prisma.order_request.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+      prisma.order_request.count({ where: { created_at: { gte: previousRange.startDate, lte: previousRange.endDate } } }),
     ]);
 
+    // Values calculation
     const currentRevenueValue = Number(currentRevenue._sum.totalPayable) || 0;
     const previousRevenueValue = Number(previousRevenue._sum.totalPayable) || 0;
+    const currentConsultationsTotal = todayConsultations[0] + todayConsultations[1];
+    const previousConsultationsTotal = previousConsultations[0] + previousConsultations[1];
 
-    const currentConsultationsTotal =
-      todayConsultations[0] + todayConsultations[1];
-    const previousConsultationsTotal =
-      previousConsultations[0] + previousConsultations[1];
-
-    // Calculate comparisons
-    const revenueComparison = calculateComparison(
-      currentRevenueValue,
-      previousRevenueValue
-    );
+    const revenueComparison = calculateComparison(currentRevenueValue, previousRevenueValue);
     const usersComparison = calculateComparison(currentUsers, previousUsers);
-    const consultationsComparison = calculateComparison(
-      currentConsultationsTotal,
-      previousConsultationsTotal
-    );
-    const ordersComparison = calculateComparison(
-      currentOrders,
-      previousOrders
-    );
+    const consultationsComparison = calculateComparison(currentConsultationsTotal, previousConsultationsTotal);
+    const ordersComparison = calculateComparison(currentOrders, previousOrders);
 
-    // Get revenue trend (daily breakdown)
-    const revenueTrend = await prisma.$queryRaw<
-      Array<{ date: Date; revenue: number }>
-    >`
+    // Revenue Trend
+    const revenueTrend = await prisma.$queryRaw<Array<{ date: Date; revenue: number }>>`
       SELECT 
         DATE(created_at) as date,
         SUM(CAST(totalPayable AS DECIMAL(10,2))) as revenue
@@ -225,14 +135,11 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-    // Get top astrologers
-    const topAstrologers = await prisma.order_request.groupBy({
+    // --- TOP ASTROLOGERS (With Image Fix) ---
+    const topAstrologersRaw = await prisma.order_request.groupBy({
       by: ["astrologerId"],
       where: {
-        created_at: {
-          gte: dateRange.startDate,
-          lte: dateRange.endDate,
-        },
+        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
         astrologerId: { not: null },
       },
       _sum: { totalPayable: true },
@@ -241,43 +148,103 @@ export async function GET(request: NextRequest) {
       take: 5,
     });
 
-    // Get astrologer details
-    const astrologerIds = topAstrologers
+    const topAstroIds = topAstrologersRaw
       .map((a) => a.astrologerId)
-      .filter(Boolean) as bigint[];
+      .filter((id) => id !== null) as bigint[];
 
-    const astrologerDetails = await prisma.astrologers.findMany({
-      where: { id: { in: astrologerIds } },
-      select: { id: true, name: true, profileImage: true },
+    const astroDetails = await prisma.astrologers.findMany({
+      where: { id: { in: topAstroIds } },
+      select: { 
+        id: true, 
+        name: true, 
+        profileImage: true,
+        // Fallback for missing images
+        users: { select: { profile: true } }
+      },
     });
 
-    const topAstrologersWithDetails = topAstrologers.map((astro) => {
-      const details = astrologerDetails.find(
-        (d) => d.id === astro.astrologerId
-      );
+    const topAstrologersWithDetails = topAstrologersRaw.map((astro) => {
+      const details = astroDetails.find((d) => d.id === astro.astrologerId);
+      const img = details?.profileImage || details?.users?.profile || null;
+      
       return {
-        id: astro.astrologerId, // BigInt will be converted by convertPrismaTypes
+        id: astro.astrologerId,
         name: details?.name || "Unknown",
-        profileImage: details?.profileImage,
+        profileImage: img,
         revenue: Number(astro._sum.totalPayable) || 0,
         orders: astro._count,
       };
     });
 
-    // Recent activities
-    const recentOrders = await prisma.order_request.findMany({
+    // --- RECENT ACTIVITY (Manual Join Fix) ---
+    // 1. Fetch Raw Orders
+    const recentOrdersRaw = await prisma.order_request.findMany({
       where: {
-        created_at: {
-          gte: dateRange.startDate,
-          lte: dateRange.endDate,
-        },
+        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
       },
       orderBy: { created_at: "desc" },
       take: 10,
-      include: {
-        user: { select: { id: true, name: true, profile: true } },
-        astrologer: { select: { id: true, name: true } },
-      },
+      select: {
+        id: true,
+        userId: true,
+        astrologerId: true,
+        orderType: true,
+        totalPayable: true,
+        orderStatus: true,
+        created_at: true
+      }
+    });
+
+    // 2. Extract IDs
+    const userIds = new Set<string>();
+    const astroIds = new Set<string>();
+
+    recentOrdersRaw.forEach(o => {
+        if (o.userId) userIds.add(o.userId.toString());
+        if (o.astrologerId) astroIds.add(o.astrologerId.toString());
+    });
+
+    // 3. Manual Fetch - Users
+    const userMap = new Map();
+    if (userIds.size > 0) {
+        const users = await prisma.users.findMany({
+            where: { id: { in: Array.from(userIds).map(id => BigInt(id)) } },
+            select: { id: true, name: true, profile: true }
+        });
+        users.forEach(u => userMap.set(u.id.toString(), u));
+    }
+
+    // 4. Manual Fetch - Astrologers
+    const astroMap = new Map();
+    if (astroIds.size > 0) {
+        const astros = await prisma.astrologers.findMany({
+            where: { id: { in: Array.from(astroIds).map(id => BigInt(id)) } },
+            select: { id: true, name: true }
+        });
+        astros.forEach(a => astroMap.set(a.id.toString(), a));
+    }
+
+    // 5. Stitch
+    const recentActivity = recentOrdersRaw.map((order) => {
+        const u = order.userId ? userMap.get(order.userId.toString()) : null;
+        const a = order.astrologerId ? astroMap.get(order.astrologerId.toString()) : null;
+
+        return {
+            id: order.id,
+            type: order.orderType,
+            user: {
+                id: order.userId,
+                name: u?.name || "Unknown User",
+                profile: u?.profile || null,
+            },
+            astrologer: {
+                id: order.astrologerId,
+                name: a?.name || "N/A",
+            },
+            amount: Number(order.totalPayable) || 0,
+            status: order.orderStatus,
+            createdAt: order.created_at,
+        };
     });
 
     const response: DashboardResponse = {
@@ -320,27 +287,12 @@ export async function GET(request: NextRequest) {
         },
         charts: {
           revenueTrend: revenueTrend.map((r) => ({
-            date: r.date, // Date → ISO string via helper
+            date: r.date,
             revenue: Number(r.revenue) || 0,
           })),
           topAstrologers: topAstrologersWithDetails,
         },
-        recentActivity: recentOrders.map((order) => ({
-          id: order.id, // BigInt → string via helper
-          type: order.orderType,
-          user: {
-            id: order.user?.id, // BigInt → string via helper
-            name: order.user?.name || "Unknown",
-            profile: order.user?.profile,
-          },
-          astrologer: {
-            id: order.astrologer?.id, // BigInt → string via helper
-            name: order.astrologer?.name || "N/A",
-          },
-          amount: Number(order.totalPayable) || 0,
-          status: order.orderStatus,
-          createdAt: order.created_at, // Date → ISO via helper
-        })),
+        recentActivity: recentActivity,
       },
       metadata: {
         filter,
@@ -352,9 +304,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // 🔹 IMPORTANT: convert BigInt/Date before sending
     const safe = convertPrismaTypes(response);
-
     return NextResponse.json(safe);
   } catch (error) {
     console.error("Dashboard overview error:", error);

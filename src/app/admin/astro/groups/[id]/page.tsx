@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/admin/astro/groups/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Safe parse helper (keeps midnight boundary and guards invalid input)
+// Safe parse helper
 function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -14,6 +14,18 @@ function parsePeriodDays(periodStr: string | null | undefined, fallbackDays = 30
   return Math.round(n);
 }
 
+// Helper to safely convert Decimal to number
+const toNumber = (val: any): number => {
+  if (val == null) return 0;
+  if (typeof val === 'number' && Number.isFinite(val)) return val;
+  if (typeof val === 'object' && typeof val.toString === 'function') {
+    const num = Number(val.toString());
+    return Number.isFinite(num) ? num : 0;
+  }
+  const num = Number(val);
+  return Number.isFinite(num) ? num : 0;
+};
+
 // GET - Get dashboard statistics
 export async function GET(request: NextRequest) {
   try {
@@ -21,272 +33,180 @@ export async function GET(request: NextRequest) {
     const periodStr = searchParams.get('period') || '30';
     const periodDays = parsePeriodDays(periodStr, 30);
 
-    // startDate is periodDays before now (used for period revenue)
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - periodDays);
     startDate.setHours(0, 0, 0, 0);
 
-    // alias for today's start
     const todayStart = startOfToday();
 
-    // Common where clause for product/mall orders only
     const productOrderWhere = {
       isDelete: '0',
       productId: { not: null },
     };
 
-    // Common where clause for delivered orders only (for revenue)
     const deliveredOrderWhere = {
       ...productOrderWhere,
       orderStatus: 'delivered',
     };
 
+    // 1. Fetch Aggregates & Raw Lists (Parallel)
     const [
-      // Product stats
       totalProducts,
       activeProducts,
       totalCategories,
-
-      // Order stats
       totalOrders,
       todayOrders,
       pendingOrders,
       completedOrders,
-
-      // Revenue stats (only delivered orders)
       totalRevenue,
       periodRevenue,
       todayRevenue,
+      
+      // Raw Recent Orders (No Includes)
+      rawRecentOrders,
 
-      // Recent orders
-      recentOrders,
-
-      // Top products (raw)
+      // Top products (Raw SQL)
       topProducts,
 
-      // Revenue by date (raw)
+      // Revenue by date (Raw SQL)
       revenueByDate,
 
-      // Orders by status (raw)
+      // Orders by status (Raw SQL)
       ordersByStatus,
     ] = await Promise.all([
       // Products
-      prisma.astromall_products.count({
-        where: { isDelete: false },
-      }),
-      prisma.astromall_products.count({
-        where: { isDelete: false, isActive: true },
-      }),
-      prisma.product_categories.count({
-        where: { isDelete: false },
-      }),
+      prisma.astromall_products.count({ where: { isDelete: false } }),
+      prisma.astromall_products.count({ where: { isDelete: false, isActive: true } }),
+      prisma.product_categories.count({ where: { isDelete: false } }),
 
-      // Orders (only product/mall orders)
-      prisma.order_request.count({
-        where: productOrderWhere,
-      }),
-      prisma.order_request.count({
-        where: {
-          ...productOrderWhere,
-          created_at: {
-            gte: todayStart,
-          },
-        },
-      }),
-      prisma.order_request.count({
-        where: {
-          ...productOrderWhere,
-          orderStatus: 'pending',
-        },
-      }),
-      prisma.order_request.count({
-        where: {
-          ...productOrderWhere,
-          orderStatus: {
-            in: ['completed', 'delivered'],
-          },
-        },
-      }),
+      // Orders
+      prisma.order_request.count({ where: productOrderWhere }),
+      prisma.order_request.count({ where: { ...productOrderWhere, created_at: { gte: todayStart } } }),
+      prisma.order_request.count({ where: { ...productOrderWhere, orderStatus: 'pending' } }),
+      prisma.order_request.count({ where: { ...productOrderWhere, orderStatus: { in: ['completed', 'delivered'] } } }),
 
-      // Revenue aggregates (only delivered product/mall orders)
-      prisma.order_request.aggregate({
-        where: deliveredOrderWhere,
-        _sum: {
-          totalPayable: true,
-        },
-      }),
-      prisma.order_request.aggregate({
-        where: {
-          ...deliveredOrderWhere,
-          created_at: {
-            gte: startDate,
-          },
-        },
-        _sum: {
-          totalPayable: true,
-        },
-      }),
-      prisma.order_request.aggregate({
-        where: {
-          ...deliveredOrderWhere,
-          created_at: {
-            gte: todayStart,
-          },
-        },
-        _sum: {
-          totalPayable: true,
-        },
-      }),
+      // Revenue
+      prisma.order_request.aggregate({ where: deliveredOrderWhere, _sum: { totalPayable: true } }),
+      prisma.order_request.aggregate({ where: { ...deliveredOrderWhere, created_at: { gte: startDate } }, _sum: { totalPayable: true } }),
+      prisma.order_request.aggregate({ where: { ...deliveredOrderWhere, created_at: { gte: todayStart } }, _sum: { totalPayable: true } }),
 
-      // Recent orders (only product/mall orders)
+      // Recent Orders - Raw Fetch Only
       prisma.order_request.findMany({
         where: productOrderWhere,
         take: 10,
-        orderBy: {
-          created_at: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-          product: {
-            select: {
-              name: true,
-              productImage: true,
-              // Don't select amount here - use totalPayable from order instead
-            },
-          },
-        },
+        orderBy: { created_at: 'desc' },
+        // NO INCLUDE HERE - Causes issues
       }),
 
-      // Top products - only count delivered orders for revenue
+      // Top products
       prisma.$queryRaw`
-        SELECT 
-          p.id,
-          p.name,
-          p.productImage,
-          p.amount,
-          COUNT(o.id) as orderCount,
-          SUM(CASE WHEN o.orderStatus = 'delivered' THEN o.totalPayable ELSE 0 END) as totalRevenue
+        SELECT p.id, p.name, p.productImage, p.amount, COUNT(o.id) as orderCount,
+        SUM(CASE WHEN o.orderStatus = 'delivered' THEN o.totalPayable ELSE 0 END) as totalRevenue
         FROM astromall_products p
-        LEFT JOIN order_request o ON o.productId = p.id 
-          AND o.isDelete = '0'
+        LEFT JOIN order_request o ON o.productId = p.id AND o.isDelete = '0'
         WHERE p.isDelete = false
         GROUP BY p.id, p.name, p.productImage, p.amount
-        ORDER BY orderCount DESC
-        LIMIT 5
+        ORDER BY orderCount DESC LIMIT 5
       `,
 
-      // Revenue by date (last 7 days) — only delivered product orders
+      // Revenue by date
       prisma.$queryRaw`
-        SELECT 
-          DATE(created_at) as date,
-          COUNT(*) as orders,
-          SUM(totalPayable) as revenue
+        SELECT DATE(created_at) as date, COUNT(*) as orders, SUM(totalPayable) as revenue
         FROM order_request
-        WHERE isDelete = '0' 
-          AND productId IS NOT NULL
-          AND orderStatus = 'delivered'
-          AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY date DESC
+        WHERE isDelete = '0' AND productId IS NOT NULL AND orderStatus = 'delivered' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY DATE(created_at) ORDER BY date DESC
       `,
 
-      // Orders by status — only product orders
+      // Orders by status
       prisma.$queryRaw`
-        SELECT 
-          orderStatus,
-          COUNT(*) as count
-        FROM order_request
-        WHERE isDelete = '0'
-          AND productId IS NOT NULL
-        GROUP BY orderStatus
+        SELECT orderStatus, COUNT(*) as count FROM order_request
+        WHERE isDelete = '0' AND productId IS NOT NULL GROUP BY orderStatus
       `,
     ]);
 
-    // --- Fix TS typing so .map is safe ---
-    const recentOrdersArr = Array.isArray(recentOrders) ? recentOrders : [];
+    // 2. Manual Join Strategy for Recent Orders
+    const userIds = new Set<string>();
+    const productIds = new Set<string>();
+
+    rawRecentOrders.forEach(o => {
+        if (o.userId) userIds.add(o.userId.toString());
+        if (o.productId) productIds.add(o.productId.toString());
+    });
+
+    // Fetch Users Manually
+    const userMap = new Map();
+    if (userIds.size > 0) {
+        const users = await prisma.users.findMany({
+            where: { id: { in: Array.from(userIds).map(id => BigInt(id)) } },
+            select: { id: true, name: true, email: true, contactNo: true }
+        });
+        users.forEach(u => userMap.set(u.id.toString(), u));
+    }
+
+    // Fetch Products Manually
+    const productMap = new Map();
+    if (productIds.size > 0) {
+        const products = await prisma.astromall_products.findMany({
+            where: { id: { in: Array.from(productIds).map(id => BigInt(id)) } },
+            select: { id: true, name: true, productImage: true }
+        });
+        products.forEach(p => productMap.set(p.id.toString(), p));
+    }
+
+    // Stitch & Normalize Recent Orders
+    const normalizedRecentOrders = rawRecentOrders.map((o) => {
+      const u = o.userId ? userMap.get(o.userId.toString()) : null;
+      const p = o.productId ? productMap.get(o.productId.toString()) : null;
+
+      return {
+        id: o.id.toString(),
+        userId: o.userId.toString(),
+        orderType: o.orderType,
+        orderStatus: o.orderStatus,
+        totalPayable: toNumber(o.totalPayable),
+        paymentMethod: o.paymentMethod,
+        created_at: o.created_at ? o.created_at.toISOString() : null,
+        
+        user: u ? {
+            name: u.name,
+            email: u.email
+        } : { name: "Unknown", email: "N/A" },
+
+        product: p ? {
+            name: p.name,
+            productImage: p.productImage
+        } : { name: "Unknown Product", productImage: null }
+      };
+    });
+
+    // --- Normalization for other raw queries ---
     const topProductsArr = Array.isArray(topProducts) ? topProducts : [];
     const revenueByDateArr = Array.isArray(revenueByDate) ? revenueByDate : [];
     const ordersByStatusArr = Array.isArray(ordersByStatus) ? ordersByStatus : [];
 
-    // ---------- Normalization: convert Dates/Decimals/raw strings -> stable JS primitives ----------
-    // Normalize recentOrders - use totalPayable from order, not product.amount
-    const normalizedRecentOrders = recentOrdersArr.map((o: any) => {
-      let createdAtIso: string | null = null;
-      if (o?.created_at) {
-        try {
-          const d = o.created_at instanceof Date ? o.created_at : new Date(o.created_at);
-          createdAtIso = isNaN(d.getTime()) ? null : d.toISOString();
-        } catch {
-          createdAtIso = null;
-        }
-      }
-
-      // Convert totalPayable (Decimal) to number
-      let totalPayable = 0;
-      if (o?.totalPayable != null) {
-        if (typeof o.totalPayable === 'object' && typeof o.totalPayable.toString === 'function') {
-          const converted = Number(o.totalPayable.toString());
-          totalPayable = Number.isFinite(converted) ? converted : 0;
-        } else {
-          const converted = Number(o.totalPayable);
-          totalPayable = Number.isFinite(converted) ? converted : 0;
-        }
-      }
-
-      return {
-        id: o.id?.toString(),
-        userId: o.userId?.toString(),
-        orderType: o.orderType,
-        orderStatus: o.orderStatus,
-        totalPayable: totalPayable,
-        paymentMethod: o.paymentMethod,
-        created_at: createdAtIso,
-        user: o.user,
-        product: o.product, // Just name and image, no amount
-      };
-    });
-
-    // Normalize topProducts (raw SQL returns strings for numeric fields sometimes)
     const normalizedTopProducts = topProductsArr.map((p: any) => ({
-      id: p.id,
+      id: p.id?.toString(),
       name: p.name,
       productImage: p.productImage,
-      amount: p.amount != null ? Number(p.amount) : 0,
-      orderCount: p.orderCount != null ? Number(p.orderCount) : 0,
-      totalRevenue: p.totalRevenue != null ? Number(p.totalRevenue) : 0,
+      amount: toNumber(p.amount),
+      orderCount: toNumber(p.orderCount),
+      totalRevenue: toNumber(p.totalRevenue),
     }));
 
-    // Normalize revenueByDate (raw SQL)
-    const normalizedRevenueByDate = revenueByDateArr.map((r: any) => {
-      const dateStr = r?.date ? (typeof r.date === 'string' ? r.date : String(r.date)) : null;
-      return {
-        date: dateStr,
-        orders: r.orders != null ? Number(r.orders) : 0,
-        revenue: r.revenue != null ? Number(r.revenue) : 0,
-      };
-    });
+    const normalizedRevenueByDate = revenueByDateArr.map((r: any) => ({
+      date: r?.date ? (typeof r.date === 'string' ? r.date : String(r.date)) : null,
+      orders: toNumber(r.orders),
+      revenue: toNumber(r.revenue),
+    }));
 
-    // Normalize ordersByStatus (raw SQL)
     const normalizedOrdersByStatus = ordersByStatusArr.map((s: any) => ({
       orderStatus: s.orderStatus,
-      count: s.count != null ? Number(s.count) : 0,
+      count: toNumber(s.count),
     }));
 
-    // Safe conversion for aggregate sums: totalPayable is Decimal
-    const safeTotalRevenue = totalRevenue?._sum?.totalPayable 
-      ? Number(totalRevenue._sum.totalPayable.toString()) 
-      : 0;
-    const safePeriodRevenue = periodRevenue?._sum?.totalPayable
-      ? Number(periodRevenue._sum.totalPayable.toString())
-      : 0;
-    const safeTodayRevenue = todayRevenue?._sum?.totalPayable
-      ? Number(todayRevenue._sum.totalPayable.toString())
-      : 0;
+    const safeTotalRevenue = totalRevenue?._sum?.totalPayable ? toNumber(totalRevenue._sum.totalPayable) : 0;
+    const safePeriodRevenue = periodRevenue?._sum?.totalPayable ? toNumber(periodRevenue._sum.totalPayable) : 0;
+    const safeTodayRevenue = todayRevenue?._sum?.totalPayable ? toNumber(todayRevenue._sum.totalPayable) : 0;
 
     const responseData = {
       success: true,
@@ -307,17 +227,15 @@ export async function GET(request: NextRequest) {
           period: safePeriodRevenue,
           today: safeTodayRevenue,
         },
-        recentOrders: normalizedRecentOrders, // Already fully normalized
-        topProducts: normalizedTopProducts.map(p => ({
-          ...p,
-          id: p.id?.toString(),
-        })),
+        recentOrders: normalizedRecentOrders,
+        topProducts: normalizedTopProducts,
         revenueByDate: normalizedRevenueByDate,
         ordersByStatus: normalizedOrdersByStatus,
       },
     };
 
     return NextResponse.json(responseData);
+
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message },

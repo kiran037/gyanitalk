@@ -7,14 +7,10 @@ import {
 } from "../utils/dateFilter";
 import { DashboardResponse } from "../utils/types";
 
-// 🔹 Add this helper (or import it from a shared util if you already have one)
+// 🔹 Helper: convert BigInt / Decimal / Date → JSON-safe
 function convertPrismaTypes(obj: unknown): any {
   if (obj === null || obj === undefined) return obj;
-
-  // BigInt → string
   if (typeof obj === "bigint") return obj.toString();
-
-  // Prisma Decimal → number
   if (
     typeof obj === "object" &&
     (obj as any).constructor &&
@@ -22,17 +18,9 @@ function convertPrismaTypes(obj: unknown): any {
   ) {
     return Number((obj as any).toString());
   }
-
-  // Date → ISO string
   if (obj instanceof Date) return obj.toISOString();
-
-  // primitives
   if (typeof obj !== "object") return obj;
-
-  // arrays
   if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
-
-  // objects
   const out: any = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     out[k] = convertPrismaTypes(v);
@@ -50,7 +38,7 @@ export async function GET(request: NextRequest) {
     const dateRange = getDateRange(filter, customStart || undefined, customEnd || undefined);
     const previousRange = getPreviousDateRange(dateRange);
 
-    // Blog Analytics
+    // --- 1. PARALLEL AGGREGATES (Counts & Sums) ---
     const [
       totalBlogs,
       activeBlogs,
@@ -58,48 +46,40 @@ export async function GET(request: NextRequest) {
       previousBlogViews,
       blogReaders,
       previousBlogReaders,
+      totalHoroscopes, 
+      horoscopeFeedback, 
+      dailyHoroscopeViews,
+      totalVideos, 
+      activeVideos,
+      totalStories, 
+      storyViews
     ] = await Promise.all([
-      // Total blogs
-      prisma.blogs.count({
-        where: { isDelete: false },
-      }),
-
-      // Active blogs
-      prisma.blogs.count({
-        where: { isActive: true, isDelete: false },
-      }),
-
-      // Current period blog views
+      // Blogs
+      prisma.blogs.count({ where: { isDelete: false } }),
+      prisma.blogs.count({ where: { isActive: true, isDelete: false } }),
       prisma.blogs.aggregate({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-          isDelete: false,
-        },
+        where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate }, isDelete: false },
         _sum: { viewer: true },
       }),
-
-      // Previous period blog views
       prisma.blogs.aggregate({
-        where: {
-          created_at: { gte: previousRange.startDate, lte: previousRange.endDate },
-          isDelete: false,
-        },
+        where: { created_at: { gte: previousRange.startDate, lte: previousRange.endDate }, isDelete: false },
         _sum: { viewer: true },
       }),
+      prisma.blog_readers.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+      prisma.blog_readers.count({ where: { created_at: { gte: previousRange.startDate, lte: previousRange.endDate } } }),
+      
+      // Horoscopes
+      prisma.horoscopes.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+      prisma.horoscopefeedback.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+      prisma.dailyhoroscope.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
 
-      // Current period blog readers
-      prisma.blog_readers.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
+      // Videos
+      prisma.astrology_videos.count({ where: { isDelete: false } }),
+      prisma.astrology_videos.count({ where: { isActive: true, isDelete: false } }),
 
-      // Previous period blog readers
-      prisma.blog_readers.count({
-        where: {
-          created_at: { gte: previousRange.startDate, lte: previousRange.endDate },
-        },
-      }),
+      // Stories
+      prisma.astrologer_stories.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
+      prisma.story_view_counts.count({ where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } } }),
     ]);
 
     const blogViewsComparison = calculateComparison(
@@ -108,7 +88,7 @@ export async function GET(request: NextRequest) {
     );
     const blogReadersComparison = calculateComparison(blogReaders, previousBlogReaders);
 
-    // Most Viewed Blogs
+    // --- 2. BLOG LISTS ---
     const mostViewedBlogs = await prisma.blogs.findMany({
       where: {
         created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
@@ -127,7 +107,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Blog Category Performance
+    // Blog Categories (Manual Join)
     const blogsByCategory = await prisma.blogs.groupBy({
       by: ["blogCategoryId"],
       where: {
@@ -142,6 +122,7 @@ export async function GET(request: NextRequest) {
     const categoryIds = blogsByCategory
       .map((b) => b.blogCategoryId)
       .filter(Boolean) as bigint[];
+      
     const categoryDetails = await prisma.blog_categories.findMany({
       where: { id: { in: categoryIds } },
       select: { id: true, name: true },
@@ -157,128 +138,118 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Horoscope Analytics
-    const [totalHoroscopes, horoscopeFeedback, dailyHoroscopeViews] = await Promise.all([
-      // Total horoscopes
-      prisma.horoscopes.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
-
-      // Horoscope feedback
-      prisma.horoscopefeedback.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
-
-      // Daily horoscope views (approximated by count)
-      prisma.dailyhoroscope.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
-    ]);
-
-    // Horoscope by Zodiac Sign
+    // --- 3. HOROSCOPES & VIDEOS ---
     const horoscopeByZodiac = await prisma.horoscopes.groupBy({
       by: ["zodiac"],
-      where: {
-        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-      },
+      where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } },
       _count: true,
     });
 
-    // Horoscope Feedback Distribution
     const feedbackTypes = await prisma.horoscopefeedback.groupBy({
       by: ["feedbacktype"],
-      where: {
-        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-      },
+      where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } },
       _count: true,
     });
 
-    // Video Content Analytics
-    const [totalVideos, activeVideos] = await Promise.all([
-      prisma.astrology_videos.count({
-        where: { isDelete: false },
-      }),
-      prisma.astrology_videos.count({
-        where: { isActive: true, isDelete: false },
-      }),
-    ]);
-
     const recentVideos = await prisma.astrology_videos.findMany({
-      where: {
-        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        isDelete: false,
-      },
+      where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate }, isDelete: false },
       orderBy: { created_at: "desc" },
       take: 10,
-      select: {
-        id: true,
-        videoTitle: true,
-        youtubeLink: true,
-        coverImage: true,
-        created_at: true,
-      },
+      select: { id: true, videoTitle: true, youtubeLink: true, coverImage: true, created_at: true },
     });
 
-    // Astrologer Stories Analytics
-    const [totalStories, storyViews] = await Promise.all([
-      // Total stories
-      prisma.astrologer_stories.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
-
-      // Story views
-      prisma.story_view_counts.count({
-        where: {
-          created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        },
-      }),
-    ]);
-
-    // Most Viewed Stories
+    // --- 4. STORIES & ASTROLOGERS (Manual Join Fix) ---
+    
+    // A. Most Viewed Stories
     const mostViewedStories = await prisma.story_view_counts.groupBy({
       by: ["storyId"],
-      where: {
-        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-      },
+      where: { created_at: { gte: dateRange.startDate, lte: dateRange.endDate } },
       _count: true,
       orderBy: { _count: { storyId: "desc" } },
       take: 10,
     });
 
     const storyIds = mostViewedStories.map((s) => s.storyId);
+    
+    // Fetch raw stories to get astrologerId
     const storyDetails = await prisma.astrologer_stories.findMany({
       where: { id: { in: storyIds } },
-      include: {
-        astrologer: {
-          select: { id: true, name: true, profileImage: true },
-        },
-      },
+      select: { id: true, mediaType: true, created_at: true, astrologerId: true }
     });
 
+    // B. Top Story Creators
+    const topStoryCreators = await prisma.astrologer_stories.groupBy({
+      by: ["astrologerId"],
+      where: {
+        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
+        astrologerId: { not: null },
+      },
+      _count: true,
+      orderBy: { _count: { astrologerId: "desc" } },
+      take: 10,
+    });
+
+    // C. Collect ALL Astrologer IDs to fetch details once
+    const allAstroIds = new Set<bigint>();
+    
+    storyDetails.forEach(s => { if(s.astrologerId) allAstroIds.add(s.astrologerId) });
+    topStoryCreators.forEach(t => { if(t.astrologerId) allAstroIds.add(t.astrologerId) });
+
+    // D. Fetch Astrologer Details with User Profile Fallback
+    const astroMap = new Map();
+    if (allAstroIds.size > 0) {
+        const astros = await prisma.astrologers.findMany({
+            where: { id: { in: Array.from(allAstroIds) } },
+            select: { 
+                id: true, 
+                name: true, 
+                profileImage: true,
+                users: { select: { profile: true } } // Fallback image
+            }
+        });
+
+        astros.forEach(a => {
+            const img = a.profileImage || a.users?.profile || null;
+            astroMap.set(a.id.toString(), {
+                name: a.name,
+                profileImage: img
+            });
+        });
+    }
+
+    // E. Stitch Most Viewed Stories
     const mostViewedStoriesWithDetails = mostViewedStories.map((story) => {
       const details = storyDetails.find((s) => s.id === story.storyId);
+      const astroId = details?.astrologerId?.toString();
+      const astroInfo = astroId ? astroMap.get(astroId) : null;
+
       return {
         storyId: story.storyId,
         views: story._count,
         mediaType: details?.mediaType,
         astrologer: {
-          id: details?.astrologer?.id,
-          name: details?.astrologer?.name || "Unknown",
-          profileImage: details?.astrologer?.profileImage,
+          id: details?.astrologerId,
+          name: astroInfo?.name || "Unknown",
+          profileImage: astroInfo?.profileImage,
         },
         createdAt: details?.created_at,
       };
     });
 
-    // Daily Content Creation Trend
+    // F. Stitch Top Creators
+    const topStoryCreatorsWithDetails = topStoryCreators.map((creator) => {
+      const idStr = creator.astrologerId?.toString();
+      const info = idStr ? astroMap.get(idStr) : null;
+      
+      return {
+        astrologerId: creator.astrologerId,
+        name: info?.name || "Unknown",
+        profileImage: info?.profileImage,
+        storiesCount: creator._count,
+      };
+    });
+
+    // --- 5. CHARTS (Raw Query) ---
     const dailyContentTrend = await prisma.$queryRaw<
       Array<{ date: Date; blogs: number; videos: number; stories: number }>
     >`
@@ -301,7 +272,7 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-    // Top Authors/Content Creators
+    // Top Blog Authors (Simple GroupBy)
     const topAuthors = await prisma.blogs.groupBy({
       by: ["author"],
       where: {
@@ -312,36 +283,6 @@ export async function GET(request: NextRequest) {
       _sum: { viewer: true },
       orderBy: { _count: { author: "desc" } },
       take: 10,
-    });
-
-    // Astrologers with Most Stories
-    const topStoryCreators = await prisma.astrologer_stories.groupBy({
-      by: ["astrologerId"],
-      where: {
-        created_at: { gte: dateRange.startDate, lte: dateRange.endDate },
-        astrologerId: { not: null },
-      },
-      _count: true,
-      orderBy: { _count: { astrologerId: "desc" } },
-      take: 10,
-    });
-
-    const creatorIds = topStoryCreators
-      .map((t) => t.astrologerId)
-      .filter(Boolean) as bigint[];
-    const creatorDetails = await prisma.astrologers.findMany({
-      where: { id: { in: creatorIds } },
-      select: { id: true, name: true, profileImage: true },
-    });
-
-    const topStoryCreatorsWithDetails = topStoryCreators.map((creator) => {
-      const details = creatorDetails.find((c) => c.id === creator.astrologerId);
-      return {
-        astrologerId: creator.astrologerId,
-        name: details?.name || "Unknown",
-        profileImage: details?.profileImage,
-        storiesCount: creator._count,
-      };
     });
 
     const response: DashboardResponse = {
@@ -426,7 +367,6 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // 🔹 Make response JSON-safe (fixes BigInt error)
     return NextResponse.json(convertPrismaTypes(response));
   } catch (error) {
     console.error("Content dashboard error:", error);
