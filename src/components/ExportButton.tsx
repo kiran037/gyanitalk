@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import React, { useState } from "react";
 import { Button } from "@/components/adminUI/Button";
@@ -45,16 +45,25 @@ export default function ExportButton({
     try {
       if (type === "table") {
         if (!tableId) throw new Error("tableId is required for table export");
+        // Ensure we await the function as exceljs generation is async
         await exportTableToExcel(tableId, filename);
       } else {
         let rows = jsonData;
-        if ((!rows || rows.length === 0) && getJsonData) rows = await getJsonData();
-        if (!rows || rows.length === 0) throw new Error("No data to export");
+        if ((!rows || rows.length === 0) && getJsonData) {
+          rows = await getJsonData();
+        }
+        
+        if (!rows || rows.length === 0) {
+          throw new Error("No data to export");
+        }
+        
         await exportJsonToExcel(rows, filename, sheetName);
       }
+      
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 2000);
     } catch (e: any) {
+      console.error(e);
       setExportError(e?.message || "Export failed");
       setTimeout(() => setExportError(null), 3500);
     } finally {

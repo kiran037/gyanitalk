@@ -1,14 +1,27 @@
-///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/kundali/numerology/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import axios from 'axios';
 import { DateTime } from 'luxon';
 
-let LANGUAGE = 'en';
+// Helper: convert BigInt / Decimal / Date -> JSON-safe
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (typeof obj === "object" && (obj as any).constructor?.name === "Decimal") {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
 
-const setLanguage = (lang: string) => {
-  LANGUAGE = lang || 'en';
-};
+let LANGUAGE = 'en';
 
 const getResponse = async (resource: string, data: any) => {
   try {
@@ -35,38 +48,26 @@ const getResponse = async (resource: string, data: any) => {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication (optional for numerology)
-    const authHeader = request.headers.get('authorization');
-    let userId: number | undefined;
-
-    // TODO: Verify JWT if needed
-    // if (authHeader) { userId = await verifyToken(authHeader); }
-
     const body = await request.json();
-    let { day, month, year, name, language = 'en', id } = body;
+    let { day, month, year, name, language = 'en', id, userId } = body;
+    LANGUAGE = language;
 
-    setLanguage(language);
-
-    // ✅ FIX: Store numerology data in intakeform table since numerology table doesn't exist
     let numerologyRecord: any = null;
 
-    if (id !== null && id !== undefined) {
-      // Fetch existing record from intakeform
+    if (id) {
+      // Fetch existing
       numerologyRecord = await prisma.intakeform.findFirst({
         where: {
           id: Number(id),
-          userId: userId || undefined
+          // Add userId check if provided
+          ...(userId && { userId: Number(userId) })
         }
       });
 
       if (!numerologyRecord) {
-        return NextResponse.json({
-          success: false,
-          error: 'Numerology record not found'
-        }, { status: 404 });
+        return NextResponse.json({ success: false, error: 'Record not found' }, { status: 404 });
       }
 
-      // Extract DOB
       const dobObj = new Date(numerologyRecord.birthDate);
       day = dobObj.getDate();
       month = dobObj.getMonth() + 1;
@@ -74,31 +75,24 @@ export async function POST(request: NextRequest) {
       name = numerologyRecord.name;
 
     } else {
-      // Validate inputs
       if (!day || !month || !year || !name) {
-        return NextResponse.json({
-          success: false,
-          error: 'day, month, year, and name are required'
-        }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Required fields missing' }, { status: 400 });
       }
 
-      // Create new record in intakeform table
-      const dob = DateTime.fromObject(
-        { day: Number(day), month: Number(month), year: Number(year) },
-        { zone: 'Asia/Kolkata' }
-      ).toJSDate();
+      // Store in intakeform
+      const dob = DateTime.fromObject({ day, month, year }, { zone: 'Asia/Kolkata' }).toJSDate();
 
       numerologyRecord = await prisma.intakeform.create({
         data: {
-          userId: userId || null,
+          userId: userId ? Number(userId) : null,
           name: name,
-          phoneNumber: '', // Required field, default empty
-          gender: 'other', // Required field, default
+          phoneNumber: '',
+          gender: 'other',
           birthDate: dob,
-          birthTime: '00:00', // Required field, default
-          birthPlace: '', // Required field, default
-          maritalStatus: '', // Required field, default
-          topicOfConcern: 'Numerology', // Required field
+          birthTime: '00:00',
+          birthPlace: 'Unknown',
+          maritalStatus: 'Single',
+          topicOfConcern: 'Numerology',
           latitude: '0',
           longitude: '0',
           timezone: '5.5'
@@ -106,10 +100,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Prepare data for API
     const packageData = { day, month, year, name };
 
-    // Fetch all numerology data
     const [
       table,
       numero_rep,
@@ -128,7 +120,7 @@ export async function POST(request: NextRequest) {
       getResponse('numero_fav_mantra', packageData)
     ]);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       data: {
         numerologyId: numerologyRecord.id,
@@ -139,55 +131,39 @@ export async function POST(request: NextRequest) {
         fastsReport: fast_report,
         favoriteLord: fav_lord,
         favoriteMantra: fav_mantra
-      },
-      message: 'Numerology data fetched successfully'
-    });
+      }
+    };
+
+    return NextResponse.json(convertPrismaTypes(response));
 
   } catch (error: any) {
     console.error('Numerology error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch numerology data',
-      message: error.message
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-// GET all numerology records for logged-in user
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 });
-    }
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId'); // Pass userId via query param if needed for testing
 
-    // TODO: Verify JWT
-    const userId = 1; // Replace with actual auth
+    // Use hardcoded test ID if no auth yet, or integrate your getSession here
+    const effectiveUserId = userId ? parseInt(userId) : 1; 
 
-    // ✅ FIX: Fetch from intakeform where topicOfConcern is 'Numerology'
     const records = await prisma.intakeform.findMany({
       where: { 
-        userId: userId,
+        userId: effectiveUserId,
         topicOfConcern: 'Numerology'
       },
       orderBy: { created_at: 'desc' }
     });
 
-    return NextResponse.json({
+    return NextResponse.json(convertPrismaTypes({
       success: true,
       data: records
-    });
+    }));
 
   } catch (error: any) {
-    console.error('Numerology list error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch numerology records',
-      message: error.message
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

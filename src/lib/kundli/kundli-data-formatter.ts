@@ -1,24 +1,17 @@
-/**
- * KundliDataFormatter - Formats and structures kundli data
- * Handles data extraction from API responses and null safety
- */
-
 export class KundliDataFormatter {
-  
-  /**
-   * Safely extract data from PromiseSettledResult
-   */
+
   static extractData(result: PromiseSettledResult<any>, logName?: string): any {
-    if (result.status === 'fulfilled') {
-      const data = result.value?.response || null;
+    if (result.status === 'fulfilled' && result.value) {
+      const data = result.value.response !== undefined ? result.value.response : result.value;
+      
       if (logName) {
-        console.log(`✓ ${logName}: Success`);
+
       }
-      return data;
+      return data || null;
     }
     
     if (logName) {
-      console.warn(`✗ ${logName}: Failed -`, result.reason?.message || 'Unknown error');
+      console.warn(`✗ ${logName}: Failed or Empty -`, result.status === 'rejected' ? result.reason?.message : 'No value');
     }
     return null;
   }
@@ -45,13 +38,17 @@ export class KundliDataFormatter {
   static formatPlanetDetails(planetData: any) {
     if (!planetData) return null;
     
+    // V3 often returns an object map { "Sun": {...}, "Moon": {...} }
+    // We convert values to an array for counting
+    const planets = Object.values(planetData);
+    
     return {
       planets: planetData,
       summary: {
-        totalPlanets: Object.keys(planetData).filter(k => k !== 'birth_dasa' && k !== 'current_dasa').length,
-        retrograde: Object.values(planetData).filter((p: any) => p?.retro === true).length,
-        exalted: Object.values(planetData).filter((p: any) => p?.basic_avastha === 'Exalted').length,
-        debilitated: Object.values(planetData).filter((p: any) => p?.basic_avastha === 'Debilitated').length
+        totalPlanets: planets.length,
+        retrograde: planets.filter((p: any) => p?.isRetro === 'true' || p?.retro === true).length,
+        exalted: planets.filter((p: any) => p?.basic_avastha?.toLowerCase() === 'exalted').length,
+        debilitated: planets.filter((p: any) => p?.basic_avastha?.toLowerCase() === 'debilitated').length
       }
     };
   }
@@ -60,9 +57,10 @@ export class KundliDataFormatter {
    * Format yoga list with categorization
    */
   static formatYogaList(yogaData: any) {
-    if (!yogaData || !yogaData.yogas_list) return null;
+    if (!yogaData) return null;
     
-    const yogas = yogaData.yogas_list;
+    // Handle case where yogas_list might be missing
+    const yogas = yogaData.yogas_list || [];
     
     return {
       total: yogaData.yogas_count || yogas.length,
@@ -70,20 +68,20 @@ export class KundliDataFormatter {
       dhanaYogaCount: yogaData.dhana_yoga_count || 0,
       daridraYogaCount: yogaData.daridra_yoga_count || 0,
       yogas: yogas.map((yoga: any) => ({
-        name: yoga.yoga,
-        meaning: yoga.meaning,
+        name: yoga.yoga || yoga.name,
+        meaning: yoga.meaning || yoga.description,
         strength: yoga.strength_in_percentage,
         planets: yoga.planets_involved,
         houses: yoga.houses_involved
       })),
       categorized: {
         beneficial: yogas.filter((y: any) => 
-          !y.yoga.toLowerCase().includes('daridra') && 
-          !y.yoga.toLowerCase().includes('dosha')
+          !y.yoga?.toLowerCase().includes('daridra') && 
+          !y.yoga?.toLowerCase().includes('dosha')
         ),
         challenging: yogas.filter((y: any) => 
-          y.yoga.toLowerCase().includes('daridra') || 
-          y.yoga.toLowerCase().includes('dosha')
+          y.yoga?.toLowerCase().includes('daridra') || 
+          y.yoga?.toLowerCase().includes('dosha')
         )
       }
     };
@@ -131,28 +129,29 @@ export class KundliDataFormatter {
    * Format sade sati information
    */
   static formatSadeSati(sadeSatiData: any) {
-    if (!sadeSatiData) return null;
+    const table = sadeSatiData.table || [];
+    const current = sadeSatiData.current || null;
     
     return {
-      table: sadeSatiData.table || [],
-      current: sadeSatiData.current ? {
-        dateConsidered: sadeSatiData.current.date_considered,
-        periodType: sadeSatiData.current.shani_period_type,
-        description: sadeSatiData.current.description,
-        botResponse: sadeSatiData.current.bot_response,
-        saturnRetrograde: sadeSatiData.current.saturn_retrograde,
-        age: sadeSatiData.current.age,
-        remedies: sadeSatiData.current.remedies || []
+      table: table,
+      current: current ? {
+        dateConsidered: current.date_considered,
+        periodType: current.shani_period_type,
+        description: current.description,
+        botResponse: current.bot_response,
+        saturnRetrograde: current.saturn_retrograde,
+        age: current.age,
+        remedies: current.remedies || []
       } : null,
       periods: {
-        past: sadeSatiData.table?.filter((p: any) => new Date(p.end_date) < new Date()) || [],
-        current: sadeSatiData.table?.filter((p: any) => {
+        past: table.filter((p: any) => new Date(p.end_date) < new Date()),
+        current: table.filter((p: any) => {
           const start = new Date(p.start_date);
           const end = new Date(p.end_date);
           const now = new Date();
           return start <= now && now <= end;
-        }) || [],
-        future: sadeSatiData.table?.filter((p: any) => new Date(p.start_date) > new Date()) || []
+        }),
+        future: table.filter((p: any) => new Date(p.start_date) > new Date())
       }
     };
   }
@@ -171,36 +170,12 @@ export class KundliDataFormatter {
       dashaEnd: month.specifications?.dasha_end,
       dashaInflection: month.specifications?.dasha_inflection,
       predictions: {
-        relationship: {
-          probability: month.predictions?.relationship?.probability,
-          outcome: month.predictions?.relationship?.outcome,
-          response: month.predictions?.relationship?.bot_response
-        },
-        education: {
-          probability: month.predictions?.education?.probability,
-          outcome: month.predictions?.education?.outcome,
-          response: month.predictions?.education?.bot_response
-        },
-        career: {
-          probability: month.predictions?.career?.probability,
-          outcome: month.predictions?.career?.outcome,
-          response: month.predictions?.career?.bot_response
-        },
-        finance: {
-          probability: month.predictions?.finance?.probability,
-          outcome: month.predictions?.finance?.outcome,
-          response: month.predictions?.finance?.bot_response
-        },
-        health: {
-          probability: month.predictions?.health?.probability,
-          outcome: month.predictions?.health?.outcome,
-          response: month.predictions?.health?.bot_response
-        },
-        family: {
-          probability: month.predictions?.family?.probability,
-          outcome: month.predictions?.family?.outcome,
-          response: month.predictions?.family?.bot_response
-        }
+        relationship: month.predictions?.relationship,
+        education: month.predictions?.education,
+        career: month.predictions?.career,
+        finance: month.predictions?.finance,
+        health: month.predictions?.health,
+        family: month.predictions?.family
       }
     }));
   }
@@ -245,6 +220,7 @@ export class KundliDataFormatter {
     allApiResults: any[],
     language: string
   ) {
+    // Destructuring MUST match the Promise.all array order in route.ts exactly
     const [
       planetDetails,
       ascendantReport,
@@ -283,26 +259,28 @@ export class KundliDataFormatter {
       numeroTable
     ] = allApiResults;
 
+    // Extract basic signs once
+    const moonSignData = this.extractData(moonSign, 'Moon Sign');
+    const sunSignData = this.extractData(sunSign, 'Sun Sign');
+    const ascendantData = this.extractData(ascendant, 'Ascendant');
+
     return {
       basicDetails: {
-  ...this.formatBasicDetails(birthDetails),
-
-  moonSign: this.extractData(moonSign, 'Moon Sign')?.moon_sign
-    || this.extractData(moonSign)?.sign
-    || null,
-
-  sunSign: this.extractData(sunSign, 'Sun Sign')?.sun_sign
-    || this.extractData(sunSign)?.sign
-    || null,
-
-  ascendant: this.extractData(ascendant, 'Ascendant')?.ascendant
-    || this.extractData(ascendant)?.sign
-    || null,
-},
+        ...this.formatBasicDetails(birthDetails),
+        // Handle different API response structures for signs
+        moonSign: moonSignData?.moon_sign || moonSignData?.sign || null,
+        sunSign: sunSignData?.sun_sign || sunSignData?.sign || null,
+        ascendant: ascendantData?.ascendant || ascendantData?.sign || null,
+      },
       
       // Core horoscope
       planetDetails: this.formatPlanetDetails(this.extractData(planetDetails, 'Planet Details')),
-      ascendantReport: this.extractData(ascendantReport, 'Ascendant Report')?.[0],
+      
+      // Ascendant report might be an array or object
+      ascendantReport: Array.isArray(this.extractData(ascendantReport)) 
+        ? this.extractData(ascendantReport)[0] 
+        : this.extractData(ascendantReport, 'Ascendant Report'),
+        
       personalCharacteristics: this.extractData(personalCharacteristics, 'Personal Characteristics'),
       
       // Charts
@@ -341,13 +319,6 @@ export class KundliDataFormatter {
       },
       yogaList: this.formatYogaList(this.extractData(yogaList, 'Yoga List')),
       extendedDetails: this.extractData(extendedKundliDetails, 'Extended Kundli Details'),
-      
-      // Signs and ascendant
-      signs: {
-        moon: this.extractData(moonSign, 'Moon Sign'),
-        sun: this.extractData(sunSign, 'Sun Sign'),
-        ascendant: this.extractData(ascendant, 'Ascendant')
-      },
       
       // Friendship and compatibility
       friendship: this.extractData(friendship, 'Friendship'),

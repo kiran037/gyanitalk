@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/components/adminUI/StatCard.tsx
 import { ReactNode } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";

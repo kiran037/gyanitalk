@@ -1,45 +1,57 @@
-
-
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 /**
  * Exports an HTML table to an Excel (.xlsx) file download.
- * 
+ *
  * @param tableId - The HTML id attribute of the table to export.
- * @param filename - The filename for the downloaded Excel file including .xlsx extension.
+ * @param filename - The filename for the downloaded Excel file.
  */
-export function exportTableToExcel(tableId: string, filename = "data.xlsx") {
+export async function exportTableToExcel(tableId: string, filename = "data.xlsx") {
   const table = document.getElementById(tableId);
   if (!table) {
     console.error(`Table with id '${tableId}' not found`);
     return;
   }
 
-  // Convert HTML table element to worksheet
-  const worksheet = XLSX.utils.table_to_sheet(table);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet1");
 
-  // Create a new workbook and append the worksheet
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  // Get all rows from the table
+  const rows = table.querySelectorAll("tr");
 
-  // Write workbook to binary array
-  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  rows.forEach((row, rowIndex) => {
+    const cells = row.querySelectorAll("th, td");
+    
+    cells.forEach((cell, colIndex) => {
+      // ExcelJS uses 1-based indexing for rows and columns
+      const excelCell = worksheet.getCell(rowIndex + 1, colIndex + 1);
+      
+      // Set the value (using innerText to get visible text)
+      excelCell.value = (cell as HTMLElement).innerText;
 
-  // Create a blob from the output and trigger file download
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
+      // Optional: Add basic styling for headers (assuming <th> tags are headers)
+      if (cell.tagName.toLowerCase() === "th") {
+        excelCell.font = { bold: true };
+      }
+    });
+  });
+
+  // Generate buffer and save
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   saveAs(blob, filename);
 }
 
 /**
  * Exports a JSON array to an Excel (.xlsx) file download.
- * 
+ *
  * @param data - Array of objects to export.
- * @param filename - The filename for the downloaded Excel file including .xlsx extension.
+ * @param filename - The filename for the downloaded Excel file.
  * @param sheetName - Optional sheet name inside Excel workbook.
  */
-export function exportJsonToExcel(
-  data: object[],
+export async function exportJsonToExcel(
+  data: any[],
   filename = "data.xlsx",
   sheetName = "Sheet1"
 ) {
@@ -48,17 +60,27 @@ export function exportJsonToExcel(
     return;
   }
 
-  // Convert JSON data to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
 
-  // Create a new workbook and append the worksheet
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  // Extract headers from the first object keys
+  const headers = Object.keys(data[0]);
+  
+  // Set columns in ExcelJS
+  worksheet.columns = headers.map((header) => ({
+    header: header,
+    key: header,
+    width: 20, // Default width
+  }));
 
-  // Write workbook to binary array
-  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  // Make header row bold
+  worksheet.getRow(1).font = { bold: true };
 
-  // Create a blob from the output and trigger file download
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
+  // Add rows
+  worksheet.addRows(data);
+
+  // Generate buffer and save
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   saveAs(blob, filename);
 }

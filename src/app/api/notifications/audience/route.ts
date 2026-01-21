@@ -1,3 +1,4 @@
+///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/notifications/audience/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
