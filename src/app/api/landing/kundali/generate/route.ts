@@ -1,3 +1,5 @@
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "@/lib/prisma";
 import { RateLimiter } from '@/lib/rate-limiter';
@@ -12,6 +14,23 @@ import { getClientIP } from '@/lib/ip-helper';
 import { formatDateForAPI } from '@/lib/date-formatter';
 import { getSession } from "@/lib/auth/index"; 
 
+// ✅ Helper to safely convert BigInt/Decimal/Date for JSON response
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (typeof obj === "object" && (obj as any).constructor?.name === "Decimal") {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
+
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
     
@@ -22,26 +41,15 @@ export async function POST(request: NextRequest) {
             language: string;
         };
 
-        // 1. Get IP address
         const ipAddress = getClientIP(request);
-
-        // 2. Check Authentication Status
         const session = await getSession(request);
         const isLoggedIn = !!(session && session.userId);
         
         let ownerUserId: number;
 
-        // 3. DETERMINE OWNERSHIP LOGIC
         if (isLoggedIn) {
-            // CASE A: User is logged in. 
-            // The Kundli belongs to THEM, regardless of the phone number entered.
             ownerUserId = Number(session!.userId);
-            console.log(`✓ User Logged In. associating Kundli with ID: ${ownerUserId}`);
         } else {
-            // CASE B: Guest User.
-            // We must find or create a user based on the phone number provided in the form.
-            
-            // Validate mobile number for guest creation
             if (!birthDetails.contactNo || birthDetails.contactNo.length < 10) {
                 return APIError.badRequest('Valid mobile number is required');
             }
@@ -68,7 +76,6 @@ export async function POST(request: NextRequest) {
                     }
                 });
 
-                // Create wallet for new user
                 await prisma.user_wallets.create({
                     data: {
                         userId: user.id,
@@ -81,10 +88,8 @@ export async function POST(request: NextRequest) {
                 });
             }
             ownerUserId = Number(user.id);
-            console.log(`✓ Guest User. Associated/Created User ID: ${ownerUserId} based on phone.`);
         }
 
-        // 4. Rate Limiting
         const identifier = isLoggedIn ? `user_${ownerUserId}` : `ip_${ipAddress}`;
         const rateLimitResult = await RateLimiter.checkLimit(identifier, isLoggedIn);
 
@@ -96,7 +101,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 5. Validate Input Data
         const validation = Validator.validateBirthDetails(birthDetails);
         if (!validation.isValid) {
             return APIError.badRequest('Validation failed', validation.errors);
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest) {
         const truncatedName = birthDetails.name.substring(0, 50);
         const truncatedBirthPlace = birthDetails.birthPlace.substring(0, 50);
 
-        // 6. Prepare API Params
+        // API Parameters
         const apiParams = {
             dob: formatDateForAPI(birthDetails.birthDate),
             tob: birthDetails.birthTime,
@@ -120,6 +124,7 @@ export async function POST(request: NextRequest) {
         };
 
         // 7. Fetch External APIs (Parallel)
+        // ✅ Ensure this order matches "KundliDataFormatter.formatCompleteKundli" destructuring EXACTLY
         const allApiResults = await Promise.allSettled([
             VedicGenAPI.getPlanetDetails(apiParams),
             VedicGenAPI.getAscendantReport(apiParams),
@@ -158,8 +163,6 @@ export async function POST(request: NextRequest) {
             VedicGenAPI.getNumeroTable({ ...apiParams, name: truncatedName })
         ]);
 
-        // 8. Create Kundali Record
-        // CRITICAL: We use 'ownerUserId' for createdBy/modifiedBy
         const kundali = await prisma.kundalis.create({
             data: {
                 name: truncatedName,
@@ -172,14 +175,13 @@ export async function POST(request: NextRequest) {
                 timezone: normalizedTimezone,
                 isActive: true,
                 isDelete: false,
-                createdBy: ownerUserId,  // <--- FIXED: Points to logged in user or guest user
-                modifiedBy: ownerUserId, // <--- FIXED
+                createdBy: ownerUserId,
+                modifiedBy: ownerUserId,
                 pdf_type: 'free',
                 forMatch: '0'
             }
         });
 
-        // 9. Create Session
         const kundliData = KundliDataFormatter.formatCompleteKundli(
             birthDetails,
             allApiResults,
@@ -193,13 +195,11 @@ export async function POST(request: NextRequest) {
             ownerUserId
         );
 
-        const totalTime = Date.now() - startTime;
-
-        return NextResponse.json({
+        const responseData = {
             success: true,
             data: {
                 sessionId,
-                kundaliId: Number(kundali.id),
+                kundaliId: kundali.id, 
                 userId: ownerUserId,
                 kundli: kundliData
             },
@@ -207,7 +207,10 @@ export async function POST(request: NextRequest) {
             remainingFreeGenerations: rateLimitResult.remaining,
             resetAt: rateLimitResult.resetAt,
             message: 'Comprehensive kundli generated successfully',
-        });
+        };
+
+        // ✅ FIX: Use converter to handle BigInt serialization
+        return NextResponse.json(convertPrismaTypes(responseData));
 
     } catch (error: any) {
         console.error("Kundli gen error:", error);

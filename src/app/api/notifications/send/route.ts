@@ -1,8 +1,9 @@
+// ===================================
+// FILE: app/api/notifications/send/route.ts
+// ===================================
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-const { sendNotification } = require("@/services/fcm");
-
-
+import { sendBatchNotifications } from "@/services/fcm";
 
 function serializeBigInt(obj: any): any {
   return JSON.parse(
@@ -79,48 +80,50 @@ export async function POST(request: NextRequest) {
           },
         });
         break;
+
+      default:
+        return NextResponse.json(
+          { success: false, error: "Invalid target audience" },
+          { status: 400 }
+        );
     }
 
-    let sentCount = 0;
-    let failedCount = 0;
-
-    for (const user of targetUsers) {
+    // ✅ OPTIMIZED: Collect all tokens
+    const tokens: string[] = [];
+    targetUsers.forEach((user) => {
       const fcmToken =
         user.user_device_details[0]?.fcmToken || user.fcm_token;
-
       if (fcmToken) {
-        try {
-          await sendNotification({
-            token: fcmToken,
-            title: notification.title,
-            description: notification.description,
-            body: {
-              notificationId: notification.id.toString(),
-            },
-          });
-          sentCount++;
-
-          await prisma.user_notifications.create({
-            data: {
-              userId: user.id,
-              title: notification.title,
-              description: notification.description,
-              notificationId: notification.id,
-              is_read: false,
-              isActive: true,
-              isDelete: false,
-              createdBy: 1,
-              modifiedBy: 1,
-            },
-          });
-        } catch (error) {
-          console.error(`Failed to send to user ${user.id}:`, error);
-          failedCount++;
-        }
-      } else {
-        failedCount++;
+        tokens.push(fcmToken);
       }
-    }
+    });
+
+    // ✅ Send in batch (much faster!)
+    const { successCount, failureCount } = await sendBatchNotifications({
+      tokens,
+      title: notification.title,
+      description: notification.description,
+      body: {
+        notificationId: notification.id.toString(),
+      },
+    });
+
+    // ✅ OPTIMIZED: Bulk create user_notifications
+    await prisma.user_notifications.createMany({
+      data: targetUsers.map((user) => ({
+        userId: user.id,
+        title: notification.title,
+        description: notification.description,
+        notificationId: notification.id,
+        is_read: false,
+        isActive: true,
+        isDelete: false,
+        notification_type: 0,
+        createdBy: 1,
+        modifiedBy: 1,
+      })),
+      skipDuplicates: true,
+    });
 
     return NextResponse.json(
       serializeBigInt({
@@ -130,8 +133,8 @@ export async function POST(request: NextRequest) {
           notificationId: notification.id.toString(),
           stats: {
             totalRecipients: targetUsers.length,
-            sentCount,
-            failedCount,
+            sentCount: successCount,
+            failedCount: failureCount,
           },
         },
       })

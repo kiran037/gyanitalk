@@ -1,8 +1,9 @@
+// ===================================
+// FILE: app/api/notifications/test/route.ts
+// ===================================
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-const { sendNotification } = require("@/services/fcm");
-
-
+import { sendNotification } from "@/services/fcm";
 
 function serializeBigInt(obj: any): any {
   return JSON.parse(

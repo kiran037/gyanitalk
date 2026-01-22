@@ -1,4 +1,3 @@
-// app/blog/page.tsx
 import { Metadata } from "next";
 import BlogClient from "./BlogClient";
 import { prisma } from "@/lib/prisma";
@@ -28,31 +27,19 @@ const getBlogSEO = cache(async () => {
     },
   });
 
-  // 🔁 fallback if admin has not set SEO
   if (!page) {
     return {
       title: "Astrology Blog – Insights, Horoscopes & Remedies | Gyanitalk",
       description: "Read astrology blogs, daily horoscope insights, remedies and spiritual guidance.",
-      keywords: [
-        "astrology blog",
-        "horoscope blog",
-        "vedic astrology",
-        "astrology remedies",
-        "spiritual guidance",
-        "gyanitalk blog",
-      ],
+      keywords: ["astrology blog", "horoscope blog", "vedic astrology", "gyanitalk blog"],
       canonical: "/blog",
     };
   }
 
   return {
-    title: page.metaTitle || page.title || "Astrology Blog – Insights, Horoscopes & Remedies | Gyanitalk",
-    description:
-      page.metaDescription ||
-      "Read astrology blogs, daily horoscope insights, remedies and spiritual guidance.",
-    keywords: page.metaKeywords
-      ? page.metaKeywords.split(",").map(k => k.trim())
-      : [],
+    title: page.metaTitle || page.title,
+    description: page.metaDescription,
+    keywords: page.metaKeywords ? page.metaKeywords.split(",").map((k) => k.trim()) : [],
     canonical: page.canonicalUrl || "/blog",
     og: {
       title: page.ogTitle,
@@ -68,40 +55,38 @@ const getBlogSEO = cache(async () => {
   };
 });
 
-
-
 async function getBlogs(
-  searchParams: Promise<Record<string, string | string[] | undefined>>,
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 ) {
   const sp = await searchParams;
-
   const params = new URLSearchParams({
     page: typeof sp.page === "string" ? sp.page : "1",
     limit: "9",
     sortBy: typeof sp.sortBy === "string" ? sp.sortBy : "latest",
   });
 
-  if (typeof sp.search === "string") {
-    params.append("search", sp.search);
-  }
+  if (typeof sp.search === "string") params.append("search", sp.search);
+  if (typeof sp.categoryId === "string") params.append("categoryId", sp.categoryId);
 
-  if (typeof sp.categoryId === "string") {
-    params.append("categoryId", sp.categoryId);
-  }
-
+  // --- 🔴 FIXED LOGIC START ---
   const h = await headers();
-const host = h.get("host");
-  const protocol =
-    process.env.NODE_ENV === "production" ? "https" : "http";
-
+  const host = h.get("host") || "localhost:3000";
+  
+  // Force HTTP if running locally (localhost or IP), otherwise use HTTPS
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+  const protocol = isLocal ? "http" : "https";
+  
   const url = `${protocol}://${host}/api/landing/blog?${params}`;
+  // --- 🔴 FIXED LOGIC END ---
 
-  const res = await fetch(url, {
-    next: { revalidate: 300 },
-  });
-
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(url, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -110,34 +95,20 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const seo = await getBlogSEO();
-
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
-
     title: seo.title,
     description: seo.description ?? undefined,
     keywords: seo.keywords,
-
-    alternates: {
-      canonical: seo.canonical,
-    },
-
-    robots: {
-      index: true,
-      follow: true,
-    },
-
+    alternates: { canonical: seo.canonical },
+    robots: { index: true, follow: true },
     openGraph: seo.og?.title
       ? {
           title: seo.og.title,
           description: seo.og.description ?? undefined,
           url: seo.canonical,
-          siteName: "Gyanitalk",
-          type: "website",
           images: seo.og.image ? [seo.og.image] : undefined,
         }
       : undefined,
-
     twitter: seo.twitter?.title
       ? {
           card: "summary_large_image",
@@ -146,10 +117,6 @@ export async function generateMetadata({
           images: seo.twitter.image ? [seo.twitter.image] : undefined,
         }
       : undefined,
-
-    other: {
-      "content-language": "en",
-    },
   };
 }
 
@@ -160,7 +127,6 @@ export default async function BlogPage({
 }) {
   const data = await getBlogs(searchParams);
 
-  // 🔒 Hard fallback (no blank page ever)
   const safeData =
     data?.success && data.data
       ? data

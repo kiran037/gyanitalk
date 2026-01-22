@@ -1,10 +1,7 @@
+
 import axios from 'axios';
 import { prisma } from "@/lib/prisma";
 
-/**
- * VedicGenAPI - Handles all kundli generation and analysis APIs
- * Separated from matching APIs to maintain clean architecture
- */
 export class VedicGenAPI {
   private static BASE_URL = 'https://api.vedicastroapi.com/v3-json';
 
@@ -15,633 +12,197 @@ export class VedicGenAPI {
     return flag?.value || process.env.VEDICASTRO_API_KEY || '';
   }
 
-  // ===== CORE HOROSCOPE APIs =====
+  // ===== CORE HOROSCOPE APIs (/horoscope) =====
   
-  static async getPlanetDetails(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getPlanetDetails(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/planet-details`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/planet-details`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getAscendantReport(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getAscendantReport(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/ascendant-report`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/ascendant-report`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getPlanetReport(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    planet: string;
-    lang: string;
-  }) {
+  static async getPersonalCharacteristics(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/planet-report`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/personal-characteristics`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getPersonalCharacteristics(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getDivisionalCharts(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/personal-characteristics`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/divisional-charts`, { params: { ...params, api_key: apiKey, response_type: 'planet_object' } })).data;
   }
 
-  static async getDivisionalCharts(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    div: string;
-    lang: string;
-  }) {
+  static async getChartImage(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/divisional-charts`, {
+    return (await axios.get(`${this.BASE_URL}/horoscope/chart-image`, { params: { ...params, api_key: apiKey, color: '#ff3366', stroke: 2, format: 'svg' } })).data;
+  }
+
+  // ✅ ADDED MISSING METHOD
+  static async getAshtakvargaChartImage(params: any) {
+    const apiKey = await this.getApiKey();
+    return (await axios.get(`${this.BASE_URL}/horoscope/ashtakvarga-chart`, { 
       params: { 
         ...params, 
-        api_key: apiKey,
-        response_type: 'planet_object'
-      }
-    });
-    return response.data;
-  }
-
-  static async getChartImage(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-    div: string;
-    style: string;
-  }) {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/chart-image`, {
-      params: {
-        ...params,
-        api_key: apiKey,
-        font_size: 24,
-        font_style: 'roboto',
-        color: '#ff3366',
-        stroke: 3,
-        colorful_planets: 1,
-        format: 'svg',
-        size: 500,
-        show_degree: true
-      }
-    });
-    return response.data;
-  }
-
-  static async getGeneralHouseReport(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    house: number;
-    lang: string;
-  }) {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/general-house-report`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
-  }
-
-  // ===== ASHTAKVARGA APIs =====
-
-  static async getAshtakvarga(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/ashtakvarga`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
-  }
-
-  static async getBinnashtakvarga(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    planet: string;
-    lang: string;
-  }) {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/binnashtakvarga`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
-  }
-
-  static async getAshtakvargaChartImage(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    style: string;
-    planet: string;
-    lang: string;
-  }) {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/ashtakvarga-chart-image`, {
-      params: {
-        ...params,
         api_key: apiKey,
         color: '#ff3366',
         size: 500,
         font_size: 24,
         format: 'svg'
-      }
-    });
-    return response.data;
+      } 
+    })).data;
   }
 
-  // ===== PLANETARY ASPECTS =====
-
-  static async getPlanetaryAspects(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    type: string;
-    lang: string;
-  }) {
+  // ✅ ADDED USEFUL RELATED METHOD
+  static async getBinnashtakvarga(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/planetary-aspects`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/binnashtakvarga`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getPlanetsInHouses(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getAshtakvarga(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/planets-in-houses`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/ashtakvarga`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  // ===== WESTERN ASTROLOGY =====
-
-  static async getWesternPlanets(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getPlanetaryAspects(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/western-planets`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/planetary-aspects`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  // ===== EXTENDED HOROSCOPE APIs (NEW) =====
-
-  static async getShadBala(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getPlanetsInHouses(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/shad-bala`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/planets-in-houses`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getSadeSatiTable(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getWesternPlanets(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/sade-sati-table`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/western-planets`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getCurrentSadeSati(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  // ===== EXTENDED HOROSCOPE APIs (/extended-horoscope) =====
+
+  static async getShadBala(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/current-sade-sati`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/shad-bala`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getKPHouses(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getSadeSatiTable(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/kp-houses`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/sade-sati-table`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getKPPlanets(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getCurrentSadeSati(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/kp-planets`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/current-sade-sati`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getVarshapalYearChart(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getYogaList(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/varshapal-year-chart`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/yoga-list`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getVarshapalDetails(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getKPHouses(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/varshapal-details`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/kp-houses`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getYogaList(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getKPPlanets(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/yoga-list`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/kp-planets`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getExtendedKundliDetails(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getVarshapalYearChart(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/extended-kundli-details`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/varshapal-year-chart`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getFindMoonSign(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getVarshapalDetails(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/find-moon-sign`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/varshapal-details`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getFindSunSign(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getExtendedKundliDetails(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/find-sun-sign`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/extended-kundli-details`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getFindAscendant(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getFindMoonSign(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/find-ascendant`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/find-moon-sign`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getFriendship(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getFindSunSign(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/friendship`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/find-sun-sign`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getGemSuggestion(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getFindAscendant(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/gem-suggestion`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/horoscope/find-ascendant`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getNumeroTable(params: {
-    name: string;
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getFriendship(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/numero-table`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/friendship`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getRudrakshSuggestion(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getGemSuggestion(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/rudraksh-suggestion`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/gem-suggestion`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getAruthaPadas(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getRudrakshSuggestion(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/arutha-padas`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/rudraksh-suggestion`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getJaiminiKarakas(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getNumeroTable(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/extended-horoscope/jaimini-karakas`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/numero-table`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  // ===== DOSHA APIs =====
-
-  static async getMangalDosh(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getAruthaPadas(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/dosha/mangal-dosh`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/arutha-padas`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getKaalsarpDosh(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getJaiminiKarakas(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/dosha/kaalsarp-dosh`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/extended-horoscope/jaimini-karakas`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getManglikDosh(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  // ===== DOSHA APIs (/dosha) =====
+
+  static async getMangalDosh(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/dosha/manglik-dosh`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/dosha/mangal-dosh`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getPitraDosh(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getKaalsarpDosh(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/dosha/pitra-dosh`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/dosha/kaalsarp-dosh`, { params: { ...params, api_key: apiKey } })).data;
   }
 
-  static async getPapasamaya(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getManglikDosh(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/dosha/papasamaya`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
+    return (await axios.get(`${this.BASE_URL}/dosha/manglik-dosh`, { params: { ...params, api_key: apiKey } })).data;
+  }
+
+  static async getPitraDosh(params: any) {
+    const apiKey = await this.getApiKey();
+    return (await axios.get(`${this.BASE_URL}/dosha/pitra-dosh`, { params: { ...params, api_key: apiKey } })).data;
+  }
+
+  static async getPapasamaya(params: any) {
+    const apiKey = await this.getApiKey();
+    return (await axios.get(`${this.BASE_URL}/dosha/papasamaya`, { params: { ...params, api_key: apiKey } })).data;
   }
 
   // ===== AI PREDICTIONS =====
 
-  static async getAI12MonthPrediction(params: {
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    lang: string;
-  }) {
+  static async getAI12MonthPrediction(params: any) {
     const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/horoscope/ai-12-month-prediction`, {
-      params: { ...params, api_key: apiKey }
-    });
-    return response.data;
-  }
-
-  // ===== PDF GENERATION =====
-  
-  static async generatePDF(params: {
-    name: string;
-    dob: string;
-    tob: string;
-    lat: number;
-    lon: number;
-    tz: string;
-    pob: string;
-    lang: string;
-    pdfType: string;
-    style: string;
-  }): Promise<string> {
-    const apiKey = await this.getApiKey();
-    const response = await axios.get(`${this.BASE_URL}/pdf/horoscope-queue`, {
-      params: {
-        ...params,
-        api_key: apiKey,
-        color: '140'
-      }
-    });
-
-    if (response.data.status === 200 && response.data.response) {
-      return response.data.response;
-    }
-    throw new Error('PDF generation failed');
+    return (await axios.get(`${this.BASE_URL}/horoscope/ai-12-month-prediction`, { params: { ...params, api_key: apiKey } })).data;
   }
 }

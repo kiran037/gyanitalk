@@ -1,13 +1,26 @@
-// /api/landing/kundali/chart/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { VedicGenAPI } from '@/lib/kundli/vedic-gen-api';
 import { APIError } from '@/lib/error-response';
 import { formatDateForAPI } from '@/lib/date-formatter';
 
-/**
- * POST /api/landing/kundali/chart
- * Generate specific chart (D1, D9, etc.) on demand
- */
+// Helper: convert BigInt / Decimal / Date -> JSON-safe
+function convertPrismaTypes(obj: unknown): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "bigint") return obj.toString();
+  if (typeof obj === "object" && (obj as any).constructor?.name === "Decimal") {
+    return Number((obj as any).toString());
+  }
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(convertPrismaTypes);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    out[k] = convertPrismaTypes(v);
+  }
+  return out;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -23,14 +36,10 @@ export async function POST(request: NextRequest) {
       planet = 'total'
     } = body;
 
-    // Basic validation
     if (!birthDate || !birthTime || !latitude || !longitude || !timezone) {
       return APIError.badRequest('Missing required fields');
     }
 
-    console.log(`🎨 Generating ${div} chart in ${style} style`);
-
-    // CRITICAL: Convert timezone to string
     const timezoneStr = typeof timezone === 'number' ? timezone.toString() : timezone;
 
     const apiParams = {
@@ -44,64 +53,40 @@ export async function POST(request: NextRequest) {
       style
     };
 
-    console.log('📤 API params:', apiParams);
-
     const isAshtakvargaChart = planet && planet !== 'total';
     let chartData;
     
+    // Now that the method exists on the class, we can call it directly
     if (isAshtakvargaChart) {
       chartData = await VedicGenAPI.getAshtakvargaChartImage({ ...apiParams, planet });
     } else {
       chartData = await VedicGenAPI.getChartImage(apiParams);
     }
 
-    console.log('📥 API response type:', typeof chartData);
-    console.log('📥 API response keys:', chartData ? Object.keys(chartData) : 'null');
-
-    // CRITICAL FIX: The VedicAstro API returns the SVG directly in response.response
-    // which is a STRING (the SVG XML), not an object
+    // Logic to extract SVG from V3 Response
     let chartHtml = null;
 
-    if (chartData && chartData.response) {
-      // The response.response field IS the SVG string itself
-      if (typeof chartData.response === 'string') {
+    if (chartData) {
+      if (typeof chartData === 'string') {
+        chartHtml = chartData;
+      } else if (typeof chartData.response === 'string') {
         chartHtml = chartData.response;
-      } else if (typeof chartData.response.response === 'string') {
-        chartHtml = chartData.response.response;
-      } else if (chartData.response.chart) {
-        chartHtml = chartData.response.chart;
-      } else if (chartData.response.svg) {
-        chartHtml = chartData.response.svg;
+      } else if (chartData.svg) {
+        chartHtml = chartData.svg;
       }
     }
 
-    // Fallback: check if chartData itself is a string (unlikely but possible)
-    if (!chartHtml && typeof chartData === 'string') {
-      chartHtml = chartData;
-    }
-
-    if (!chartHtml || typeof chartHtml !== 'string' || chartHtml.length === 0) {
-      console.error('❌ No valid chart data found');
-      console.error('Response structure:', JSON.stringify(chartData, null, 2).substring(0, 500));
-      
+    if (!chartHtml || typeof chartHtml !== 'string') {
+      console.error('Chart API Error:', chartData);
       return NextResponse.json({
         success: false,
-        error: 'Chart generation failed - no SVG data in response',
-        debug: process.env.NODE_ENV === 'development' ? {
-          responseType: typeof chartData,
-          hasResponse: !!chartData?.response,
-          responseType2: typeof chartData?.response,
-          sampleData: typeof chartData === 'object' ? Object.keys(chartData).slice(0, 10) : 'not object'
-        } : undefined
+        error: 'Chart generation failed - invalid response from provider'
       }, { status: 500 });
     }
 
-    // Verify it's actually SVG
     const isSVG = chartHtml.trim().startsWith('<') || chartHtml.includes('<svg');
-    
-    console.log(`✅ Chart generated! Length: ${chartHtml.length}, Is SVG: ${isSVG}`);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       data: {
         chart: chartHtml,
@@ -111,19 +96,18 @@ export async function POST(request: NextRequest) {
         format: isSVG ? 'svg' : 'text'
       },
       message: `${div} chart generated successfully`
-    });
+    };
+
+    return NextResponse.json(convertPrismaTypes(response));
 
   } catch (error: any) {
-    console.error('❌ Chart generation error:', error);
-    return APIError.internalError(
-      'Failed to generate chart',
-      process.env.NODE_ENV === 'development' ? error.message : undefined
-    );
+    console.error('Chart error:', error);
+    return APIError.internalError('Failed to generate chart');
   }
 }
 
 export async function GET(request: NextRequest) {
-  const chartTypes = {
+    const chartTypes = {
     divisional: [
       { code: 'D1', name: 'Rasi Chart', description: 'Main birth chart' },
       { code: 'D2', name: 'Hora Chart', description: 'Wealth and prosperity' },
@@ -148,9 +132,5 @@ export async function GET(request: NextRequest) {
     ]
   };
 
-  return NextResponse.json({
-    success: true,
-    data: chartTypes,
-    message: 'Available chart types'
-  });
+  return NextResponse.json({ success: true, data: chartTypes });
 }

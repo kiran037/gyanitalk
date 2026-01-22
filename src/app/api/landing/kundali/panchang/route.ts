@@ -1,31 +1,23 @@
-///Users/xeoren/Desktop/gyanitallk-admin/src/app/api/landing/kundali/panchang/route.ts
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { day, month, year, language = 'en' } = body;
+    const { day, month, year, language = 'en', latitude = 28.6139, longitude = 77.2090, timezone = 5.5 } = body;
 
-    // Validate input
-    if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Valid day, month, and year are required'
-      }, { status: 400 });
+    if (!day || !month || !year) {
+      return NextResponse.json({ success: false, error: 'Date is required' }, { status: 400 });
     }
-
-    // Default location (can be customized)
-    const latitude = 28.6139; // Delhi
-    const longitude = 77.2090;
-    const timezone = 5.5;
 
     const payload = {
       day: parseInt(day),
       month: parseInt(month),
       year: parseInt(year),
       hour: 5,
-      min: 20,
+      min: 30, // Standard panchang time
       lat: latitude,
       lon: longitude,
       tzone: timezone,
@@ -41,7 +33,7 @@ export async function POST(request: NextRequest) {
       {
         headers: {
           Authorization: `Basic ${Buffer.from(`${userId}:${apiKey}`).toString('base64')}`,
-          ...(language && { 'Accept-Language': language })
+          'Accept-Language': language
         },
         timeout: 10000
       }
@@ -54,15 +46,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Panchang error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch Panchang',
-      message: error.message
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-// GET method for today's panchang
 export async function GET(request: NextRequest) {
   try {
     const today = new Date();
@@ -70,20 +57,10 @@ export async function GET(request: NextRequest) {
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
 
-    const latitude = 28.6139;
-    const longitude = 77.2090;
-    const timezone = 5.5;
-
     const payload = {
-      day,
-      month,
-      year,
-      hour: 5,
-      min: 20,
-      lat: latitude,
-      lon: longitude,
-      tzone: timezone,
-      name: 'User'
+      day, month, year,
+      hour: 5, min: 30,
+      lat: 28.6139, lon: 77.2090, tzone: 5.5
     };
 
     const userId = process.env.ASTROLOGYAPI_USER_ID;
@@ -93,10 +70,7 @@ export async function GET(request: NextRequest) {
       'http://json.astrologyapi.com/v1/advanced_panchang/',
       new URLSearchParams(payload as any),
       {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${userId}:${apiKey}`).toString('base64')}`
-        },
-        timeout: 10000
+        headers: { Authorization: `Basic ${Buffer.from(`${userId}:${apiKey}`).toString('base64')}` }
       }
     );
 
@@ -107,11 +81,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Panchang error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch Panchang',
-      message: error.message
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
